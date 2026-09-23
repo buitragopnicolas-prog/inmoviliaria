@@ -40,11 +40,11 @@ jobs:
           --health-cmd "pg_isready -U inmobiliaria -d inmobiliaria"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: npm
@@ -87,7 +87,7 @@ jobs:
       group: inmobiliaria-dev
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: SSH deploy dev
@@ -119,7 +119,7 @@ jobs:
       group: inmobiliaria-production
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: SSH promote reviewed SHA
