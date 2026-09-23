@@ -26,9 +26,9 @@ Las contraseñas locales de prueba están en `.env.example`; sustitúyalas si el
 
 El clúster es de un solo nodo y no tiene StorageClass predeterminada. `k8s/infra/dev` crea PV estáticos, PVC y servicios exclusivos de dev. `scripts/bootstrap-dev-vps.sh` genera secretos aleatorios exclusivos de dev en `/root/asesoria-inmobiliaria-dev-secrets.env` con permisos 600. No copia secretos ni datos de producción.
 
-El namespace, PostgreSQL, MinIO, migraciones y seed de dev están instalados. Una versión de prueba `dev-preview` se ejecuta en API y web. La prueba `python3 scripts/smoke-dev-vps.py --upload` verificó salud, catálogo, web, login administrador y escritura/lectura de MinIO a través de Traefik.
+El namespace, PostgreSQL, MinIO, migraciones y seed de dev están instalados. API y web ejecutan imágenes etiquetadas con el SHA completo del commit desplegado. La prueba `python3 scripts/smoke-dev-vps.py --upload` verificó salud, catálogo, web, login administrador y escritura/lectura de MinIO a través de Traefik.
 
-Nginx tiene una ruta HTTP propia para `dev.asesoriainmobiliariajb.com` en `k8s/nginx-dev.conf`. Para habilitar HTTPS, el registro A de `dev` debe resolver a la IP del VPS desde los DNS autoritativos de Hostinger. Entonces, en el VPS, ejecute `certbot certonly --webroot -w /var/www/html -d dev.asesoriainmobiliariajb.com`, copie `k8s/nginx-dev-https.conf` al sitio Nginx de dev, ejecute `nginx -t` y recargue Nginx. El archivo preparado usa el certificado dev propio y redirige HTTP a HTTPS. La web dev incorpora la URL HTTPS al compilarse, por lo que HTTPS es necesario para probarla desde un navegador. Al último control, `orbit.dns-parking.com` y `horizon.dns-parking.com` aún no devolvían ese registro A.
+El registro A `dev` apunta al VPS y responde en ambos DNS autoritativos de Hostinger. Nginx usa `k8s/nginx-dev-https.conf`, con un certificado Let's Encrypt propio de dev y redirección HTTP a HTTPS. Certbot renueva el certificado mediante el webroot `/var/www/html`. La web dev incorpora esa URL HTTPS al compilarse.
 
 ## CI/CD
 
