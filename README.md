@@ -15,6 +15,10 @@ Plataforma web para publicar inmuebles en arriendo, recibir contactos, administr
 - Docker Compose para frontend, API, PostgreSQL y MinIO.
 - Storage S3-compatible con MinIO y ruta pública estable vía API para archivos e imágenes.
 
+## Preparación actual de local, dev y producción
+
+Consulte [la guía de arranque y despliegues](docs/LOCAL_Y_DESPLIEGUES.md). Incluye el script Windows, los overlays Kubernetes y el despliegue con migraciones previas.
+
 ## Inicio rápido con Docker
 
 1. Copie las variables de entorno:

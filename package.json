@@ -7,14 +7,16 @@
     "apps/web"
   ],
   "scripts": {
-    "dev": "dotenv -e .env -- concurrently -n API,WEB -c blue,green \"npm run start:dev -w @inmobiliaria/api\" \"npm run dev -w @inmobiliaria/web\"",
-    "build": "npm run build -w @inmobiliaria/api && npm run build -w @inmobiliaria/web",
+    "dev": "dotenv -e .env -- concurrently -k -n API,WEB -c blue,green \"npm run start:dev -w @inmobiliaria/api\" \"npm run dev -w @inmobiliaria/web\"",
+    "build": "npm run db:generate && npm run build -w @inmobiliaria/api && npm run build -w @inmobiliaria/web",
     "db:generate": "dotenv -e .env -- npm run prisma:generate -w @inmobiliaria/api",
     "db:migrate": "dotenv -e .env -- npm run db:migrate -w @inmobiliaria/api",
     "db:seed": "dotenv -e .env -- npm run db:seed -w @inmobiliaria/api",
     "docker:up": "docker compose up --build",
-    "docker:down": "docker compose down -v",
-    "db:import:arrendamientos": "dotenv -e .env -- npm run import:arrendamientos -w @inmobiliaria/api"
+    "docker:down": "docker compose down",
+    "db:import:arrendamientos": "dotenv -e .env -- npm run import:arrendamientos -w @inmobiliaria/api",
+    "check": "npm run lint --workspaces",
+    "infra:up": "docker compose up -d postgres minio minio-init"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
@@ -22,5 +24,16 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "overrides": {
+    "@nestjs/platform-express": {
+      "multer": "^2.4.0"
+    },
+    "prisma": {
+      "mysql2": "^3.24.4"
+    },
+    "@prisma/config": {
+      "deepmerge-ts": "^8.0.2"
+    }
   }
 }

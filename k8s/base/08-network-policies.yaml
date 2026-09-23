@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-only-from-app-and-jobs
+  namespace: asesoria-inmobiliaria
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: asesoria-api
+        - podSelector:
+            matchLabels:
+              app: n8n
+        - podSelector:
+            matchLabels:
+              job-role: db-init
+        - podSelector:
+            matchLabels:
+              job-role: n8n-db-init
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minio-only-from-api-and-jobs
+  namespace: asesoria-inmobiliaria
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: asesoria-api
+        - podSelector:
+            matchLabels:
+              job-role: minio-init
+      ports:
+        - protocol: TCP
+          port: 9000

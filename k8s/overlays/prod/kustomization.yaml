@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: asesoria-inmobiliaria
+resources:
+  - ../../base
+  - ingress.yaml
+images:
+  - name: asesoria-inmobiliaria-api
+    newName: asesoria-inmobiliaria-api
+    newTag: RELEASE_TAG
+  - name: asesoria-inmobiliaria-web
+    newName: asesoria-inmobiliaria-web
+    newTag: RELEASE_TAG
+patches:
+  - target:
+      kind: ConfigMap
+      name: asesoria-config
+    patch: |-
+      - op: replace
+        path: /data/WEB_ORIGIN
+        value: https://asesoriainmobiliariajb.com
+      - op: replace
+        path: /data/PUBLIC_API_URL
+        value: https://asesoriainmobiliariajb.com
+      - op: replace
+        path: /data/NEXT_PUBLIC_API_URL
+        value: https://asesoriainmobiliariajb.com
+      - op: replace
+        path: /data/WOMPI_REDIRECT_URL
+        value: https://asesoriainmobiliariajb.com/mi-cuenta
+      - op: replace
+        path: /data/CYBERVESTIGIO_RETURN_URL
+        value: https://asesoriainmobiliariajb.com/mi-cuenta

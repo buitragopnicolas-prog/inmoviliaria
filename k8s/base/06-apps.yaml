@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: asesoria-inmobiliaria
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asesoria-api
+  template:
+    metadata:
+      labels:
+        app: asesoria-api
+    spec:
+      containers:
+        - name: api
+          image: asesoria-inmobiliaria-api:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 4000
+          envFrom:
+            - configMapRef:
+                name: asesoria-config
+            - secretRef:
+                name: asesoria-secrets
+          startupProbe:
+            tcpSocket:
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: asesoria-inmobiliaria
+spec:
+  selector:
+    app: asesoria-api
+  ports:
+    - name: http
+      port: 4000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: asesoria-inmobiliaria
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asesoria-web
+  template:
+    metadata:
+      labels:
+        app: asesoria-web
+    spec:
+      containers:
+        - name: web
+          image: asesoria-inmobiliaria-web:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: 0.0.0.0
+            - name: API_INTERNAL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: asesoria-config
+                  key: API_INTERNAL_URL
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: asesoria-config
+                  key: NEXT_PUBLIC_API_URL
+          startupProbe:
+            tcpSocket:
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: asesoria-inmobiliaria
+spec:
+  selector:
+    app: asesoria-web
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

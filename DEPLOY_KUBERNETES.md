@@ -1,5 +1,7 @@
 # Despliegue de Asesoría Inmobiliaria JB en Kubernetes
 
+> **Instalación original.** Para el flujo actual separado de local, dev y producción use [la guía actual](docs/LOCAL_Y_DESPLIEGUES.md). No ejecute el seed ni aplique estos pasos de forma indiscriminada sobre producción existente.
+
 Arquitectura:
 
 Internet → Nginx del VPS (TLS 80/443) → Traefik NodePort 30080 → Ingress → Web/API → PostgreSQL/MinIO

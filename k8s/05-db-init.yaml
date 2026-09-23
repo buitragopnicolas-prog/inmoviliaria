@@ -33,8 +33,9 @@ spec:
             - sh
             - -c
             - |
+              set -eu
               npm run db:migrate -w @inmobiliaria/api
-              npm run db:seed -w @inmobiliaria/api
+              # Los datos de demostración se cargan únicamente de forma explícita en local/dev.
           envFrom:
             - configMapRef:
                 name: asesoria-config

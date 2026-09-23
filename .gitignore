@@ -8,3 +8,11 @@ apps/api/src/generated/prisma
 apps/api/uploads/*
 !apps/api/uploads/seed
 .DS_Store
+
+.env.*
+!.env.example
+!*.example
+*.tsbuildinfo
+.local/
+apps/web/AGENTS.md
+apps/web/CLAUDE.md

@@ -17,7 +17,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     container_name: inmobiliaria_minio
     command: server /data --console-address ":9001"
     environment:
@@ -30,7 +30,7 @@ services:
       - minio_data:/data
 
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     container_name: inmobiliaria_minio_init
     depends_on:
       minio:
@@ -47,10 +47,10 @@ services:
           echo "Esperando MinIO..."
           sleep 1
         done
-        mc mb --ignore-existing local/$STORAGE_BUCKET
-        printf '' | mc pipe local/$STORAGE_BUCKET/files/generic/.keep
-        printf '' | mc pipe local/$STORAGE_BUCKET/files/property-360/.keep
-        printf '' | mc pipe local/$STORAGE_BUCKET/property-images/.keep
+        mc mb --ignore-existing local/$$STORAGE_BUCKET
+        printf '' | mc pipe local/$$STORAGE_BUCKET/files/generic/.keep
+        printf '' | mc pipe local/$$STORAGE_BUCKET/files/property-360/.keep
+        printf '' | mc pipe local/$$STORAGE_BUCKET/property-images/.keep
 
   api:
     build:
@@ -60,11 +60,12 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-inmobiliaria}:${POSTGRES_PASSWORD:-inmobiliaria_segura}@postgres:5432/${POSTGRES_DB:-inmobiliaria}?schema=public
-      PUBLIC_API_URL: http://localhost:${API_HOST_PORT:-4000}
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
+      PORT: 4000
       STORAGE_ENDPOINT: minio
       STORAGE_PORT: 9000
       STORAGE_USE_SSL: false
-      WEB_ORIGIN: http://localhost:3000
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
     ports:
       - "${API_HOST_PORT:-4000}:4000"
     volumes:
@@ -74,20 +75,29 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/api/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
     command: sh -c "mkdir -p apps/api/uploads/seed && cp -rn seed-assets/. apps/api/uploads/seed/ && npm run db:migrate -w @inmobiliaria/api && npm run db:seed -w @inmobiliaria/api && npm run start:prod -w @inmobiliaria/api"
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
     container_name: inmobiliaria_web
     env_file: .env
     environment:
       PORT: 3000
+      HOSTNAME: 0.0.0.0
       API_INTERNAL_URL: http://api:4000
-      NEXT_PUBLIC_API_URL: http://localhost:${API_HOST_PORT:-4000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
     ports:
-      - "3000:3000"
+      - "${WEB_HOST_PORT:-3000}:3000"
     depends_on:
       - api
 

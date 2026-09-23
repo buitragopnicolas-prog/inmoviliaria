@@ -1,0 +1,141 @@
+name: Validate and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Entorno para desplegar después de validar
+        required: true
+        type: choice
+        options: [dev, prod]
+      sha:
+        description: SHA completo en main
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://inmobiliaria:ci_password@localhost:5432/inmobiliaria?schema=public
+      JWT_SECRET: ci-only-secret-not-for-deployment-1234567890
+      ADMIN_INITIAL_PASSWORD: CI-admin-123456
+      CUSTOMER_INITIAL_PASSWORD: CI-customer-123456
+      NEXT_TELEMETRY_DISABLED: '1'
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: inmobiliaria
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: inmobiliaria
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U inmobiliaria -d inmobiliaria"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run check
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - name: API smoke test
+        run: |
+          npm run start:prod -w @inmobiliaria/api > /tmp/inmo-api.log 2>&1 &
+          trap 'cat /tmp/inmo-api.log' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:4000/api/health/ready; then break; fi
+            sleep 2
+          done
+          curl -fsS http://localhost:4000/api/health/ready
+          curl -fsS http://localhost:4000/api/properties
+      - name: Validate manifests
+        run: |
+          kubectl kustomize k8s/infra/dev > /tmp/inmo-infra-dev.yaml
+          kubectl kustomize k8s/overlays/dev > /tmp/inmo-dev.yaml
+          kubectl kustomize k8s/overlays/prod > /tmp/inmo-prod.yaml
+      - name: Build deployable images
+        run: |
+          docker build -f apps/api/Dockerfile -t asesoria-inmobiliaria-api:ci .
+          docker build -f apps/web/Dockerfile --build-arg NEXT_PUBLIC_API_URL=https://dev.asesoriainmobiliariajb.com -t asesoria-inmobiliaria-web:ci .
+      - name: Production security gate
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'prod'
+        run: npm audit --audit-level=high
+
+  deploy-dev:
+    needs: validate
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://dev.asesoriainmobiliariajb.com
+    concurrency:
+      group: inmobiliaria-dev
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: SSH deploy dev
+        env:
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_USER: ${{ vars.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          DEPLOY_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+        run: |
+          test -n "$VPS_HOST" && test -n "$VPS_USER" && test -n "$VPS_SSH_KEY"
+          [[ "$DEPLOY_SHA" =~ ^[a-f0-9]{40}$ ]]
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          cp .github/known_hosts ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          umask 077
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/inmo-deploy-key
+          ssh -i ~/.ssh/inmo-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA"
+
+  deploy-prod:
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'prod'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://asesoriainmobiliariajb.com
+    concurrency:
+      group: inmobiliaria-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: SSH promote reviewed SHA
+        env:
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_USER: ${{ vars.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          DEPLOY_SHA: ${{ inputs.sha }}
+        run: |
+          test -n "$VPS_HOST" && test -n "$VPS_USER" && test -n "$VPS_SSH_KEY"
+          [[ "$DEPLOY_SHA" =~ ^[a-f0-9]{40}$ ]]
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          cp .github/known_hosts ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          umask 077
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/inmo-deploy-key
+          ssh -i ~/.ssh/inmo-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA"

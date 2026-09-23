@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asesoria-config
+  namespace: asesoria-inmobiliaria
+data:
+  NODE_ENV: production
+  PORT: "4000"
+  WEB_ORIGIN: https://asesoriainmobiliariajb.com
+  PUBLIC_API_URL: https://asesoriainmobiliariajb.com
+  API_INTERNAL_URL: http://api-service:4000
+  NEXT_PUBLIC_API_URL: https://asesoriainmobiliariajb.com
+  JWT_EXPIRES_IN_SECONDS: "86400"
+  STORAGE_ENDPOINT: minio-service
+  STORAGE_PORT: "9000"
+  STORAGE_USE_SSL: "false"
+  STORAGE_BUCKET: inmobiliaria-assets
+  STORAGE_REGION: us-east-1
+  STORAGE_AUTO_CREATE_BUCKET: "true"
+  STORAGE_MAX_FILE_SIZE: "25000000"
+  STORAGE_MAX_FILE_COUNT: "20"
+  STORAGE_MAX_REQUEST_SIZE: "70000000"
+  CONTRACT_MAX_FILE_SIZE: "25000000"
+  PROPERTY_IMAGE_MAX_FILE_SIZE: "5000000"
+  PROPERTY_360_MAX_FILE_SIZE: "15000000"
+  PAYMENT_PROVIDER: mock
+  WOMPI_REDIRECT_URL: https://asesoriainmobiliariajb.com/mi-cuenta
+  CYBERVESTIGIO_RETURN_URL: https://asesoriainmobiliariajb.com/mi-cuenta
+  PAYMENT_AMOUNT_TOLERANCE_COP: "0"
+  PAYMENT_NAME_SCORE_MIN: "72"
+  PAYMENT_NAME_SCORE_MARGIN: "12"
+  IMPORT_CREATE_CURRENT_INVOICES: "true"
+  DEFAULT_DUE_DAY: "5"
