@@ -8,7 +8,7 @@ sha="${SSH_ORIGINAL_COMMAND:-}"
 
 checkout=/opt/asesoria-inmobiliaria/cd
 if [[ ! -d "$checkout/.git" ]]; then
-  git clone --no-checkout https://github.com/94manuel/inmoviliaria.git "$checkout"
+  git clone --no-checkout https://github.com/buitragopnicolas-prog/inmoviliaria.git "$checkout"
 fi
 git -C "$checkout" fetch --prune origin main
 git -C "$checkout" merge-base --is-ancestor "$sha" origin/main || {
