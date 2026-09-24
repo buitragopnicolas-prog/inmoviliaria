@@ -242,7 +242,7 @@ td { padding: 16px 10px; border-bottom: 1px solid var(--line); vertical-align: m
 .footerBrandLogo .brandIconSvg { width: 118px; }
 .footerBrandLogo .brandWordTop { font-size: 14px; }
 .footerBrandLogo .brandWordmark strong { font-size: 24px; }
-.footer h4 { color: var(--white); font: 600 18px var(--font-display), serif; margin: 0 0 18px; }
+.footer h2 { color: var(--white); font: 600 18px var(--font-sans), sans-serif; margin: 0 0 18px; letter-spacing: 0; }
 .footer a { display: block; margin-bottom: 13px; }
 .footer a:hover { color: var(--white); text-decoration: underline; text-underline-offset: 4px; }
 .copyright { border-top: 1px solid #3d5268; text-align: center; padding: 22px; font-size: 13px; }
@@ -297,7 +297,7 @@ td { padding: 16px 10px; border-bottom: 1px solid var(--line); vertical-align: m
 .editImageGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
 .editImageItem { position: relative; min-height: 110px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--sand); }
 .editImageItem img { object-fit: cover; }
-.tableActions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; white-space: nowrap; }
+.tableActions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; white-space: nowrap; }
 
 /* Administración de usuarios y cartera */
 .adminSearch { display: flex; align-items: end; gap: 12px; padding: 20px; margin-bottom: 28px; }
@@ -465,6 +465,7 @@ td { line-height: 1.5; }
   .brandLogo { gap: 6px; }
   .brandIconSvg { width: 42px; }
   .brandLogo.isInline .brandWordmark strong { font-size: 16px; max-width: 125px; line-height: 1.05; }
+  .brand .brandLogo .brandWordmark small { display: none; }
   .navAuth .button, .menuToggle { padding-inline: 12px; }
   .menuToggle span { display: none; }
   .hero { padding-block: 36px; }
@@ -485,6 +486,12 @@ td { line-height: 1.5; }
   .amountDue { flex-wrap: wrap; gap: 12px; }
   .message > div { flex-wrap: wrap; gap: 10px; }
   .footerGrid { grid-template-columns: 1fr; gap: 28px; }
+}
+@media (max-width: 380px) {
+  .header .brandIconSvg { width: 32px; }
+  .header .brandLogo { gap: 4px; }
+  .header .brandLogo.isInline .brandWordmark strong { font-size: 14px; max-width: 104px; }
+  .navAuth .button, .button.menuToggle { padding-inline: 10px; min-width: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

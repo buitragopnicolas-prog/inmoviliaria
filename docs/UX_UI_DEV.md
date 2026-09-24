@@ -52,3 +52,37 @@ tablas y módulos operativos. Familia SVG outline local para iconos.
 Los cambios de estado del menú son exclusivamente de presentación. Ningún
 handler comercial, endpoint ni autorización se reemplaza. Se reutilizan las
 clases de formularios, cards y tablas para evitar reescribir lógica de módulos.
+
+## Validación realizada
+
+- `npm run check`: correcto en ambos workspaces. El script llamado lint en
+  este repositorio ejecuta TypeScript (`tsc --noEmit`), no ESLint.
+- `npm run build -w @inmobiliaria/web`: correcto; todas las rutas compiladas.
+  La versión instalada reportada por el build es Next.js 16.3.6.
+- Navegador real sobre `http://localhost:3000`, consumiendo exclusivamente la
+  API de `https://dev.asesoriainmobiliariajb.com` mediante variables del proceso.
+  No se modificaron archivos de configuración de entornos ni se desplegó.
+- Inicio, catálogo, nosotros, contacto, registro y ficha comprobados a
+  320, 768 y 1440 px: sin overflow horizontal del documento ni imágenes rotas
+  detectadas. Login revisado a 768 px; noticias con estado vacío revisado.
+- Búsqueda por Chicó devuelve un inmueble y conserva el filtro en la URL.
+- Menú móvil: abre, navega, cierra con Escape y devuelve foco al botón.
+- Se corrigió en un segundo ciclo el salto de línea del header a 320 px.
+- Se sustituyó el recorte de imágenes SVG de seed en el hero por una ilustración
+  arquitectónica decorativa local. Cuando hay una fotografía disponible se usa
+  el inmueble real. Las imágenes de las fichas se conservan.
+- Login muestra loading y el error accesible enviado por la API. Las credenciales
+  de ejemplo del README son rechazadas en DEV. `/admin` y `/mi-cuenta` redirigen
+  correctamente a login sin sesión.
+
+### Pendientes explícitos
+
+Se necesita una sesión válida de DEV para evaluar visualmente dashboard, tablas
+con datos privados, contratos y pagos. Los estilos compartidos están implementados,
+pero estos flujos no se consideran verificados de extremo a extremo. No se
+enviaron solicitudes de contacto, registros, facturas ni pagos de prueba. Docker
+Desktop no estaba iniciado, por lo que no se levantó la base de datos local.
+
+El contenido existente no acredita servicios jurídicos específicos ni políticas
+legales publicadas: no se inventaron enlaces legales, certificaciones o promesas.
+La revisión visual pública no equivale a una auditoría WCAG completa.
