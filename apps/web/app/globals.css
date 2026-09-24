@@ -65,17 +65,6 @@ h1, h2, h3, h4 { letter-spacing: -.025em; margin: 0; font-family: var(--font-dis
 .header { min-height: 88px; position: sticky; top: 0; z-index: 10; background: var(--white); border-bottom: 1px solid var(--line); }
 .nav { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
 .brand { display: flex; align-items: center; min-width: 260px; min-height: 56px; }
-.brandLogo { display: inline-flex; align-items: center; gap: 14px; }
-.brandLogo.isStacked { flex-direction: column; gap: 16px; text-align: center; }
-.brandIcon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.brandIconSvg { width: 78px; height: auto; display: block; }
-.brandWordmark { display: grid; gap: 4px; line-height: 1; }
-.brandWordmark strong { display: block; color: var(--forest); font-family: var(--font-display), serif; }
-.brandLogo.isInline .brandWordmark strong { font-size: clamp(18px, 1.4vw, 24px); letter-spacing: -.045em; }
-.brandLogo.isInline .brandWordmark small { display: block; color: var(--muted); text-transform: uppercase; letter-spacing: .18em; font-size: 10px; margin-top: 4px; }
-.brandWordTop { color: var(--forest-2); font-family: var(--font-display), serif; font-size: 16px; letter-spacing: .42em; margin-left: .42em; }
-.brandLogo.isStacked .brandWordmark { gap: 10px; }
-.brandLogo.isStacked .brandWordmark strong { font-size: clamp(24px, 2.1vw, 34px); letter-spacing: .18em; text-transform: uppercase; }
 .navLinks { display: flex; align-items: center; gap: 22px; color: var(--forest-2); font-weight: 600; font-size: 14px; }
 .navLinks a { position: relative; padding: 6px 0; }
 .navLinks a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--gold); transform: scaleX(0); transform-origin: left; transition: transform .2s ease; }
@@ -237,11 +226,6 @@ td { padding: 16px 10px; border-bottom: 1px solid var(--line); vertical-align: m
 .footer { margin-top: 42px; background: var(--primary); color: #ced8e2; padding-top: 56px; border-top: 3px solid var(--gold); }
 .footerGrid { display: grid; grid-template-columns: 1.4fr .8fr 1.2fr; gap: 48px; padding-bottom: 47px; }
 .footerBrand { margin-bottom: 19px; }
-.footerBrandLogo { align-items: flex-start; }
-.footerBrandLogo.isStacked { text-align: left; }
-.footerBrandLogo .brandIconSvg { width: 118px; }
-.footerBrandLogo .brandWordTop { font-size: 14px; }
-.footerBrandLogo .brandWordmark strong { font-size: 24px; }
 .footer h2 { color: var(--white); font: 600 18px var(--font-sans), sans-serif; margin: 0 0 18px; letter-spacing: 0; }
 .footer a { display: block; margin-bottom: 13px; }
 .footer a:hover { color: var(--white); text-decoration: underline; text-underline-offset: 4px; }
@@ -259,9 +243,7 @@ td { padding: 16px 10px; border-bottom: 1px solid var(--line); vertical-align: m
   .section { padding: 48px 0; }
   .header .nav { min-height: 76px; }
   .brand { min-width: auto; }
-  .brandIconSvg { width: 62px; }
-  .brandLogo.isInline .brandWordmark strong { font-size: 17px; }
-  .brand small, .welcome { display: none; }
+  .welcome { display: none; }
   .hero { padding-top: 45px; }
   .heroGrid { min-height: auto; }
   .heroVisual { min-height: 360px; }
@@ -364,8 +346,6 @@ button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 .textButton { min-height: 44px; }
 .skipLink { position: fixed; top: 8px; left: 16px; z-index: 30; padding: 12px 20px; background: var(--primary); color: white; transform: translateY(-150%); }
 .skipLink:focus { transform: translateY(0); }
-.brandLogo { --forest: var(--secondary); }
-.footerBrandLogo { --forest: #e8efec; --forest-2: #e8efec; }
 .footer p, .footer a { overflow-wrap: anywhere; }
 .footer a:focus-visible { outline-color: var(--gold-soft); }
 .navLinks a { min-height: 44px; display: inline-flex; align-items: center; }
@@ -439,7 +419,6 @@ td { line-height: 1.5; }
   .nav { gap: 14px; }
   .navLinks { gap: 14px; font-size: 13px; }
   .brand { min-width: 0; }
-  .brandIconSvg { width: 58px; }
   .welcome { display: none; }
   .metricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -462,10 +441,6 @@ td { line-height: 1.5; }
 @media (max-width: 680px) {
   .header { min-height: 76px; }
   .header .nav { gap: 8px; }
-  .brandLogo { gap: 6px; }
-  .brandIconSvg { width: 42px; }
-  .brandLogo.isInline .brandWordmark strong { font-size: 16px; max-width: 125px; line-height: 1.05; }
-  .brand .brandLogo .brandWordmark small { display: none; }
   .navAuth .button, .menuToggle { padding-inline: 12px; }
   .menuToggle span { display: none; }
   .hero { padding-block: 36px; }
@@ -488,9 +463,6 @@ td { line-height: 1.5; }
   .footerGrid { grid-template-columns: 1fr; gap: 28px; }
 }
 @media (max-width: 380px) {
-  .header .brandIconSvg { width: 32px; }
-  .header .brandLogo { gap: 4px; }
-  .header .brandLogo.isInline .brandWordmark strong { font-size: 14px; max-width: 104px; }
   .navAuth .button, .button.menuToggle { padding-inline: 10px; min-width: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {

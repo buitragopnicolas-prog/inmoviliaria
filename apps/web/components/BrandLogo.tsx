@@ -1,68 +1,29 @@
-import { useId } from 'react';
+import mark from '@/lib/brand-mark.json';
+import styles from './BrandLogo.module.css';
 
 type BrandLogoProps = {
   className?: string;
   stacked?: boolean;
   showTagline?: boolean;
+  compact?: boolean;
+  tone?: 'light' | 'dark' | 'monochrome';
 };
 
-export function BrandLogo({ className = '', stacked = false, showTagline = true }: BrandLogoProps) {
-  const gradientId = useId().replace(/:/g, '');
-  const classes = ['brandLogo', stacked ? 'isStacked' : 'isInline', className].filter(Boolean).join(' ');
-
+/** Shared original geometry for the UI and exported brand assets. */
+export function BrandLogo({ className = '', stacked = false, showTagline = true, compact = false, tone = 'light' }: BrandLogoProps) {
+  const classes = [styles.logo, styles[tone], stacked && styles.stacked, compact && styles.compact, className].filter(Boolean).join(' ');
   return (
-    <span className={classes}>
-      <span className="brandIcon" aria-hidden="true">
-        <svg className="brandIconSvg" viewBox="0 0 180 180">
-          <defs>
-            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--gold-soft)" />
-              <stop offset="100%" stopColor="var(--gold-deep)" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M25 66 90 14l65 52"
-            fill="none"
-            stroke="var(--forest)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="11"
-          />
-          <text
-            x="56"
-            y="118"
-            fill="var(--forest)"
-            fontFamily="var(--font-display), serif"
-            fontSize="82"
-            fontWeight="600"
-          >
-            J
-          </text>
-          <text
-            x="94"
-            y="120"
-            fill={`url(#${gradientId})`}
-            fontFamily="var(--font-display), serif"
-            fontSize="78"
-            fontWeight="600"
-          >
-            B
-          </text>
-        </svg>
-      </span>
-      <span className="brandWordmark">
-        {stacked ? (
-          <>
-            <span className="brandWordTop">ASESORÍA</span>
-            <strong>INMOBILIARIA JB</strong>
-          </>
-        ) : (
-          <>
-            <strong>Asesoría Inmobiliaria JB</strong>
-            {showTagline ? <small>Espacios para vivir</small> : null}
-          </>
-        )}
-      </span>
+    <span className={classes} role="img" aria-label={mark.name}>
+      <svg className={styles.symbol} viewBox={mark.viewBox} fill="currentColor" aria-hidden="true" focusable="false">
+        <path d={mark.j} />
+        <path d={mark.b} fillRule="evenodd" />
+        <path className={styles.foundation} d={mark.foundation} />
+      </svg>
+      {!compact && <span className={styles.wordmark} aria-hidden="true">
+        <span className={styles.name}>Asesoría</span>
+        <strong className={styles.descriptor}>Inmobiliaria JB</strong>
+        {showTagline && <span className={styles.tagline}>Espacios para vivir</span>}
+      </span>}
     </span>
   );
 }
