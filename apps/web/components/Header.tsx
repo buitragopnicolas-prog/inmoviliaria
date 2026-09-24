@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getCurrentUser } from '@/lib/api';
 import { logoutAction } from '@/app/actions';
 import { BrandLogo } from '@/components/BrandLogo';
+import { PublicNavigation } from '@/components/PublicNavigation';
 
 export async function Header() {
   const user = await getCurrentUser();
@@ -11,15 +12,7 @@ export async function Header() {
         <Link className="brand" href="/">
           <BrandLogo />
         </Link>
-        <nav className="navLinks" aria-label="Navegación principal">
-          <Link href="/">Inicio</Link>
-          <Link href="/inmuebles">Inmuebles</Link>
-          <Link href="/noticias">Noticias</Link>
-          <Link href="/nosotros">Nosotros</Link>
-          <Link href="/contacto">Contacto</Link>
-          {user?.role === 'ADMIN' && <Link href="/admin">Administración</Link>}
-          {user?.role === 'USER' && <Link href="/mi-cuenta">Mi cuenta</Link>}
-        </nav>
+        <PublicNavigation role={user?.role} />
         <div className="navAuth">
           {user ? (
             <form action={logoutAction}>

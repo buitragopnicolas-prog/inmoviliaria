@@ -1,9 +1,10 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiFetch } from '@/lib/api';
 import type { NewsPost, Property } from '@/lib/types';
 import { NewsCard } from '@/components/NewsCard';
 import { PropertyCard } from '@/components/PropertyCard';
-import { BrandLogo } from '@/components/BrandLogo';
+import { assetUrl } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,25 +13,26 @@ export default async function HomePage() {
     apiFetch<Property[]>('/properties/featured'),
     apiFetch<NewsPost[]>('/news/featured'),
   ]);
+  // Seed illustrations contain text and must not be cropped as property photos.
+  const heroProperty = featured.find((property) => property.images[0]?.url && !/\.svg(?:\?|$)/i.test(property.images[0].url));
   return (
     <>
       <section className="hero">
         <div className="container heroGrid">
           <div className="heroCopy">
-            <span className="eyebrow">Arriendos en Bogotá</span>
-            <h1>Encuentra el espacio donde comienza tu próxima historia.</h1>
-            <p>Inmuebles verificados, procesos transparentes y pagos en línea para arrendatarios.</p>
+            <span className="eyebrow">Asesoría y administración inmobiliaria</span>
+            <h1>Tu inmueble.<br />Un patrimonio que merece atención.</h1>
+            <p>Arriendos y administración en Bogotá, con acompañamiento para propietarios y arrendatarios. Contratos, facturas y pagos en un mismo lugar.</p>
             <div className="heroButtons"><Link className="button" href="/inmuebles">Ver inmuebles</Link><Link className="button outline" href="/contacto">Hablar con un asesor</Link></div>
-            <div className="trust"><div><strong>+120</strong><span>inmuebles administrados</span></div><div><strong>Digital</strong><span>facturas y pagos</span></div><div><strong>24/7</strong><span>consulta de cuenta</span></div></div>
+            <div className="trust"><div><strong>Inmuebles</strong><span>Información del arriendo</span></div><div><strong>Contratos</strong><span>Consulta documental</span></div><div><strong>Tu cuenta</strong><span>Facturas e historial</span></div></div>
           </div>
           <div className="heroVisual">
-            <span className="heroBadge">Respaldo inmobiliario</span>
-            <div className="heroBrandPanel">
-              <BrandLogo className="heroBrandLogo" stacked showTagline={false} />
-              <p className="heroStatement">Acompañamos arriendos, administración y pagos con una presencia clara, elegante y cercana.</p>
+            <Image className="heroPhoto" src={heroProperty ? assetUrl(heroProperty.images[0].url) : '/architecture.svg'} alt={heroProperty ? heroProperty.images[0].alt || heroProperty.title : ''} fill sizes="(max-width: 1000px) 100vw, 50vw" priority />
+            <div className="heroCaption">
+              <span>{heroProperty ? `${heroProperty.neighborhood} · ${heroProperty.city}` : 'Asesoría Inmobiliaria JB'}</span>
+              <h2>{heroProperty?.title ?? 'Gestión cercana. Información clara.'}</h2>
+              <Link href={heroProperty ? `/inmuebles/${heroProperty.slug}` : '/nosotros'}>{heroProperty ? 'Conoce este inmueble' : 'Conoce nuestra empresa'} <span aria-hidden="true">&nbsp;↗</span></Link>
             </div>
-            <div className="floatingCard"><strong>Pago seguro</strong><span>Consulta facturas pendientes y pagadas</span></div>
-            <div className="heroInsight"><strong>Atención cercana</strong><span>Propietarios y arrendatarios con soporte digital y seguimiento real.</span></div>
           </div>
         </div>
       </section>
@@ -38,6 +40,7 @@ export default async function HomePage() {
         <div className="container">
           <div className="sectionHeading"><div><span className="eyebrow">Destacados</span><h2>Inmuebles disponibles</h2></div><Link className="textLink" href="/inmuebles">Ver todos →</Link></div>
           <div className="cardsGrid">{featured.map((property) => <PropertyCard property={property} key={property.id} />)}</div>
+          {featured.length === 0 && <div className="card empty">Consulta el catálogo para conocer los inmuebles disponibles. <Link className="textLink" href="/inmuebles">Explorar inmuebles →</Link></div>}
         </div>
       </section>
       <section className="sectionAlt">
@@ -53,9 +56,9 @@ export default async function HomePage() {
       <section className="benefits sectionAlt">
         <div className="container benefitsGrid">
           <div><span className="eyebrow">Por qué elegirnos</span><h2>Una experiencia inmobiliaria simple y confiable</h2></div>
-          <article><strong>01</strong><h3>Publicaciones verificadas</h3><p>Información clara del canon, administración, ubicación y características.</p></article>
+          <article><strong>01</strong><h3>Información del inmueble</h3><p>Consulta el canon, la administración, la ubicación y las características antes de solicitar una visita.</p></article>
           <article><strong>02</strong><h3>Cuenta digital</h3><p>Consulta tus facturas mensuales y el historial de pagos desde cualquier dispositivo.</p></article>
-          <article><strong>03</strong><h3>Pagos protegidos</h3><p>Flujo preparado para pasarela de pagos y confirmación mediante webhook seguro.</p></article>
+          <article><strong>03</strong><h3>Gestión documental</h3><p>Accede a los contratos disponibles en tu cuenta y consulta la información de tu arriendo.</p></article>
         </div>
       </section>
     </>

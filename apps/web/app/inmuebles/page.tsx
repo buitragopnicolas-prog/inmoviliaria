@@ -18,9 +18,9 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
       <div className="container">
         <div className="pageHeading"><span className="eyebrow">Catálogo</span><h1>Inmuebles en arriendo</h1><p>Explora espacios disponibles y encuentra el adecuado para ti.</p></div>
         <form className="filters" method="get">
-          <input name="search" defaultValue={filters.search} placeholder="Barrio o inmueble" />
-          <input name="city" defaultValue={filters.city} placeholder="Ciudad" />
-          <input name="maxRent" defaultValue={filters.maxRent} type="number" placeholder="Canon máximo" />
+          <label>Barrio o inmueble<input name="search" defaultValue={filters.search} placeholder="Ej. Chapinero" /></label>
+          <label>Ciudad<input name="city" defaultValue={filters.city} placeholder="Ej. Bogotá" /></label>
+          <label>Canon máximo (COP)<input name="maxRent" defaultValue={filters.maxRent} type="number" placeholder="Ej. 2500000" /></label>
           <button className="button" type="submit">Buscar</button>
         </form>
         <p className="results">{properties.length} inmuebles encontrados</p>
