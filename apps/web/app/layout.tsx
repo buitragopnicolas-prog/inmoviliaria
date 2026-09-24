@@ -25,8 +25,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es">
       <body className={`${bodyFont.variable} ${displayFont.variable}`}>
+        <a className="skipLink" href="#contenido">Saltar al contenido</a>
         <Header />
-        <main>{children}</main>
+        <main id="contenido" tabIndex={-1}>{children}</main>
         <Footer />
       </body>
     </html>
