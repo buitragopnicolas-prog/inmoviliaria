@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { apiFetch } from '@/lib/api';
+import { loadPublicData } from '@/lib/public-data';
+import { DataUnavailable } from '@/components/DataUnavailable';
 import type { NewsPost, Property } from '@/lib/types';
 import { NewsCard } from '@/components/NewsCard';
 import { PropertyCard } from '@/components/PropertyCard';
@@ -10,11 +11,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const [featured, featuredNews] = await Promise.all([
-    apiFetch<Property[]>('/properties/featured'),
-    apiFetch<NewsPost[]>('/news/featured'),
+    loadPublicData<Property[]>('/properties/featured'),
+    loadPublicData<NewsPost[]>('/news/featured'),
   ]);
   // Seed illustrations contain text and must not be cropped as property photos.
-  const heroProperty = featured.find((property) => property.images[0]?.url && !/\.svg(?:\?|$)/i.test(property.images[0].url));
+  const heroProperty = featured?.find((property) => property.images[0]?.url && !/\.svg(?:\?|$)/i.test(property.images[0].url));
   return (
     <>
       <section className="hero">
@@ -39,14 +40,14 @@ export default async function HomePage() {
       <section className="section">
         <div className="container">
           <div className="sectionHeading"><div><span className="eyebrow">Destacados</span><h2>Inmuebles disponibles</h2></div><Link className="textLink" href="/inmuebles">Ver todos →</Link></div>
-          <div className="cardsGrid">{featured.map((property) => <PropertyCard property={property} key={property.id} />)}</div>
-          {featured.length === 0 && <div className="card empty">Consulta el catálogo para conocer los inmuebles disponibles. <Link className="textLink" href="/inmuebles">Explorar inmuebles →</Link></div>}
+          {featured === null ? <DataUnavailable label="los inmuebles destacados" /> : <div className="cardsGrid">{featured.map((property) => <PropertyCard property={property} key={property.id} />)}</div>}
+          {featured?.length === 0 && <div className="card empty">Consulta el catálogo para conocer los inmuebles disponibles. <Link className="textLink" href="/inmuebles">Explorar inmuebles →</Link></div>}
         </div>
       </section>
       <section className="sectionAlt">
         <div className="container">
           <div className="sectionHeading"><div><span className="eyebrow">Noticias</span><h2>Novedades y prensa del sector</h2></div><Link className="textLink" href="/noticias">Ver noticias →</Link></div>
-          {featuredNews.length > 0 ? (
+          {featuredNews === null ? <DataUnavailable label="las noticias" /> : featuredNews.length > 0 ? (
             <div className="cardsGrid newsGrid">{featuredNews.map((newsPost) => <NewsCard newsPost={newsPost} key={newsPost.id} />)}</div>
           ) : (
             <div className="card empty">Pronto publicaremos novedades inmobiliarias y enlaces a medios digitales relevantes.</div>

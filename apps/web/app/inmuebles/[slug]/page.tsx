@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { apiFetch } from '@/lib/api';
+import { notFound } from 'next/navigation';
+import { ApiError, apiFetch } from '@/lib/api';
 import { assetUrl, pesos } from '@/lib/format';
 import type { Property } from '@/lib/types';
 import { ContactForm } from '@/components/ContactForm';
@@ -8,15 +9,24 @@ import { PropertyTour360Viewer } from '@/components/PropertyTour360Viewer';
 
 export const dynamic = 'force-dynamic';
 
+async function getProperty(slug: string): Promise<Property> {
+  try {
+    return await apiFetch<Property>(`/properties/${encodeURIComponent(slug)}`);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) notFound();
+    throw error;
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const property = await apiFetch<Property>(`/properties/${slug}`);
+  const property = await getProperty(slug);
   return { title: property.title, description: property.description };
 }
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const property = await apiFetch<Property>(`/properties/${slug}`);
+  const property = await getProperty(slug);
   const video = property.videoUrl ? resolveVideoSource(property.videoUrl) : null;
   return (
     <section className="section pageTop">

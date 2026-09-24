@@ -118,6 +118,7 @@ h1, h2, h3, h4 { letter-spacing: -.025em; margin: 0; font-family: var(--font-dis
 .filters input:focus, .form input:focus, .form textarea:focus, .form select:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(23,63,53,.08); }
 .results { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
 .empty { text-align: center; padding: 44px; color: var(--muted); }
+.dataUnavailable { display: grid; justify-items: start; gap: 20px; padding: clamp(24px, 4vw, 40px); color: var(--text-secondary); }
 .detailHeading { display: flex; justify-content: space-between; gap: 30px; margin-bottom: 31px; }
 .detailHeading h1 { color: var(--forest); font-size: 48px; margin-bottom: 13px; }
 .detailHeading p { color: var(--muted); }
