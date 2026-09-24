@@ -5,7 +5,7 @@ import { AdminNav } from '@/components/AdminNav';
 import { AdminAssignPropertyForm } from '@/components/AdminAssignPropertyForm';
 import { AdminLeaseContractForm } from '@/components/AdminLeaseContractForm';
 import { apiFetch } from '@/lib/api';
-import { assetUrl, fecha, pesos } from '@/lib/format';
+import { assetUrl, fecha, fechaCalendario, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { AdminUserDetail, AdminUserInvoice, Property, UserFinancialState } from '@/lib/types';
 
@@ -75,7 +75,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <div><strong>{lease.property.title}</strong><p>{lease.property.address}</p></div>
                   <span className={`status ${lease.active ? 'paid' : 'archived'}`}>{lease.active ? 'Contrato activo' : 'Contrato finalizado'}</span>
                 </div>
-                <p className="muted">Vigencia: {lease.startDate ? fecha(lease.startDate) : 'sin fecha inicial'}{lease.endDate ? ` – ${fecha(lease.endDate)}` : ''}</p>
+                <p className="muted">Vigencia: {lease.startDate ? fechaCalendario(lease.startDate) : 'sin fecha inicial'}{lease.endDate ? ` – ${fechaCalendario(lease.endDate)}` : ''}</p>
                 <AdminLeaseContractForm leaseId={lease.id} userId={user.id} contractFile={lease.contractFile} />
               </article>)}
               {user.leases.length === 0 && <div className="empty">Este usuario todavía no tiene un contrato asociado a un inmueble.</div>}
@@ -90,7 +90,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 <tr key={lease.id}>
                   <td className="propertyRow"><div className="thumb"><Image src={assetUrl(lease.property.images[0]?.url)} alt={lease.property.title} fill sizes="54px" /></div>{lease.property.title}</td>
                   <td>{lease.property.address}<br /><span className="muted">{lease.property.neighborhood}, {lease.property.city}</span></td>
-                  <td>{lease.startDate ? fecha(lease.startDate) : 'Sin fecha'}{lease.endDate ? ` – ${fecha(lease.endDate)}` : ''}</td>
+                  <td>{lease.startDate ? fechaCalendario(lease.startDate) : 'Sin fecha'}{lease.endDate ? ` – ${fechaCalendario(lease.endDate)}` : ''}</td>
                   <td>{pesos(lease.expectedMonthlyPayment ?? lease.property.monthlyRent)}</td>
                   <td>{lease.novelty || lease.observations || <span className="muted">Sin novedades</span>}</td>
                   <td><span className={`status ${lease.active ? 'paid' : 'archived'}`}>{lease.active ? 'Activo' : 'Finalizado'}</span></td>
@@ -107,8 +107,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 <tr key={invoice.id}>
                   <td>{invoice.code}</td>
                   <td>{invoice.lease.property.title}</td>
-                  <td>{fecha(invoice.period)}</td>
-                  <td>{fecha(invoice.dueDate)}</td>
+                  <td>{fechaCalendario(invoice.period)}</td>
+                  <td>{fechaCalendario(invoice.dueDate)}</td>
                   <td>{pesos(invoice.amount)}</td>
                   <td>{pesos(invoice.balance ?? invoiceBalance(invoice))}</td>
                   <td><span className={`status ${invoice.status.toLowerCase()}`}>{invoiceStatus(invoice.status)}</span></td>

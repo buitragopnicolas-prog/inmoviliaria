@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { apiFetch } from '@/lib/api';
-import { fecha, pesos } from '@/lib/format';
+import { fechaCalendario, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { Invoice } from '@/lib/types';
 import { approveMockAction, beginPaymentAction } from '@/app/actions';
@@ -19,7 +19,7 @@ export default async function PayInvoicePage({ params, searchParams }: { params:
         <div className="card paymentCard">
           <span className="eyebrow">Pago de factura</span>
           <h1>{invoice.code}</h1>
-          <div className="paymentData"><p>Inmueble <strong>{invoice.lease.property.title}</strong></p><p>Periodo <strong>{fecha(invoice.period)}</strong></p><p>Vencimiento <strong>{fecha(invoice.dueDate)}</strong></p></div>
+          <div className="paymentData"><p>Inmueble <strong>{invoice.lease.property.title}</strong></p><p>Periodo <strong>{fechaCalendario(invoice.period)}</strong></p><p>Vencimiento <strong>{fechaCalendario(invoice.dueDate)}</strong></p></div>
           <div className="amountDue"><span>Total a pagar</span><strong>{pesos(invoice.balance)}</strong></div>
           {invoice.status === 'PAID' || invoice.balance <= 0 ? <p className="alert success">Esta factura no tiene saldo pendiente.</p> : invoice.status === 'VOID' ? <p className="alert error">Esta factura fue anulada.</p> : reference ? (
             <>
