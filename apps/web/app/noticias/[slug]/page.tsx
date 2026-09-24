@@ -1,20 +1,30 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { apiFetch } from '@/lib/api';
+import { notFound } from 'next/navigation';
+import { ApiError, apiFetch } from '@/lib/api';
 import { fecha } from '@/lib/format';
 import type { NewsPost } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
+async function getNewsPost(slug: string): Promise<NewsPost> {
+  try {
+    return await apiFetch<NewsPost>(`/news/${encodeURIComponent(slug)}`);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) notFound();
+    throw error;
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const newsPost = await apiFetch<NewsPost>(`/news/${slug}`);
+  const newsPost = await getNewsPost(slug);
   return { title: newsPost.title, description: newsPost.summary };
 }
 
 export default async function NewsDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const newsPost = await apiFetch<NewsPost>(`/news/${slug}`);
+  const newsPost = await getNewsPost(slug);
   const paragraphs = newsPost.content.split(/\r?\n\r?\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
   const sourceLabel = newsPost.sourceLabel?.trim() || 'Asesoría Inmobiliaria JB';
   return (

@@ -51,6 +51,8 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run check
+      - run: npm run test:regressions
+      - run: npm run test:web-errors
       - run: npm run db:migrate
       - run: npm run db:seed
       - name: API smoke test

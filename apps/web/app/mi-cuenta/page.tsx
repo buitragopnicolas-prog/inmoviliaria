@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { apiFetch } from '@/lib/api';
-import { fecha, pesos } from '@/lib/format';
+import { fechaCalendario, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { Invoice, UserLease } from '@/lib/types';
 
@@ -33,7 +33,7 @@ export default async function MyAccountPage({ searchParams }: { searchParams: Pr
           <div className="tableTitle"><h2>Mis contratos firmados</h2><span>{availableContracts.length} disponibles</span></div>
           <div className="contractUserGrid">
             {leases.map((lease) => <article className="contractUserCard" key={lease.id}>
-              <div><span className={`status ${lease.active ? 'paid' : 'archived'}`}>{lease.active ? 'Activo' : 'Finalizado'}</span><h3>{lease.property.title}</h3><p>{lease.property.address}, {lease.property.city}</p><small>Vigencia: {lease.startDate ? fecha(lease.startDate) : 'sin fecha inicial'}{lease.endDate ? ` – ${fecha(lease.endDate)}` : ''}</small></div>
+              <div><span className={`status ${lease.active ? 'paid' : 'archived'}`}>{lease.active ? 'Activo' : 'Finalizado'}</span><h3>{lease.property.title}</h3><p>{lease.property.address}, {lease.property.city}</p><small>Vigencia: {lease.startDate ? fechaCalendario(lease.startDate) : 'sin fecha inicial'}{lease.endDate ? ` – ${fechaCalendario(lease.endDate)}` : ''}</small></div>
               {lease.contractFile ? <div className="contractActions">
                 <Link className="button small" href={`/mi-cuenta/contratos/${lease.id}`}>Visualizar PDF</Link>
                 <Link className="button ghost small" href={`/documentos/contratos/${lease.id}?download=1`}>Descargar</Link>
@@ -49,7 +49,7 @@ export default async function MyAccountPage({ searchParams }: { searchParams: Pr
             <table><thead><tr><th>Factura</th><th>Inmueble</th><th>Periodo</th><th>Vence</th><th>Facturado</th><th>Saldo</th><th>Estado</th><th /></tr></thead>
               <tbody>{invoices.map((invoice) => (
                 <tr key={invoice.id}>
-                  <td>{invoice.code}</td><td>{invoice.lease.property.title}</td><td>{fecha(invoice.period)}</td><td>{fecha(invoice.dueDate)}</td><td>{pesos(invoice.amount)}</td><td>{pesos(invoice.balance)}</td>
+                  <td>{invoice.code}</td><td>{invoice.lease.property.title}</td><td>{fechaCalendario(invoice.period)}</td><td>{fechaCalendario(invoice.dueDate)}</td><td>{pesos(invoice.amount)}</td><td>{pesos(invoice.balance)}</td>
                   <td><span className={`status ${invoice.status.toLowerCase()}`}>{invoiceStatus(invoice.status)}</span></td>
                   <td>{invoice.balance > 0 && invoice.status !== 'VOID' ? <Link className="button small" href={`/mi-cuenta/facturas/${invoice.id}/pagar`}>Pagar</Link> : '—'}</td>
                 </tr>

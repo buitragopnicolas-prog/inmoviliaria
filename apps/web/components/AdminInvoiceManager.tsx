@@ -2,7 +2,7 @@
 
 import { Fragment, useActionState, useState } from 'react';
 import { deleteInvoiceAction, updateInvoiceAction, type ActionState } from '@/app/actions';
-import { fecha, pesos } from '@/lib/format';
+import { fechaCalendario, pesos } from '@/lib/format';
 import type { Invoice, InvoiceStatus } from '@/lib/types';
 
 export function AdminInvoiceManager({ invoices }: { invoices: Invoice[] }) {
@@ -28,7 +28,7 @@ function InvoiceRows({ invoice }: { invoice: Invoice }) {
         <td>{invoice.code}</td>
         <td>{invoice.user?.name ?? invoice.tenant?.name ?? 'Sin usuario web'}</td>
         <td>{invoice.lease.property.title}</td>
-        <td>{fecha(invoice.dueDate)}</td>
+        <td>{fechaCalendario(invoice.dueDate)}</td>
         <td>{pesos(invoice.amount)}</td>
         <td><strong>{pesos(invoice.balance)}</strong></td>
         <td>
