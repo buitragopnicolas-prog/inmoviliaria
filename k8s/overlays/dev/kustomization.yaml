@@ -17,6 +17,9 @@ patches:
       name: asesoria-config
     patch: |-
       - op: replace
+        path: /data/APP_ENV
+        value: development
+      - op: replace
         path: /data/WEB_ORIGIN
         value: https://dev.asesoriainmobiliariajb.com
       - op: replace

@@ -52,9 +52,18 @@ jobs:
       - run: npm run build
       - run: npm run check
       - run: npm run test:regressions
+      - run: npm run test:payments
       - run: npm run test:web-errors
+      - run: npm audit --audit-level=high
       - run: npm run db:migrate
       - run: npm run db:seed
+      - name: Start MinIO for readiness checks
+        run: |
+          docker run -d --name inmo-ci-minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e \
+            server /data
       - name: API smoke test
         run: |
           npm run start:prod -w @inmobiliaria/api > /tmp/inmo-api.log 2>&1 &

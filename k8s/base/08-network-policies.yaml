@@ -16,9 +16,6 @@ spec:
               app: asesoria-api
         - podSelector:
             matchLabels:
-              app: n8n
-        - podSelector:
-            matchLabels:
               job-role: db-init
         - podSelector:
             matchLabels:
