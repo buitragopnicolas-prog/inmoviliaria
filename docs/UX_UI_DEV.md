@@ -15,8 +15,9 @@ inmuebles, usuarios, noticias, archivos, facturas, conciliación y contactos.
 Los formularios usan acciones compartidas; las tablas se envuelven en
 `responsiveTable`. Se conservan rutas, validaciones, permisos y llamadas API.
 
-Paleta original: bosque #0D5A40 y #184837, dorado #B79A48, crema #FAF7EF,
-menta #EEF4EF. Se conserva el verde en la marca y como color secundario.
+Paleta original (histórica): bosque #0D5A40 y #184837, dorado #B79A48,
+crema #FAF7EF y menta #EEF4EF. La primera intervención conservó el verde
+como secundario; la identidad actual sustituye ese uso por azul.
 
 ## Diez prioridades
 
@@ -33,14 +34,17 @@ menta #EEF4EF. Se conserva el verde en la marca y como color secundario.
 
 ## Sistema de diseño
 
-Azul #102A43: títulos, navegación, acciones principales. Verde corporativo:
-marca y detalles secundarios. Dorado original: líneas y acentos, nunca texto
-pequeño de bajo contraste. Blanco y gris #F5F7F9: superficies y fondo.
+Paleta actual: azul #102A43 para marca, títulos, navegación y acciones
+principales; azul #234F76 para detalles secundarios. Dorado #B79A48 para
+líneas y acentos, nunca texto pequeño de bajo contraste. Blanco y gris
+#F5F7F9 para superficies y fondo. El verde se reserva para estados positivos
+como éxito, pago aprobado o disponibilidad; no forma parte del logo ni de
+los acentos decorativos.
 Tokens semánticos en globals.css para color, espacio, radio, sombra, ancho y
 transición. Cormorant para títulos editoriales; Source Sans para controles,
 tablas y módulos operativos. Familia SVG outline local para iconos.
 
-## Intervención
+## Primera intervención (histórica)
 
 1. Consolidar tokens, estados, tipografía y accesibilidad transversal.
 2. Navegación responsive con ruta activa, footer institucional y panel operativo.
@@ -53,7 +57,7 @@ Los cambios de estado del menú son exclusivamente de presentación. Ningún
 handler comercial, endpoint ni autorización se reemplaza. Se reutilizan las
 clases de formularios, cards y tablas para evitar reescribir lógica de módulos.
 
-## Validación realizada
+## Validación de la primera intervención (histórica)
 
 - `npm run check`: correcto en ambos workspaces. El script llamado lint en
   este repositorio ejecuta TypeScript (`tsc --noEmit`), no ESLint.
