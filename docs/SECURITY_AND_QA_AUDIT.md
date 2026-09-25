@@ -7,7 +7,7 @@ Punto inicial: `9e0048670ef18c6e43d4466d3752844dff617afe`
 
 ## Dictamen
 
-**LOCAL VALIDADO PARA LABORATORIO; NOT READY PARA PROMOCIÓN.** Docker, PostgreSQL, MinIO, migraciones, constraints, persistencia, restore y E2E financiero fueron ejecutados realmente. La promoción permanece bloqueada por riesgos de seguridad abiertos: el usuario operativo de PostgreSQL es superusuario y no existe cuarentena/antimalware para archivos.
+**READY FOR DEV REVIEW.** El laboratorio local quedó endurecido y validado con separación de privilegios para PostgreSQL y MinIO, cuarentena antimalware con fallo cerrado, migraciones, persistencia y E2E financiero concurrente. Este dictamen autoriza revisión; no constituye despliegue. DEV y producción permanecen intactos.
 
 ## Evidencia ejecutada
 
@@ -16,16 +16,17 @@ Punto inicial: `9e0048670ef18c6e43d4466d3752844dff617afe`
 | Git | OK | rama y HEAD inicial registrados; producción intacta |
 | TypeScript API/web | PASS | `npm run check` |
 | Build API/web | PASS | Prisma generate, Nest build y Next production build |
-| Pagos/config/archivos | PASS 27/27 | `npm run test:payments` |
+| Pagos/config/archivos | PASS 31/31 | `npm run test:payments`, incluidos OK, FOUND, indisponibilidad y timeout de ClamAV |
 | Manejo de errores web | PASS 10/10 | `npm run test:web-errors` |
 | Regresiones JS sin loader TS | PASS 11/11 | filtros, fechas y compuerta de pagos |
-| Suite `tsx` | BLOQUEADA | Windows devuelve `uv_os_get_passwd ENOMEM` bajo `codexsandboxoffline` |
+| Suite `tsx` | PASS 24/24 | ejecutada con identidad local normal; el error `uv_os_get_passwd ENOMEM` quedó limitado al sandbox restringido |
 | Laboratorio web | PASS parcial | HTTP 200 y cabeceras defensivas en `http://localhost:3000/laboratorio/pagos-manuales` |
 | Docker Compose | PASS sintáctico | `docker compose config --quiet` |
 | Kubernetes | PASS sintáctico | `kubectl kustomize` para infra DEV, app DEV y app PROD |
 | Docker daemon | PASS con ejecución elevada | Docker Desktop 29.8.0, contexto `desktop-linux`; PostgreSQL y MinIO saludables |
-| PostgreSQL/MinIO/migraciones | PASS | 10 migraciones aplicadas; índices, constraints y trigger verificados; bucket privado |
+| PostgreSQL/MinIO/migraciones | PASS | 11 migraciones aplicadas; rol runtime mínimo, privilegios futuros, política bucket-only y privacidad verificados |
 | E2E financiero | PASS real | factura aislada, archivos hostiles, IDOR, idempotencia x10 y confirmación concurrente |
+| E2E antimalware | PASS real | JPG/PNG/PDF limpios; EICAR bloqueado; caída del motor devuelve 503; INFECTED/SCAN_FAILED inaccesibles |
 | Dependencias | 0 critical, 0 high, 4 moderate, 0 low | `npm audit --json` |
 | Secretos | sin credenciales de alto riesgo detectadas | revisión de archivos versionados e historial; valores sensibles no se imprimieron |
 | Restore | PASS local aislado | PostgreSQL: conteos `3,4,4,6,3`; MinIO: 6 objetos y bucket privado; temporales eliminados |
@@ -49,6 +50,11 @@ Punto inicial: `9e0048670ef18c6e43d4466d3752844dff617afe`
 - CSP, anti-framing, `nosniff`, referrer policy, permissions policy y HSTS en producción.
 - Límites de longitud, cantidad y valor incorporados en inputs financieros, integración, usuarios, noticias e inmuebles.
 - Passwords de demostración eliminados de `.env.example` y de ejemplos HTTP.
+- PostgreSQL separa el rol administrador/migrador del rol runtime `inmobiliaria_app`; este último no es superusuario y no crea bases, roles, tablas ni replicación.
+- MinIO separa root de `inmobiliaria-app`; la política runtime permite únicamente listar el bucket de la aplicación y leer, escribir o eliminar objetos dentro de él.
+- Todo archivo nuevo entra a `quarantine/`, conserva un registro `PENDING_SCAN` y solo se promueve si ClamAV responde `CLEAN`.
+- Estados `INFECTED` y `SCAN_FAILED` conservan trazabilidad, permanecen en cuarentena y se excluyen de listados y descargas.
+- ClamAV 1.4.6 está fijado por digest, sin puertos de host, con firmas persistentes, healthcheck, `no-new-privileges` y capacidades reducidas.
 
 ## Seguridad por área
 
@@ -70,9 +76,9 @@ CORS usa un origen explícito y credentials; no usa `*`. La cookie HttpOnly no s
 
 El servidor deriva el saldo de la factura, exige valor exacto, fecha no futura, método habilitado, idempotency key persistida y referencia bancaria única. La confirmación requiere `ADMIN`; no cambia el saldo ante el reporte. La migración agrega unicidad parcial y checks. El E2E real envió diez reportes simultáneos y obtuvo un solo pago; dos confirmaciones simultáneas produjeron un éxito y un 409 controlado.
 
-### Archivos y MinIO
+### Archivos, MinIO y antimalware
 
-Los objetos usan UUID y prefijos saneados. El bucket de Kubernetes se configura sin acceso anónimo. La firma de archivo evita confiar solo en extensión/MIME. No existe cuarentena ni antivirus: esta validación no detecta malware o contenido activo dentro de formatos válidos. Antes de aceptar documentos de terceros a escala se requiere `UPLOAD -> QUARANTINE -> SCAN -> RELEASE`, con ClamAV o servicio equivalente, límites de descompresión y borrado seguro de rechazados.
+Los objetos usan UUID y prefijos saneados. El bucket local es privado y el usuario runtime carece de permisos administrativos o acceso a otros buckets. La firma de archivo evita confiar solo en extensión/MIME. El flujo ejecutado es `UPLOAD -> QUARANTINE -> SCAN -> CLEAN/INFECTED/SCAN_FAILED`; solo `CLEAN` pasa a su prefijo definitivo y puede listarse o descargarse. EICAR se detectó realmente, la caída del motor produjo 503 y los registros bloqueados devolvieron 404 al intentar servirlos.
 
 ### n8n y correo bancario
 
@@ -82,9 +88,9 @@ Los endpoints usan API key con comparación constante, remitentes permitidos y I
 
 No se observaron logs de passwords, JWT, cookies o cuerpos de comprobantes. Los errores públicos de Nest no exponen SQL o stack en modo normal. El log de borrado de objetos incluye una key aleatoria, no el contenido. Se recomienda redacción centralizada y correlación por request ID antes de producción.
 
-## Migraciones 202609250001 y 202609250002
+## Migraciones 202609250001, 202609250002 y 202609250003
 
-La primera agrega enums, columnas nullable, índices, relaciones y la tabla de auditoría sin reescribir valores históricos. La segunda crea constraints e índices concurrentes funcionales. No elimina columnas ni datos.
+La primera agrega enums, columnas nullable, índices, relaciones y la tabla de auditoría sin reescribir valores históricos. La segunda crea constraints e índices concurrentes funcionales. La tercera agrega el estado y la evidencia de escaneo; marca los objetos históricos como `CLEAN` con motor `legacy-trusted` y deja `PENDING_SCAN` como valor predeterminado para cargas futuras. No elimina columnas ni datos.
 
 Antes de aplicarlas se deben ejecutar en una copia restaurada estas precondiciones:
 
@@ -153,10 +159,12 @@ El límite global es 120 solicitudes por 60 segundos por instancia. Si se escala
 | Variable/grupo | LOCAL | DEV | PROD | Requerida/secreta | Validación |
 |---|---|---|---|---|---|
 | `APP_ENV` | `local` | `development` | `production` | sí/no | enum; obligatoria con NODE_ENV production |
-| `DATABASE_URL` | local | secret DEV | secret PROD | sí/sí | presencia; TLS y mínimo privilegio pendientes por entorno |
+| `DATABASE_URL` | rol runtime local | secret runtime DEV | secret runtime PROD | sí/sí | mínimo privilegio probado localmente |
+| `DATABASE_MIGRATION_URL` | rol migrador local | secret migrador DEV | secret migrador PROD | sí/sí | usada solo por Prisma migrate/seed |
 | `JWT_SECRET` | local único | secret DEV | secret PROD | sí/sí | mínimo 32 en PROD; default bloqueado |
 | `WEB_ORIGIN` | localhost | HTTPS DEV | HTTPS PROD | sí/no | HTTPS obligatorio en PROD |
-| `STORAGE_*` | MinIO local | secret/config DEV | secret/config PROD | sí/parcial | defaults bloqueados, bucket precreado en PROD |
+| `MINIO_ROOT_*`, `MINIO_APP_*`, `STORAGE_*` | separados en local | secrets separados DEV | secrets separados PROD | sí/sí | runtime bucket-only; root solo inicialización |
+| `ANTIMALWARE_*` | ClamAV interno | definir tras revisión | definir tras revisión | sí/parcial | fallo cerrado, timeout 15 s, sin puerto de host |
 | `PAYMENT_MODE` | manual/mock | manual o gateway de prueba | manual/gateway real | sí/no | mock bloqueado en PROD |
 | `PAYMENT_GATEWAY`, `WOMPI_*` | opcional | según prueba | según proveedor | condicional/sí | llaves completas si Wompi |
 | `MANUAL_PAYMENT_*` | datos de laboratorio | datos autorizados DEV | datos autorizados PROD | condicional/sensible | al menos un método completo |
@@ -171,12 +179,11 @@ La base Kubernetes conserva `PAYMENT_PROVIDER=mock`; con `APP_ENV=production` la
 
 ### Alto
 
-1. PostgreSQL, MinIO y aplicación usan actualmente secretos/usuarios de infraestructura compartidos según los manifiestos; falta demostrar mínimo privilegio y separar usuario de aplicación, migración, backup y administrador.
-2. No existe antimalware/cuarentena para archivos válidos por firma.
+No quedan hallazgos altos abiertos en el alcance local auditado.
 
 ### Moderado
 
-1. Cuatro advisories transitivos del SDK MinIO sin actualización segura disponible.
+1. Cuatro advisories npm moderados: `decode-uri-component` (GHSA-vcc3-ghjq-m6fr), `query-string` por tránsito, `stream-json` (GHSA-528h-pc64-c93x) y el agregado directo `minio@8.0.7`. No existe actualización segura disponible; `npm audit fix --force` propone una regresión incompatible y no se aplicó.
 2. JWT sin revocación, refresh rotatorio o MFA; logout no invalida un token robado.
 3. n8n carece de firma con timestamp/nonce y scopes independientes.
 4. Rate limit en memoria no es global entre réplicas.
@@ -206,12 +213,9 @@ La base Kubernetes conserva `PAYMENT_PROVIDER=mock`; con `APP_ENV=production` la
 
 La ejecución pasó contra PostgreSQL y MinIO locales. Modifica únicamente datos locales de prueba y archiva la factura creada al finalizar.
 
-## Pasos obligatorios antes de solicitar DEV
+`npm run test:e2e:antimalware` también está restringido a localhost. Verifica tres formatos limpios, EICAR estándar, exclusión de listados y descarga. Con `E2E_EXPECT_SCANNER_DOWN=true` confirmó el fallo cerrado con HTTP 503. La base local conservó `INFECTED` y `SCAN_FAILED` en `quarantine/`; las rutas de contenido devolvieron 404.
 
-1. Crear un rol PostgreSQL de aplicación sin superusuario, sin creación de roles/bases y con permisos mínimos; separar migración, runtime y backup.
-2. Diseñar e implementar cuarentena y análisis antimalware antes de aceptar documentos no confiables en un entorno promovido.
-3. Definir credenciales MinIO separadas del usuario root y una política limitada al bucket/prefijos requeridos.
-4. Resolver o aceptar formalmente los cuatro advisories moderados transitivos del SDK MinIO.
-5. Repetir build, checks, auditoría, smoke y E2E después de estos cambios.
-6. Solo después solicitar autorización explícita para DEV. Producción requiere una autorización posterior independiente.
+## Recomendación para DEV
+
+El código queda **READY FOR DEV REVIEW**. Antes de desplegar se deben crear secretos distintos para DEV, reproducir roles/políticas equivalentes sin copiar credenciales locales, acordar la aceptación temporal de los cuatro advisories npm y ejecutar backup verificable. La promoción sigue requiriendo autorización explícita. Producción requiere una autorización posterior e independiente.
 
