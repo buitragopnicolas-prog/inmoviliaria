@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { JwtUser } from '../common/decorators/current-user.decorator.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { FilesService } from '../storage/files.service.js';
+import { validateUploadedFile } from '../storage/file-validation.js';
 
 @Injectable()
 export class LeasesService {
@@ -112,11 +113,6 @@ export class LeasesService {
   }
 
   private validatePdf(file: Express.Multer.File): void {
-    const isPdfMime = file.mimetype.toLowerCase() === 'application/pdf';
-    const isPdfName = file.originalname.toLowerCase().endsWith('.pdf');
-    const hasPdfSignature = file.buffer.subarray(0, 5).toString('ascii') === '%PDF-';
-    if (!isPdfMime || !isPdfName || !hasPdfSignature) {
-      throw new BadRequestException('El contrato debe ser un archivo PDF válido.');
-    }
+    validateUploadedFile(file, ['pdf'], Number(process.env.CONTRACT_MAX_FILE_SIZE ?? 25_000_000), 'El contrato');
   }
 }

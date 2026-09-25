@@ -7,6 +7,8 @@ import { FilesService } from '../storage/files.service.js';
 import { publicManualPaymentConfig, resolveGateway, resolvePaymentMode } from './payment-config.js';
 import type { ReportManualPaymentDto } from './dto/report-manual-payment.dto.js';
 import type { ReviewManualPaymentDto } from './dto/review-manual-payment.dto.js';
+import { validateUploadedFile } from '../storage/file-validation.js';
+import { Prisma } from '../generated/prisma/client.js';
 
 interface WompiEvent {
   event?: string;
@@ -15,7 +17,6 @@ interface WompiEvent {
   timestamp?: number;
 }
 
-const receiptMimeTypes = new Set(['image/jpeg', 'image/png', 'application/pdf']);
 const pendingManualStatuses = ['AWAITING_VERIFICATION', 'UNDER_REVIEW'] as const;
 
 @Injectable()
@@ -58,14 +59,14 @@ export class PaymentsService {
     if (input.amount !== invoice.balance) throw new BadRequestException('El valor reportado debe coincidir con el saldo actual de la factura.');
     const paidAt = new Date(input.paidAt);
     if (paidAt.getTime() > Date.now() + 5 * 60_000) throw new BadRequestException('La fecha del pago no puede estar en el futuro.');
-    const bankReference = input.bankReference.trim();
+    const bankReference = input.bankReference.trim().replace(/\s+/g, ' ').toUpperCase();
     const existingByKey = await this.prisma.payment.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
     if (existingByKey) {
       if (existingByKey.userId !== userId || existingByKey.invoiceId !== invoiceId) throw new ConflictException('La solicitud ya fue utilizada.');
       return this.findManualForUser(existingByKey.id, userId);
     }
     const duplicate = await this.prisma.payment.findFirst({
-      where: { provider: 'MANUAL', bankReference: { equals: bankReference, mode: 'insensitive' }, status: { notIn: ['REJECTED', 'CANCELLED', 'VOIDED'] } },
+      where: { provider: 'MANUAL', bankReference: { equals: bankReference, mode: 'insensitive' } },
     });
     if (duplicate) throw new ConflictException('La referencia de pago ya fue reportada.');
     const activeReport = await this.prisma.payment.findFirst({
@@ -94,6 +95,13 @@ export class PaymentsService {
       return this.findManualForUser(payment.id, userId);
     } catch (error) {
       if (storedReceipt) await this.files.removeStoredFile(storedReceipt).catch(() => undefined);
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const existing = await this.prisma.payment.findFirst({
+          where: { invoiceId, userId, provider: 'MANUAL', status: { in: [...pendingManualStatuses] } },
+        });
+        if (existing) return this.findManualForUser(existing.id, userId);
+        throw new ConflictException('La referencia o la solicitud ya fue reportada.');
+      }
       throw error;
     }
   }
@@ -122,15 +130,17 @@ export class PaymentsService {
     if (!pendingManualStatuses.includes(payment.status as (typeof pendingManualStatuses)[number])) throw new ConflictException('Este reporte ya tiene una decisión definitiva.');
     const nextStatus = input.decision === 'CONFIRM' ? 'APPROVED' : input.decision === 'REJECT' ? 'REJECTED' : 'UNDER_REVIEW';
     if (input.decision !== 'CONFIRM' && !input.note?.trim()) throw new BadRequestException('Indica el motivo de la decisión.');
+    if (nextStatus === payment.status) throw new ConflictException('El pago ya se encuentra en ese estado.');
     if (input.decision === 'CONFIRM') {
       const alreadyApproved = payment.invoice.payments.filter((item) => item.id !== payment.id && item.status === 'APPROVED').reduce((sum, item) => sum + item.amount, 0);
       if (alreadyApproved + payment.amount > payment.invoice.amount) throw new ConflictException('La confirmación excedería el valor de la factura. Revisa los pagos existentes.');
     }
     return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.payment.update({
-        where: { id: payment.id },
+      const claimed = await tx.payment.updateMany({
+        where: { id: payment.id, status: payment.status },
         data: { status: nextStatus, reviewedById: adminId, reviewedAt: new Date(), reviewNote: input.note?.trim() || null },
       });
+      if (claimed.count !== 1) throw new ConflictException('Otro proceso ya revisó este pago. Actualiza la pantalla.');
       await tx.paymentAuditEvent.create({
         data: { paymentId: payment.id, actorId: adminId, fromStatus: payment.status, toStatus: nextStatus, note: input.note?.trim() || 'Pago confirmado por administración.' },
       });
@@ -138,8 +148,8 @@ export class PaymentsService {
         const approvedTotal = payment.invoice.payments.filter((item) => item.id !== payment.id && item.status === 'APPROVED').reduce((sum, item) => sum + item.amount, 0) + payment.amount;
         if (approvedTotal >= payment.invoice.amount) await tx.invoice.update({ where: { id: payment.invoiceId }, data: { status: 'PAID', paidAt: new Date() } });
       }
-      return updated;
-    });
+      return tx.payment.findUniqueOrThrow({ where: { id: payment.id } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
   async sendReceipt(fileId: string, viewer: { sub: string; role: 'ADMIN' | 'USER' }, response: Response) {
@@ -197,7 +207,7 @@ export class PaymentsService {
   private validateReceipt(file?: Express.Multer.File) {
     if (!file) return;
     const maxSize = Number(process.env.PAYMENT_RECEIPT_MAX_FILE_SIZE ?? 8_000_000);
-    if (!receiptMimeTypes.has(file.mimetype.toLowerCase()) || file.size > maxSize) throw new BadRequestException('El comprobante debe ser JPG, PNG o PDF y no superar el límite configurado.');
+    validateUploadedFile(file, ['jpeg', 'png', 'pdf'], maxSize, 'El comprobante');
   }
 
   private buildWompiCheckout(reference: string, amountInPesos: number): string {

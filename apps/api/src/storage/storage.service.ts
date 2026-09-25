@@ -58,6 +58,12 @@ export class StorageService {
     }
   }
 
+  async healthCheck(): Promise<void> {
+    await this.ensureBucket();
+    const exists = await this.client.bucketExists(this.bucket);
+    if (!exists) throw new Error('Storage bucket unavailable');
+  }
+
   private async ensureBucket(): Promise<void> {
     if (!this.bucketReady) {
       this.bucketReady = this.ensureBucketInternal().catch((error) => {

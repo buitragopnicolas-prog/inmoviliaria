@@ -26,5 +26,7 @@ COPY --from=builder /app/apps/api/uploads/seed seed-assets
 COPY --from=builder /app/apps/api/src/generated apps/api/src/generated
 COPY --from=builder /app/apps/api/scripts apps/api/scripts
 COPY --from=builder /app/integrations integrations
+RUN chown -R node:node /app
+USER node
 EXPOSE 4000
 CMD ["node", "apps/api/dist/main.js"]

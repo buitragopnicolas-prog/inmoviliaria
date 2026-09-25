@@ -24,7 +24,7 @@ export class FilesService {
 
   async getPublicMetadata(id: string) {
     const file = await this.prisma.storedFile.findFirst({
-      where: { id, purpose: { not: 'LEASE_CONTRACT' } },
+      where: { id, purpose: { in: ['PROPERTY_IMAGE', 'GENERIC'] } },
       select: {
         id: true,
         originalName: true,
@@ -90,7 +90,8 @@ export class FilesService {
     response.setHeader('Content-Type', file.mimeType);
     response.setHeader('Content-Length', String(file.size));
     response.setHeader('Cache-Control', ['LEASE_CONTRACT', 'PAYMENT_RECEIPT'].includes(file.purpose) ? 'private, no-store' : 'public, max-age=31536000, immutable');
-    response.setHeader('Content-Disposition', contentDisposition(file.originalName, download));
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    response.setHeader('Content-Disposition', contentDisposition(file.originalName, download || file.purpose === 'GENERIC'));
     await pipeline(stream, response);
   }
 

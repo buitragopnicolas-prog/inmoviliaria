@@ -7,6 +7,6 @@ import { StorageService } from './storage.service.js';
 @Module({
   controllers: [FilesController, AdminFilesController],
   providers: [StorageService, FilesService],
-  exports: [FilesService],
+  exports: [FilesService, StorageService],
 })
 export class StorageModule {}

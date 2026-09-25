@@ -20,6 +20,7 @@ import { RolesGuard } from '../common/guards/roles.guard.js';
 import { CreatePropertyDto } from './dto/create-property.dto.js';
 import { UpdatePropertyDto } from './dto/update-property.dto.js';
 import { PropertiesService } from './properties.service.js';
+import { validateUploadedFile } from '../storage/file-validation.js';
 
 const maxImageSize = Number(process.env.PROPERTY_IMAGE_MAX_FILE_SIZE ?? 5_000_000);
 const maxTour360Size = Number(process.env.PROPERTY_360_MAX_FILE_SIZE ?? 15_000_000);
@@ -97,8 +98,7 @@ export class AdminPropertiesController {
 
   private validateImages(files: Express.Multer.File[], required = false): void {
     if (required && files.length === 0) throw new BadRequestException('Debe subir al menos una imagen.');
-    const invalid = files.find((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype) || file.size > maxImageSize);
-    if (invalid) throw new BadRequestException('Las imágenes deben ser JPG, PNG o WEBP y pesar máximo 5 MB.');
+    files.forEach((file) => validateUploadedFile(file, ['jpeg', 'png', 'webp'], maxImageSize, 'La imagen'));
   }
 
   private validateTotalSize(files: Express.Multer.File[], tour360?: Express.Multer.File): void {
@@ -110,9 +110,6 @@ export class AdminPropertiesController {
 
   private validateTour360(file?: Express.Multer.File): void {
     if (!file) return;
-    const validMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!validMimeTypes.includes(file.mimetype) || file.size > maxTour360Size) {
-      throw new BadRequestException('La foto 360 debe ser JPG, PNG o WEBP y pesar máximo 15 MB.');
-    }
+    validateUploadedFile(file, ['jpeg', 'png', 'webp'], maxTour360Size, 'La foto 360');
   }
 }

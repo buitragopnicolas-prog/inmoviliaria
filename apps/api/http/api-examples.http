@@ -7,7 +7,7 @@ Content-Type: application/json
 
 {
   "email": "cliente@asesoriainmobiliariajb.com",
-  "password": "Cliente123*"
+  "password": "REEMPLAZAR_CON_PASSWORD_LOCAL"
 }
 
 ### Catálogo público
@@ -23,7 +23,7 @@ Content-Type: application/json
 
 {
   "email": "admin@asesoriainmobiliariajb.com",
-  "password": "Admin123*"
+  "password": "REEMPLAZAR_CON_PASSWORD_LOCAL"
 }
 
 ### Dashboard administrativo

@@ -14,6 +14,7 @@ export class CreateNewsPostDto {
 
   @IsString()
   @MinLength(30)
+  @MaxLength(50_000)
   content!: string;
 
   @IsOptional()
@@ -25,6 +26,7 @@ export class CreateNewsPostDto {
   @IsOptional()
   @Transform(({ value }) => typeof value === 'string' && value.trim().length === 0 ? undefined : value)
   @IsUrl({ require_tld: false }, { message: 'El enlace externo debe ser una URL válida.' })
+  @MaxLength(2048)
   externalUrl?: string;
 
   @IsOptional()

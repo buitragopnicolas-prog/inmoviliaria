@@ -9,6 +9,7 @@ import { RolesGuard } from '../common/guards/roles.guard.js';
 import { PaymentsService } from './payments.service.js';
 import { ReportManualPaymentDto } from './dto/report-manual-payment.dto.js';
 import { ReviewManualPaymentDto } from './dto/review-manual-payment.dto.js';
+import { Throttle } from '@nestjs/throttler';
 
 const receiptMaxSize = Number(process.env.PAYMENT_RECEIPT_MAX_FILE_SIZE ?? 8_000_000);
 
@@ -29,6 +30,7 @@ export class PaymentsController {
   }
 
   @Post('invoices/:invoiceId/manual-report')
+  @Throttle({ default: { limit: Number(process.env.RATE_LIMIT_PAYMENT_REPORT ?? 10), ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('receipt', { storage: memoryStorage(), limits: { fileSize: receiptMaxSize } }))
   reportManual(
@@ -48,6 +50,7 @@ export class PaymentsController {
   }
 
   @Patch('manual/:paymentId/review')
+  @Throttle({ default: { limit: Number(process.env.RATE_LIMIT_PAYMENT_REVIEW ?? 30), ttl: 60_000 } })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   reviewManual(
@@ -69,12 +72,14 @@ export class PaymentsController {
   }
 
   @Post('mock/:reference/approve')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   approveMock(@Param('reference') reference: string, @CurrentUser() user: JwtUser) {
     return this.payments.approveMock(reference, user.sub);
   }
 
   @Post('wompi/webhook')
+  @Throttle({ default: { limit: Number(process.env.RATE_LIMIT_WEBHOOK ?? 60), ttl: 60_000 } })
   webhook(@Body() event: unknown, @Headers('x-event-checksum') checksum?: string) {
     return this.payments.processWompiEvent(event as Parameters<PaymentsService['processWompiEvent']>[0], checksum);
   }

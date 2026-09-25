@@ -1,9 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsISO8601, IsInt, IsOptional, IsString, Matches, Min, MinLength } from 'class-validator';
+import { IsIn, IsISO8601, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class LegacyReconcilePaymentDto {
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   cuentaDestino?: string;
 
   @Matches(/^\d{4}$/)
@@ -11,23 +12,27 @@ export class LegacyReconcilePaymentDto {
 
   @IsString()
   @MinLength(2)
+  @MaxLength(160)
   pagador!: string;
 
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(2_000_000_000)
   valor!: number;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['COP'])
   moneda?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   referenciaBancaria?: string;
 
   @IsString()
   @MinLength(1)
+  @MaxLength(120)
   referenciaIdempotencia!: string;
 
   @IsISO8601()
@@ -35,37 +40,44 @@ export class LegacyReconcilePaymentDto {
 
   @IsString()
   @MinLength(1)
+  @MaxLength(255)
   idCorreoOutlook!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(300)
   asuntoCorreo?: string;
 }
 
 export class LegacyRegisterPaymentDto {
   @IsString()
   @MinLength(1)
+  @MaxLength(64)
   arrendatarioId!: string;
 
   @IsString()
   @MinLength(1)
+  @MaxLength(64)
   contratoId!: string;
 
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(2_000_000_000)
   valor!: number;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['COP'])
   moneda?: string;
 
   @IsString()
   @MinLength(2)
+  @MaxLength(160)
   pagador!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   banco?: string;
 
   @Matches(/^\d{4}$/)
@@ -73,10 +85,12 @@ export class LegacyRegisterPaymentDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   referenciaBancaria?: string;
 
   @IsString()
   @MinLength(1)
+  @MaxLength(120)
   referenciaIdempotencia!: string;
 
   @IsISO8601()
@@ -84,9 +98,11 @@ export class LegacyRegisterPaymentDto {
 
   @IsString()
   @MinLength(1)
+  @MaxLength(255)
   idCorreoOutlook!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(80)
   origen?: string;
 }

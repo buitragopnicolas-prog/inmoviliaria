@@ -29,6 +29,8 @@ function fixture(overrides: Record<string, unknown> = {}) {
       return saved;
     },
     update: async ({ data }: { data: Record<string, unknown> }) => ({ id: 'payment-1', ...data }),
+    updateMany: async ({ data }: { data: Record<string, unknown> }) => { saved = { id: 'payment-1', ...saved, ...data }; return { count: 1 }; },
+    findUniqueOrThrow: async () => saved ?? { id: 'payment-1' },
   };
   const tx = {
     payment,
@@ -86,12 +88,35 @@ test('rechaza comprobantes cuyo MIME no está autorizado', async () => {
 test('confirma administrativamente y actualiza la factura dentro del valor permitido', async () => {
   const manual = { id: 'payment-1', provider: 'MANUAL', status: 'AWAITING_VERIFICATION', amount: 100_000, invoiceId: 'invoice-1', invoice: { amount: 100_000, payments: [] } };
   let invoiceUpdated = false;
-  const payment = { findFirst: async () => manual, update: async ({ data }: { data: Record<string, unknown> }) => ({ ...manual, ...data }) };
+  let reviewed = manual as Record<string, unknown>;
+  const payment = {
+    findFirst: async () => manual,
+    updateMany: async ({ data }: { data: Record<string, unknown> }) => { reviewed = { ...manual, ...data }; return { count: 1 }; },
+    findUniqueOrThrow: async () => reviewed,
+  };
   const tx = { payment, paymentAuditEvent: { create: async () => ({}) }, invoice: { update: async () => { invoiceUpdated = true; return {}; } } };
   const { service } = fixture({ payment, $transaction: async (callback: (transaction: typeof tx) => unknown) => callback(tx) });
   const result = await service.reviewManual('payment-1', 'admin-1', { decision: ManualPaymentReviewDecision.CONFIRM });
   assert.equal(result.status, 'APPROVED');
   assert.equal(invoiceUpdated, true);
+});
+
+test('rechaza una segunda decisión concurrente sobre el mismo pago', async () => {
+  const manual = { id: 'payment-1', provider: 'MANUAL', status: 'AWAITING_VERIFICATION', amount: 100_000, invoiceId: 'invoice-1', invoice: { amount: 100_000, payments: [] } };
+  let auditCreated = false;
+  const payment = {
+    findFirst: async () => manual,
+    updateMany: async () => ({ count: 0 }),
+    findUniqueOrThrow: async () => manual,
+  };
+  const tx = {
+    payment,
+    paymentAuditEvent: { create: async () => { auditCreated = true; return {}; } },
+    invoice: { update: async () => ({}) },
+  };
+  const { service } = fixture({ payment, $transaction: async (callback: (transaction: typeof tx) => unknown) => callback(tx) });
+  await assert.rejects(() => service.reviewManual('payment-1', 'admin-2', { decision: ManualPaymentReviewDecision.CONFIRM }), ConflictException);
+  assert.equal(auditCreated, false);
 });
 
 test('bloquea la aprobación mock en producción', async () => {
