@@ -7,7 +7,7 @@ Punto inicial: `9e0048670ef18c6e43d4466d3752844dff617afe`
 
 ## Dictamen
 
-**NOT READY.** El código compila y los controles unitarios agregados pasan, pero el usuario aislado que ejecuta esta sesión no pertenece a `docker-users` y no puede acceder a Docker Desktop/WSL. No existe evidencia ejecutada de PostgreSQL, MinIO, migraciones, constraints, persistencia, restore o E2E real. Esos controles son obligatorios antes de promover la rama.
+**LOCAL VALIDADO PARA LABORATORIO; NOT READY PARA PROMOCIÓN.** Docker, PostgreSQL, MinIO, migraciones, constraints, persistencia, restore y E2E financiero fueron ejecutados realmente. La promoción permanece bloqueada por riesgos de seguridad abiertos: el usuario operativo de PostgreSQL es superusuario y no existe cuarentena/antimalware para archivos.
 
 ## Evidencia ejecutada
 
@@ -16,19 +16,19 @@ Punto inicial: `9e0048670ef18c6e43d4466d3752844dff617afe`
 | Git | OK | rama y HEAD inicial registrados; producción intacta |
 | TypeScript API/web | PASS | `npm run check` |
 | Build API/web | PASS | Prisma generate, Nest build y Next production build |
-| Pagos/config/archivos | PASS 25/25 | `npm run test:payments` |
+| Pagos/config/archivos | PASS 27/27 | `npm run test:payments` |
 | Manejo de errores web | PASS 10/10 | `npm run test:web-errors` |
 | Regresiones JS sin loader TS | PASS 11/11 | filtros, fechas y compuerta de pagos |
 | Suite `tsx` | BLOQUEADA | Windows devuelve `uv_os_get_passwd ENOMEM` bajo `codexsandboxoffline` |
 | Laboratorio web | PASS parcial | HTTP 200 y cabeceras defensivas en `http://localhost:3000/laboratorio/pagos-manuales` |
 | Docker Compose | PASS sintáctico | `docker compose config --quiet` |
 | Kubernetes | PASS sintáctico | `kubectl kustomize` para infra DEV, app DEV y app PROD |
-| Docker daemon | FAIL de entorno | named pipe ausente; la cuenta aislada no está en `docker-users` |
-| PostgreSQL/MinIO/migraciones | NO EJECUTADO | dependen del daemon bloqueado |
-| E2E financiero | CREADO, NO EJECUTADO | `npm run test:e2e:local`; requiere servicios reales y credenciales locales |
+| Docker daemon | PASS con ejecución elevada | Docker Desktop 29.8.0, contexto `desktop-linux`; PostgreSQL y MinIO saludables |
+| PostgreSQL/MinIO/migraciones | PASS | 10 migraciones aplicadas; índices, constraints y trigger verificados; bucket privado |
+| E2E financiero | PASS real | factura aislada, archivos hostiles, IDOR, idempotencia x10 y confirmación concurrente |
 | Dependencias | 0 critical, 0 high, 4 moderate, 0 low | `npm audit --json` |
 | Secretos | sin credenciales de alto riesgo detectadas | revisión de archivos versionados e historial; valores sensibles no se imprimieron |
-| Restore | NO EJECUTADO | procedimiento documentado; backup externo no tocado |
+| Restore | PASS local aislado | PostgreSQL: conteos `3,4,4,6,3`; MinIO: 6 objetos y bucket privado; temporales eliminados |
 
 ## Correcciones aplicadas
 
@@ -40,6 +40,7 @@ Punto inicial: `9e0048670ef18c6e43d4466d3752844dff617afe`
 - Comprobantes y contratos se sirven con `private, no-store`; archivos genéricos se fuerzan como descarga y todos usan `nosniff`.
 - Referencias manuales normalizadas y únicas sin distinguir mayúsculas; una sola solicitud manual activa por factura.
 - Decisión administrativa adquirida mediante actualización condicional y transacción serializable; una segunda decisión concurrente devuelve conflicto.
+- Conflictos serializables Prisma `P2034` convertidos en HTTP 409 e idempotencia protegida durante la ventana entre consultas concurrentes.
 - Constraints para monto positivo, COP, referencia normalizada y transiciones de auditoría.
 - Auditoría financiera append-only mediante trigger que impide `UPDATE` y `DELETE`.
 - Readiness verifica PostgreSQL y el bucket de almacenamiento.
@@ -59,7 +60,7 @@ Riesgo abierto: no existen refresh tokens, revocación, listado de sesiones, rec
 
 ### Autorización e IDOR
 
-Los controladores administrativos usan JWT y rol `ADMIN`. Facturas y contratos del usuario filtran por `userId`. Los comprobantes permiten acceso únicamente al propietario o a un administrador y devuelven 404 en accesos no autorizados. Estas reglas fueron revisadas en código; las pruebas cruzadas A/B reales siguen pendientes de E2E.
+Los controladores administrativos usan JWT y rol `ADMIN`. Facturas y contratos del usuario filtran por `userId`. Los comprobantes permiten acceso únicamente al propietario o a un administrador y devuelven 404 en accesos no autorizados. El E2E creó un segundo usuario y confirmó 404 para factura y comprobante ajenos, además de 403 para la bandeja administrativa.
 
 ### CSRF, CORS y XSS
 
@@ -67,7 +68,7 @@ CORS usa un origen explícito y credentials; no usa `*`. La cookie HttpOnly no s
 
 ### Pagos, replay e idempotencia
 
-El servidor deriva el saldo de la factura, exige valor exacto, fecha no futura, método habilitado, idempotency key persistida y referencia bancaria única. La confirmación requiere `ADMIN`; no cambia el saldo ante el reporte. La migración agrega unicidad parcial y checks. La prueba automatizada cubre monto manipulado, propiedad, duplicados, MIME falso, producción mock y una segunda decisión concurrente. La prueba real x10 contra PostgreSQL está preparada en el E2E y no se ejecutó.
+El servidor deriva el saldo de la factura, exige valor exacto, fecha no futura, método habilitado, idempotency key persistida y referencia bancaria única. La confirmación requiere `ADMIN`; no cambia el saldo ante el reporte. La migración agrega unicidad parcial y checks. El E2E real envió diez reportes simultáneos y obtuvo un solo pago; dos confirmaciones simultáneas produjeron un éxito y un 409 controlado.
 
 ### Archivos y MinIO
 
@@ -172,7 +173,6 @@ La base Kubernetes conserva `PAYMENT_PROVIDER=mock`; con `APP_ENV=production` la
 
 1. PostgreSQL, MinIO y aplicación usan actualmente secretos/usuarios de infraestructura compartidos según los manifiestos; falta demostrar mínimo privilegio y separar usuario de aplicación, migración, backup y administrador.
 2. No existe antimalware/cuarentena para archivos válidos por firma.
-3. No existe prueba real de restore, migración o E2E; por ello la preparación operativa no está demostrada.
 
 ### Moderado
 
@@ -189,28 +189,29 @@ La base Kubernetes conserva `PAYMENT_PROVIDER=mock`; con `APP_ENV=production` la
 1. Falta request ID/redacción centralizada y métricas de seguridad.
 2. No hay límites distribuidos ni bloqueo progresivo de cuenta; el límite por IP mitiga fuerza bruta básica.
 
-## Procedimiento E2E local preparado
+## Procedimiento E2E local ejecutado
 
 `npm run test:e2e:local` está restringido por código a `localhost`, `127.0.0.1` o `::1`. Requiere `E2E_CUSTOMER_EMAIL`, `E2E_CUSTOMER_PASSWORD`, `E2E_ADMIN_EMAIL` y `E2E_ADMIN_PASSWORD`. Verifica:
 
 - usuario autenticado y factura propia con saldo;
+- factura exclusiva creada y archivada por la prueba para no depender del saldo seed;
 - usuario sin acceso a la bandeja administrativa;
+- segundo usuario sin acceso a factura ni comprobante ajenos;
+- rechazo real de HTML como JPG, EXE como PDF, MIME incorrecto, archivo vacío, PNG corrupto, doble extensión y archivo sobredimensionado;
 - comprobante JPG válido y privado;
 - diez reportes simultáneos con la misma idempotency key producen un solo pago;
 - bandeja administrativa;
 - dos confirmaciones simultáneas producen una sola decisión y un `409`;
 - factura finalmente pagada.
 
-La ejecución modifica únicamente datos locales de prueba y debe hacerse sobre un seed descartable.
+La ejecución pasó contra PostgreSQL y MinIO locales. Modifica únicamente datos locales de prueba y archiva la factura creada al finalizar.
 
-## Pasos obligatorios para desbloquear LOCAL
+## Pasos obligatorios antes de solicitar DEV
 
-1. Ejecutar Docker Desktop con una cuenta que tenga acceso a `docker-users` o incorporar de forma administrada la identidad de automatización y reiniciar sesión.
-2. Confirmar `docker info` y `docker compose ps` con daemon operativo.
-3. Levantar PostgreSQL y MinIO, aplicar migraciones a una copia con datos representativos y ejecutar las consultas de preflight.
-4. Verificar constraints, índices, privacidad de bucket, carga/descarga/borrado y persistencia tras reinicio.
-5. Ejecutar el E2E local, pruebas A/B de IDOR y los formatos maliciosos/corruptos contra la API real.
-6. Ejecutar backup y restore aislado conforme al runbook.
-7. Repetir build, checks, auditoría de dependencias, smoke y revisión visual.
-8. Solo después solicitar autorización explícita para DEV. Producción requiere una autorización posterior independiente.
+1. Crear un rol PostgreSQL de aplicación sin superusuario, sin creación de roles/bases y con permisos mínimos; separar migración, runtime y backup.
+2. Diseñar e implementar cuarentena y análisis antimalware antes de aceptar documentos no confiables en un entorno promovido.
+3. Definir credenciales MinIO separadas del usuario root y una política limitada al bucket/prefijos requeridos.
+4. Resolver o aceptar formalmente los cuatro advisories moderados transitivos del SDK MinIO.
+5. Repetir build, checks, auditoría, smoke y E2E después de estos cambios.
+6. Solo después solicitar autorización explícita para DEV. Producción requiere una autorización posterior independiente.
 
