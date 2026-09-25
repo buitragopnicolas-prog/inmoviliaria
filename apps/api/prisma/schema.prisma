@@ -110,6 +110,13 @@ enum StoredFilePurpose {
   PAYMENT_RECEIPT
 }
 
+enum FileScanStatus {
+  PENDING_SCAN
+  CLEAN
+  INFECTED
+  SCAN_FAILED
+}
+
 model User {
   id            String       @id @default(cuid())
   name          String
@@ -243,6 +250,10 @@ model StoredFile {
   mimeType     String
   size         Int
   purpose      StoredFilePurpose @default(GENERIC)
+  scanStatus   FileScanStatus    @default(PENDING_SCAN)
+  scanEngine   String?
+  scanResult   String?
+  scannedAt    DateTime?
   publicPath   String            @unique
   createdById  String?
   createdBy    User?             @relation("StoredFileCreator", fields: [createdById], references: [id], onDelete: SetNull)
@@ -250,7 +261,7 @@ model StoredFile {
   paymentReceipt Payment?        @relation("PaymentReceiptFile")
   createdAt    DateTime          @default(now())
 
-  @@index([purpose, createdAt])
+  @@index([purpose, scanStatus, createdAt])
 }
 
 model Lease {

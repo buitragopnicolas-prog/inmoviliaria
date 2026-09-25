@@ -18,8 +18,9 @@
     "check": "npm run lint --workspaces",
     "test:regressions": "node --import tsx --test --test-concurrency=1 apps/web/lib/api.test.ts apps/web/lib/public-data.test.ts apps/web/lib/catalog-filters.test.mjs scripts/format-date.test.mjs scripts/payment-config-policy.test.mjs apps/api/src/payments/payment-config.test.ts",
     "test:web-errors": "node scripts/test-web-errors.mjs",
-    "test:payments": "npm run build -w @inmobiliaria/api && node --test apps/api/dist/config/runtime-config.test.js apps/api/dist/storage/file-validation.test.js apps/api/dist/payments/payment-config.test.js apps/api/dist/payments/payments.service.test.js scripts/payment-config-policy.test.mjs",
+    "test:payments": "npm run build -w @inmobiliaria/api && node --test apps/api/dist/config/runtime-config.test.js apps/api/dist/storage/antimalware.service.test.js apps/api/dist/storage/file-validation.test.js apps/api/dist/payments/payment-config.test.js apps/api/dist/payments/payments.service.test.js scripts/payment-config-policy.test.mjs",
     "test:e2e:local": "dotenv -e .env -- node scripts/e2e-manual-payments.mjs",
+    "test:e2e:antimalware": "dotenv -e .env -- node scripts/e2e-antimalware.mjs",
     "infra:up": "docker compose up -d postgres minio minio-init"
   },
   "devDependencies": {
