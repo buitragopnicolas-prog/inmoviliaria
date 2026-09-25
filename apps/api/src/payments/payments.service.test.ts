@@ -4,6 +4,7 @@ import { BadRequestException, ConflictException, ForbiddenException, NotFoundExc
 import { PaymentsService } from './payments.service.js';
 import { ManualPaymentMethodDto } from './dto/report-manual-payment.dto.js';
 import { ManualPaymentReviewDecision } from './dto/review-manual-payment.dto.js';
+import { Prisma } from '../generated/prisma/client.js';
 
 const originalEnvironment = { ...process.env };
 
@@ -79,6 +80,18 @@ test('rechaza una referencia bancaria activa duplicada', async () => {
   await assert.rejects(() => service.reportManual('invoice-1', 'user-1', report), ConflictException);
 });
 
+test('reconoce como idempotente el duplicado que se hace visible entre consultas', async () => {
+  const duplicatePayment = {
+    findUnique: async () => null,
+    findFirst: async (args: { where?: { id?: string } }) => args.where?.id
+      ? { id: 'payment-1', status: 'AWAITING_VERIFICATION' }
+      : { id: 'payment-1', idempotencyKey: report.idempotencyKey, userId: 'user-1', invoiceId: 'invoice-1' },
+  };
+  const { service } = fixture({ payment: duplicatePayment });
+  const result = await service.reportManual('invoice-1', 'user-1', report);
+  assert.equal(result?.id, 'payment-1');
+});
+
 test('rechaza comprobantes cuyo MIME no está autorizado', async () => {
   const { service } = fixture();
   const file = { mimetype: 'text/html', size: 100, originalname: 'falso.jpg', buffer: Buffer.from('x') } as Express.Multer.File;
@@ -117,6 +130,14 @@ test('rechaza una segunda decisión concurrente sobre el mismo pago', async () =
   const { service } = fixture({ payment, $transaction: async (callback: (transaction: typeof tx) => unknown) => callback(tx) });
   await assert.rejects(() => service.reviewManual('payment-1', 'admin-2', { decision: ManualPaymentReviewDecision.CONFIRM }), ConflictException);
   assert.equal(auditCreated, false);
+});
+
+test('convierte un conflicto serializable de Prisma en HTTP 409', async () => {
+  const manual = { id: 'payment-1', provider: 'MANUAL', status: 'AWAITING_VERIFICATION', amount: 100_000, invoiceId: 'invoice-1', invoice: { amount: 100_000, payments: [] } };
+  const payment = { findFirst: async () => manual };
+  const conflict = new Prisma.PrismaClientKnownRequestError('write conflict', { code: 'P2034', clientVersion: 'test' });
+  const { service } = fixture({ payment, $transaction: async () => { throw conflict; } });
+  await assert.rejects(() => service.reviewManual('payment-1', 'admin-2', { decision: ManualPaymentReviewDecision.CONFIRM }), ConflictException);
 });
 
 test('bloquea la aprobación mock en producción', async () => {

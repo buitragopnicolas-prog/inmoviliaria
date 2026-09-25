@@ -68,7 +68,12 @@ export class PaymentsService {
     const duplicate = await this.prisma.payment.findFirst({
       where: { provider: 'MANUAL', bankReference: { equals: bankReference, mode: 'insensitive' } },
     });
-    if (duplicate) throw new ConflictException('La referencia de pago ya fue reportada.');
+    if (duplicate) {
+      if (duplicate.idempotencyKey === input.idempotencyKey && duplicate.userId === userId && duplicate.invoiceId === invoiceId) {
+        return this.findManualForUser(duplicate.id, userId);
+      }
+      throw new ConflictException('La referencia de pago ya fue reportada.');
+    }
     const activeReport = await this.prisma.payment.findFirst({
       where: { invoiceId, userId, provider: 'MANUAL', status: { in: [...pendingManualStatuses] } },
     });
@@ -135,21 +140,28 @@ export class PaymentsService {
       const alreadyApproved = payment.invoice.payments.filter((item) => item.id !== payment.id && item.status === 'APPROVED').reduce((sum, item) => sum + item.amount, 0);
       if (alreadyApproved + payment.amount > payment.invoice.amount) throw new ConflictException('La confirmación excedería el valor de la factura. Revisa los pagos existentes.');
     }
-    return this.prisma.$transaction(async (tx) => {
-      const claimed = await tx.payment.updateMany({
-        where: { id: payment.id, status: payment.status },
-        data: { status: nextStatus, reviewedById: adminId, reviewedAt: new Date(), reviewNote: input.note?.trim() || null },
-      });
-      if (claimed.count !== 1) throw new ConflictException('Otro proceso ya revisó este pago. Actualiza la pantalla.');
-      await tx.paymentAuditEvent.create({
-        data: { paymentId: payment.id, actorId: adminId, fromStatus: payment.status, toStatus: nextStatus, note: input.note?.trim() || 'Pago confirmado por administración.' },
-      });
-      if (nextStatus === 'APPROVED') {
-        const approvedTotal = payment.invoice.payments.filter((item) => item.id !== payment.id && item.status === 'APPROVED').reduce((sum, item) => sum + item.amount, 0) + payment.amount;
-        if (approvedTotal >= payment.invoice.amount) await tx.invoice.update({ where: { id: payment.invoiceId }, data: { status: 'PAID', paidAt: new Date() } });
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const claimed = await tx.payment.updateMany({
+          where: { id: payment.id, status: payment.status },
+          data: { status: nextStatus, reviewedById: adminId, reviewedAt: new Date(), reviewNote: input.note?.trim() || null },
+        });
+        if (claimed.count !== 1) throw new ConflictException('Otro proceso ya revisó este pago. Actualiza la pantalla.');
+        await tx.paymentAuditEvent.create({
+          data: { paymentId: payment.id, actorId: adminId, fromStatus: payment.status, toStatus: nextStatus, note: input.note?.trim() || 'Pago confirmado por administración.' },
+        });
+        if (nextStatus === 'APPROVED') {
+          const approvedTotal = payment.invoice.payments.filter((item) => item.id !== payment.id && item.status === 'APPROVED').reduce((sum, item) => sum + item.amount, 0) + payment.amount;
+          if (approvedTotal >= payment.invoice.amount) await tx.invoice.update({ where: { id: payment.invoiceId }, data: { status: 'PAID', paidAt: new Date() } });
+        }
+        return tx.payment.findUniqueOrThrow({ where: { id: payment.id } });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') {
+        throw new ConflictException('Otro proceso ya revisó este pago. Actualiza la pantalla.');
       }
-      return tx.payment.findUniqueOrThrow({ where: { id: payment.id } });
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      throw error;
+    }
   }
 
   async sendReceipt(fileId: string, viewer: { sub: string; role: 'ADMIN' | 'USER' }, response: Response) {
