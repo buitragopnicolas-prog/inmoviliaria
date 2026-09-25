@@ -83,11 +83,13 @@ En producción se debe reemplazar el disco local por almacenamiento de objetos, 
 
 ### Modo local
 
-`PAYMENT_PROVIDER=mock` permite crear un intento y aprobarlo desde la interfaz, actualizando `Payment.status=APPROVED` e `Invoice.status=PAID` sin cobros reales.
+`PAYMENT_MODE=manual` separa los medios de pago de una pasarela. QR, Bre-B, transferencia y consignación generan reportes `AWAITING_VERIFICATION`; solo administración puede confirmarlos. Los comprobantes son privados y cada transición conserva auditoría.
+
+`PAYMENT_MODE=mock` permite simular el ciclo únicamente en local. La API bloquea la aprobación mock con `NODE_ENV=production` y el despliegue valida la configuración antes de promover.
 
 ### Wompi
 
-`PAYMENT_PROVIDER=wompi` crea la URL de Checkout Web con referencia única, monto en centavos COP y firma de integridad SHA-256. El estado definitivo de la factura cambia desde el webhook firmado, validando dinámicamente las propiedades que envía el evento, su timestamp y `WOMPI_EVENTS_SECRET`.
+`PAYMENT_MODE=gateway` con `PAYMENT_GATEWAY=wompi` crea la URL de Checkout Web con referencia única, monto en centavos COP y firma de integridad SHA-256. El estado definitivo de la factura cambia desde el webhook firmado, validando dinámicamente las propiedades que envía el evento, su timestamp y `WOMPI_EVENTS_SECRET`.
 
 ## Evolución recomendada
 

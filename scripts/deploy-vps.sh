@@ -43,10 +43,7 @@ if [[ "$stage" == prod ]]; then
     echo 'Falta aprobación explícita del SHA para producción en el VPS.' >&2
     exit 1
   fi
-  if grep -Eq 'PAYMENT_PROVIDER: *mock([[:space:]]|$)' "$manifest"; then
-    echo 'Producción sigue configurada con pagos mock.' >&2
-    exit 1
-  fi
+  node "$repo/scripts/payment-config-policy.mjs" "$manifest"
   if [[ ! -f /var/lib/asesoria-inmobiliaria-dev/verified-sha ]] ||
      [[ "$(cat /var/lib/asesoria-inmobiliaria-dev/verified-sha)" != "$release" ]]; then
     echo 'El SHA no pasó verificación completa en dev.' >&2

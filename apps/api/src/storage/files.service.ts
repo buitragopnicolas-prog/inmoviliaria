@@ -5,7 +5,7 @@ import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { StorageService } from './storage.service.js';
 
-type UploadPurpose = 'PROPERTY_IMAGE' | 'GENERIC' | 'LEASE_CONTRACT';
+type UploadPurpose = 'PROPERTY_IMAGE' | 'GENERIC' | 'LEASE_CONTRACT' | 'PAYMENT_RECEIPT';
 
 @Injectable()
 export class FilesService {
@@ -61,6 +61,15 @@ export class FilesService {
     return uploaded ?? null;
   }
 
+  async uploadPaymentReceipt(file: Express.Multer.File, createdById: string) {
+    const [uploaded] = await this.uploadMany([file], {
+      createdById,
+      purpose: 'PAYMENT_RECEIPT',
+      folder: 'payment-receipts',
+    });
+    return uploaded ?? null;
+  }
+
   async removeStoredFile(file: { id: string; objectKey: string }): Promise<void> {
     await this.storage.removeObject(file.objectKey).catch(() => undefined);
     await this.prisma.storedFile.deleteMany({ where: { id: file.id } });
@@ -74,13 +83,13 @@ export class FilesService {
 
   async sendContent(id: string, response: Response, download = false, allowSensitive = false): Promise<void> {
     const file = await this.prisma.storedFile.findUnique({ where: { id } });
-    if (!file || (file.purpose === 'LEASE_CONTRACT' && !allowSensitive)) {
+    if (!file || (['LEASE_CONTRACT', 'PAYMENT_RECEIPT'].includes(file.purpose) && !allowSensitive)) {
       throw new NotFoundException('Archivo no encontrado.');
     }
     const stream = await this.storage.getObjectStream(file.objectKey);
     response.setHeader('Content-Type', file.mimeType);
     response.setHeader('Content-Length', String(file.size));
-    response.setHeader('Cache-Control', file.purpose === 'LEASE_CONTRACT' ? 'private, no-store' : 'public, max-age=31536000, immutable');
+    response.setHeader('Cache-Control', ['LEASE_CONTRACT', 'PAYMENT_RECEIPT'].includes(file.purpose) ? 'private, no-store' : 'public, max-age=31536000, immutable');
     response.setHeader('Content-Disposition', contentDisposition(file.originalName, download));
     await pipeline(stream, response);
   }
@@ -94,6 +103,8 @@ export class FilesService {
       ? 'property-images'
       : options.purpose === 'LEASE_CONTRACT'
         ? 'lease-contracts'
+        : options.purpose === 'PAYMENT_RECEIPT'
+          ? 'payment-receipts'
         : `files/${sanitizeFolder(options.folder)}`;
     const uploadedObjects: Array<{ bucket: string; objectKey: string; mimeType: string; originalName: string; size: number }> = [];
     try {
@@ -112,7 +123,9 @@ export class FilesService {
           purpose: options.purpose,
           publicPath: options.purpose === 'LEASE_CONTRACT'
             ? `/api/leases/contracts/${id}`
-            : `/api/files/${id}/content`,
+            : options.purpose === 'PAYMENT_RECEIPT'
+              ? `/api/payments/receipts/${id}`
+              : `/api/files/${id}/content`,
           createdById: options.createdById,
         };
       });
