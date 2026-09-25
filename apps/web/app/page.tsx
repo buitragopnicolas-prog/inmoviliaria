@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { loadPublicData } from '@/lib/public-data';
 import { DataUnavailable } from '@/components/DataUnavailable';
 import type { NewsPost, Property } from '@/lib/types';
 import { NewsCard } from '@/components/NewsCard';
 import { PropertyCard } from '@/components/PropertyCard';
-import { assetUrl } from '@/lib/format';
+import { Reveal } from '@/components/Reveal';
+import { HomeHero, ServiceIntroduction, DocumentsSection, DigitalSection, ContactSection } from '@/components/home/HomeSections';
+import styles from '@/components/home/HomeSections.module.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,54 +15,37 @@ export default async function HomePage() {
     loadPublicData<Property[]>('/properties/featured'),
     loadPublicData<NewsPost[]>('/news/featured'),
   ]);
-  // Seed illustrations contain text and must not be cropped as property photos.
-  const heroProperty = featured?.find((property) => property.images[0]?.url && !/\.svg(?:\?|$)/i.test(property.images[0].url));
+
   return (
-    <>
-      <section className="hero">
-        <div className="container heroGrid">
-          <div className="heroCopy">
-            <span className="eyebrow">Asesoría y administración inmobiliaria</span>
-            <h1>Tu inmueble.<br />Un patrimonio que merece atención.</h1>
-            <p>Arriendos y administración en Bogotá, con acompañamiento para propietarios y arrendatarios. Contratos, facturas y pagos en un mismo lugar.</p>
-            <div className="heroButtons"><Link className="button" href="/inmuebles">Ver inmuebles</Link><Link className="button outline" href="/contacto">Hablar con un asesor</Link></div>
-            <div className="trust"><div><strong>Inmuebles</strong><span>Información del arriendo</span></div><div><strong>Contratos</strong><span>Consulta documental</span></div><div><strong>Tu cuenta</strong><span>Facturas e historial</span></div></div>
-          </div>
-          <div className="heroVisual">
-            <Image className="heroPhoto" src={heroProperty ? assetUrl(heroProperty.images[0].url) : '/architecture.svg'} alt={heroProperty ? heroProperty.images[0].alt || heroProperty.title : ''} fill sizes="(max-width: 1000px) 100vw, 50vw" priority />
-            <div className="heroCaption">
-              <span>{heroProperty ? `${heroProperty.neighborhood} · ${heroProperty.city}` : 'Asesoría Inmobiliaria JB'}</span>
-              <h2>{heroProperty?.title ?? 'Gestión cercana. Información clara.'}</h2>
-              <Link href={heroProperty ? `/inmuebles/${heroProperty.slug}` : '/nosotros'}>{heroProperty ? 'Conoce este inmueble' : 'Conoce nuestra empresa'} <span aria-hidden="true">&nbsp;↗</span></Link>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section className="section">
+    <div className={styles.home}>
+      <HomeHero />
+      <ServiceIntroduction />
+      <section className={styles.properties} id="inmuebles-destacados" aria-labelledby="featured-title">
         <div className="container">
-          <div className="sectionHeading"><div><span className="eyebrow">Destacados</span><h2>Inmuebles disponibles</h2></div><Link className="textLink" href="/inmuebles">Ver todos →</Link></div>
-          {featured === null ? <DataUnavailable label="los inmuebles destacados" /> : <div className="cardsGrid">{featured.map((property) => <PropertyCard property={property} key={property.id} />)}</div>}
+          <Reveal className={styles.sectionHeading}>
+            <div><span className={styles.kicker}>02 / Encuentra tu lugar</span><h2 id="featured-title">Espacios para tu<br /><em>próxima etapa.</em></h2></div>
+            <div className={styles.headingAside}><p>Conoce los inmuebles disponibles en arriendo. Cada detalle cuenta al elegir.</p><Link className={styles.arrowLink} href="/inmuebles">Explorar el catálogo <span aria-hidden="true">↗</span></Link></div>
+          </Reveal>
+          {featured === null ? <DataUnavailable label="los inmuebles destacados" /> : (
+            <div className={`cardsGrid ${styles.propertyGrid}`}>{featured.map((property, index) => <Reveal key={property.id} delay={index * 60}><PropertyCard property={property} /></Reveal>)}</div>
+          )}
           {featured?.length === 0 && <div className="card empty">Consulta el catálogo para conocer los inmuebles disponibles. <Link className="textLink" href="/inmuebles">Explorar inmuebles →</Link></div>}
         </div>
       </section>
-      <section className="sectionAlt">
+      <DocumentsSection />
+      <DigitalSection />
+      <section className={styles.news} aria-labelledby="news-title">
         <div className="container">
-          <div className="sectionHeading"><div><span className="eyebrow">Noticias</span><h2>Novedades y prensa del sector</h2></div><Link className="textLink" href="/noticias">Ver noticias →</Link></div>
+          <Reveal className={styles.sectionHeading}>
+            <div><span className={styles.kicker}>05 / Una mirada al sector</span><h2 id="news-title">Información para<br /><em>decidir mejor.</em></h2></div>
+            <Link className={styles.arrowLink} href="/noticias">Noticias y actualidad <span aria-hidden="true">↗</span></Link>
+          </Reveal>
           {featuredNews === null ? <DataUnavailable label="las noticias" /> : featuredNews.length > 0 ? (
             <div className="cardsGrid newsGrid">{featuredNews.map((newsPost) => <NewsCard newsPost={newsPost} key={newsPost.id} />)}</div>
-          ) : (
-            <div className="card empty">Pronto publicaremos novedades inmobiliarias y enlaces a medios digitales relevantes.</div>
-          )}
+          ) : <p className={styles.newsEmpty}>Pronto publicaremos novedades inmobiliarias y enlaces a medios digitales relevantes.</p>}
         </div>
       </section>
-      <section className="benefits sectionAlt">
-        <div className="container benefitsGrid">
-          <div><span className="eyebrow">Por qué elegirnos</span><h2>Una experiencia inmobiliaria simple y confiable</h2></div>
-          <article><strong>01</strong><h3>Información del inmueble</h3><p>Consulta el canon, la administración, la ubicación y las características antes de solicitar una visita.</p></article>
-          <article><strong>02</strong><h3>Cuenta digital</h3><p>Consulta tus facturas mensuales y el historial de pagos desde cualquier dispositivo.</p></article>
-          <article><strong>03</strong><h3>Gestión documental</h3><p>Accede a los contratos disponibles en tu cuenta y consulta la información de tu arriendo.</p></article>
-        </div>
-      </section>
-    </>
+      <ContactSection />
+    </div>
   );
 }

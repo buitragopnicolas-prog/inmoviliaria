@@ -5,11 +5,22 @@ import type { Property } from '@/lib/types';
 import { UiIcon } from './UiIcon';
 
 export function PropertyCard({ property }: { property: Property }) {
+  const image = property.images[0];
+  const isIllustration = /\.svg(?:[?#]|$)/i.test(image?.url ?? '');
+  const isSeedIllustration = /\/uploads\/seed\/[^?#]+\.svg(?:[?#]|$)/i.test(image?.url ?? '');
+
   return (
     <article className="propertyCard">
       <div className="propertyImage">
-        <Image src={assetUrl(property.images[0]?.url)} alt={property.images[0]?.alt ?? property.title} fill sizes="(max-width: 900px) 100vw, 33vw" />
+        <Image
+          className={isIllustration ? 'propertyIllustration' : undefined}
+          src={assetUrl(image?.url)}
+          alt={isSeedIllustration ? `Ilustración de referencia: ${property.title}` : image?.alt ?? property.title}
+          fill
+          sizes="(max-width: 680px) calc(100vw - 32px), (max-width: 1000px) calc((100vw - 72px) / 2), (max-width: 1288px) calc((100vw - 96px) / 3), 397px"
+        />
         <span className="pill">Disponible</span>
+        {isSeedIllustration && <span className="propertyImageReference">Imagen de referencia</span>}
       </div>
       <div className="propertyBody">
         <p className="location">{property.neighborhood}, {property.city}</p>

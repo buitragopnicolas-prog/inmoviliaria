@@ -1,0 +1,28 @@
+.reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.reveal[data-reveal-state='pending']:not(:focus-within) {
+  opacity: .35;
+  transform: translateY(12px);
+}
+
+.reveal[data-reveal-state='revealed'] {
+  transition: opacity 460ms ease, transform 460ms ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal:focus-within {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .reveal[data-reveal-state] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
