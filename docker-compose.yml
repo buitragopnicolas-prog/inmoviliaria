@@ -16,13 +16,41 @@ services:
       timeout: 5s
       retries: 10
 
+  postgres-app-init:
+    image: postgres:17-alpine
+    container_name: inmobiliaria_postgres_app_init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-inmobiliaria}
+      PGUSER: ${POSTGRES_USER:-inmobiliaria}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-inmobiliaria_segura}
+      APP_DATABASE_USER: ${POSTGRES_APP_USER:-inmobiliaria_app}
+      APP_DATABASE_PASSWORD: ${POSTGRES_APP_PASSWORD:-local_app_password_change_me}
+    volumes:
+      - ./docker/postgres/configure-app-role.sql:/docker-entrypoint-initdb.d/configure-app-role.sql:ro
+    restart: "no"
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        psql --set=ON_ERROR_STOP=1 \
+          --set=database_name="$$PGDATABASE" \
+          --set=migrator_user="$$PGUSER" \
+          --set=app_user="$$APP_DATABASE_USER" \
+          --set=app_password="$$APP_DATABASE_PASSWORD" \
+          --file=/docker-entrypoint-initdb.d/configure-app-role.sql
+
   minio:
     image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     container_name: inmobiliaria_minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
       - "${MINIO_API_HOST_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_HOST_PORT:-9001}:9001"
@@ -36,21 +64,57 @@ services:
       minio:
         condition: service_started
     environment:
-      MC_HOST_local: http://${STORAGE_ACCESS_KEY:-minioadmin}:${STORAGE_SECRET_KEY:-minioadmin}@minio:9000
-      STORAGE_BUCKET: ${STORAGE_BUCKET:-inmobiliaria-assets}
+      MC_HOST_local: http://${MINIO_ROOT_USER:-minioadmin}:${MINIO_ROOT_PASSWORD:-minioadmin}@minio:9000
+      STORAGE_BUCKET: inmobiliaria-assets
+      MINIO_APP_USER: ${MINIO_APP_USER:-inmobiliaria-app}
+      MINIO_APP_PASSWORD: ${MINIO_APP_PASSWORD:-local_app_password_change_me}
+    volumes:
+      - ./docker/minio/app-policy.json:/policies/app-policy.json:ro
     restart: "no"
     entrypoint:
       - /bin/sh
-      - -c
+      - -ec
       - |
         until mc ls local >/dev/null 2>&1; do
           echo "Esperando MinIO..."
           sleep 1
         done
         mc mb --ignore-existing local/$$STORAGE_BUCKET
+        mc anonymous set none local/$$STORAGE_BUCKET
+        mc admin user add local "$$MINIO_APP_USER" "$$MINIO_APP_PASSWORD"
+        mc admin policy create local inmobiliaria-app-policy /policies/app-policy.json
+        mc admin policy attach local inmobiliaria-app-policy --user "$$MINIO_APP_USER"
         printf '' | mc pipe local/$$STORAGE_BUCKET/files/generic/.keep
         printf '' | mc pipe local/$$STORAGE_BUCKET/files/property-360/.keep
         printf '' | mc pipe local/$$STORAGE_BUCKET/property-images/.keep
+
+  clamav:
+    image: clamav/clamav@sha256:a5f03c12a79dbe9f6d8a527b6bb1ea053fa8dd061d3738a26897f055ee2d9303
+    container_name: inmobiliaria_clamav
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - clamav_signatures:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+          cpus: "1.50"
 
   api:
     build:
@@ -59,12 +123,21 @@ services:
     container_name: inmobiliaria_api
     env_file: .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-inmobiliaria}:${POSTGRES_PASSWORD:-inmobiliaria_segura}@postgres:5432/${POSTGRES_DB:-inmobiliaria}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER:-inmobiliaria_app}:${POSTGRES_APP_PASSWORD:-local_app_password_change_me}@postgres:5432/${POSTGRES_DB:-inmobiliaria}?schema=public
+      DATABASE_MIGRATION_URL: postgresql://${POSTGRES_USER:-inmobiliaria}:${POSTGRES_PASSWORD:-inmobiliaria_segura}@postgres:5432/${POSTGRES_DB:-inmobiliaria}?schema=public
       PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
       PORT: 4000
       STORAGE_ENDPOINT: minio
       STORAGE_PORT: 9000
       STORAGE_USE_SSL: false
+      STORAGE_BUCKET: inmobiliaria-assets
+      STORAGE_ACCESS_KEY: ${MINIO_APP_USER:-inmobiliaria-app}
+      STORAGE_SECRET_KEY: ${MINIO_APP_PASSWORD:-local_app_password_change_me}
+      STORAGE_AUTO_CREATE_BUCKET: false
+      ANTIMALWARE_ENABLED: true
+      ANTIMALWARE_HOST: clamav
+      ANTIMALWARE_PORT: 3310
+      ANTIMALWARE_TIMEOUT_MS: ${ANTIMALWARE_TIMEOUT_MS:-15000}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
     ports:
       - "${API_HOST_PORT:-4000}:4000"
@@ -73,15 +146,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      postgres-app-init:
+        condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:4000/api/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 30s
-    command: sh -c "mkdir -p apps/api/uploads/seed && cp -rn seed-assets/. apps/api/uploads/seed/ && npm run db:migrate -w @inmobiliaria/api && npm run db:seed -w @inmobiliaria/api && npm run start:prod -w @inmobiliaria/api"
+    command: sh -ec "mkdir -p apps/api/uploads/seed && cp -rn seed-assets/. apps/api/uploads/seed/ && DATABASE_URL=\"$$DATABASE_MIGRATION_URL\" npm run db:migrate -w @inmobiliaria/api && DATABASE_URL=\"$$DATABASE_MIGRATION_URL\" npm run db:seed -w @inmobiliaria/api && npm run start:prod -w @inmobiliaria/api"
 
   web:
     build:
@@ -105,3 +182,4 @@ volumes:
   inmobiliaria_db:
   uploads:
   minio_data:
+  clamav_signatures:
