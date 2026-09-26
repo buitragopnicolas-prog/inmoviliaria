@@ -62,8 +62,7 @@ jobs:
           docker run -d --name inmo-ci-minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin \
-            quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e \
-            server /data
+            bitnamilegacy/minio@sha256:6dabb4a2088c9a79908de3bc05f4586c23ad2182c8908e7e3acbf61c1467fb20
       - name: API smoke test
         run: |
           npm run start:prod -w @inmobiliaria/api > /tmp/inmo-api.log 2>&1 &
