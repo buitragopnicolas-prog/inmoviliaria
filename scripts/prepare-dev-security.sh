@@ -75,13 +75,14 @@ spec:
           command: ["/bin/sh", "-ec"]
           args:
             - |
-              psql "\$DATABASE_MIGRATION_URL" --set=ON_ERROR_STOP=1 \\
+              database_admin_url="\${DATABASE_MIGRATION_URL%%\?*}"
+              psql "\$database_admin_url" --set=ON_ERROR_STOP=1 \\
                 --set=database_name="\$POSTGRES_DB" \\
                 --set=migrator_user="\$POSTGRES_USER" \\
                 --set=app_user="\$POSTGRES_APP_USER" \\
                 --set=app_password="\$POSTGRES_APP_PASSWORD" \\
                 --file=/security/configure-app-role.sql
-              psql "\$DATABASE_MIGRATION_URL" -Atc "SELECT rolname,rolsuper,rolcreatedb,rolcreaterole,rolreplication FROM pg_roles WHERE rolname='\$POSTGRES_APP_USER'"
+              psql "\$database_admin_url" -Atc "SELECT rolname,rolsuper,rolcreatedb,rolcreaterole,rolreplication FROM pg_roles WHERE rolname='\$POSTGRES_APP_USER'"
           envFrom:
             - secretRef: { name: asesoria-secrets }
           volumeMounts:
