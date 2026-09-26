@@ -16,9 +16,6 @@ spec:
               app: asesoria-api
         - podSelector:
             matchLabels:
-              app: n8n
-        - podSelector:
-            matchLabels:
               job-role: db-init
         - podSelector:
             matchLabels:
@@ -49,3 +46,23 @@ spec:
       ports:
         - protocol: TCP
           port: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: clamav-only-from-api
+  namespace: asesoria-inmobiliaria
+spec:
+  podSelector:
+    matchLabels:
+      app: clamav
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: asesoria-api
+      ports:
+        - protocol: TCP
+          port: 3310

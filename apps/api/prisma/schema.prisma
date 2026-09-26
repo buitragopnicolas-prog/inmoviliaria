@@ -42,10 +42,23 @@ enum InvoiceStatus {
 
 enum PaymentStatus {
   PENDING
+  AWAITING_VERIFICATION
+  UNDER_REVIEW
   APPROVED
   DECLINED
+  REJECTED
+  EXPIRED
+  CANCELLED
+  REFUNDED
   ERROR
   VOIDED
+}
+
+enum ManualPaymentMethod {
+  QR
+  BREB
+  BANK_TRANSFER
+  BANK_DEPOSIT
 }
 
 enum PaymentProvider {
@@ -94,6 +107,14 @@ enum StoredFilePurpose {
   PROPERTY_IMAGE
   GENERIC
   LEASE_CONTRACT
+  PAYMENT_RECEIPT
+}
+
+enum FileScanStatus {
+  PENDING_SCAN
+  CLEAN
+  INFECTED
+  SCAN_FAILED
 }
 
 model User {
@@ -107,7 +128,9 @@ model User {
   newsPosts     NewsPost[]   @relation("NewsCreator")
   leases        Lease[]
   invoices      Invoice[]
-  payments      Payment[]
+  payments      Payment[]           @relation("PaymentOwner")
+  reviewedPayments Payment[]        @relation("PaymentReviewer")
+  paymentAuditEvents PaymentAuditEvent[] @relation("PaymentAuditActor")
   tenantProfile Tenant?
   storedFiles   StoredFile[] @relation("StoredFileCreator")
   createdAt     DateTime     @default(now())
@@ -227,13 +250,18 @@ model StoredFile {
   mimeType     String
   size         Int
   purpose      StoredFilePurpose @default(GENERIC)
+  scanStatus   FileScanStatus    @default(PENDING_SCAN)
+  scanEngine   String?
+  scanResult   String?
+  scannedAt    DateTime?
   publicPath   String            @unique
   createdById  String?
   createdBy    User?             @relation("StoredFileCreator", fields: [createdById], references: [id], onDelete: SetNull)
   leaseContract Lease?           @relation("LeaseContractFile")
+  paymentReceipt Payment?        @relation("PaymentReceiptFile")
   createdAt    DateTime          @default(now())
 
-  @@index([purpose, createdAt])
+  @@index([purpose, scanStatus, createdAt])
 }
 
 model Lease {
@@ -393,18 +421,44 @@ model Payment {
   payerNameNormalized String?
   bankAccountLast4    String?
   bankReference       String?
+  manualMethod        ManualPaymentMethod?
+  idempotencyKey      String?                  @unique
+  paidAt              DateTime?
+  reportedAt          DateTime?
+  receiptFileId       String?                  @unique
+  reviewedById        String?
+  reviewedAt          DateTime?
+  reviewNote          String?
   invoiceId           String
   tenantId            String?
   userId              String?
   invoice             Invoice                  @relation(fields: [invoiceId], references: [id])
   tenant              Tenant?                  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  user                User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user                User?                    @relation("PaymentOwner", fields: [userId], references: [id], onDelete: SetNull)
+  receiptFile         StoredFile?              @relation("PaymentReceiptFile", fields: [receiptFileId], references: [id], onDelete: SetNull)
+  reviewedBy          User?                    @relation("PaymentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  auditEvents         PaymentAuditEvent[]
   bankNotification    BankPaymentNotification?
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime                 @updatedAt
 
   @@index([invoiceId, status])
   @@index([bankReference])
+  @@index([provider, status, reportedAt])
+}
+
+model PaymentAuditEvent {
+  id         String        @id @default(cuid())
+  paymentId  String
+  actorId    String?
+  fromStatus PaymentStatus?
+  toStatus   PaymentStatus
+  note       String?
+  payment    Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  actor      User?         @relation("PaymentAuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt  DateTime      @default(now())
+
+  @@index([paymentId, createdAt])
 }
 
 model BankPaymentNotification {

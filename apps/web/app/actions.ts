@@ -294,6 +294,35 @@ export async function approveMockAction(formData: FormData): Promise<void> {
   redirect('/mi-cuenta?pago=aprobado');
 }
 
+export async function reportManualPaymentAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const invoiceId = String(formData.get('invoiceId'));
+    formData.delete('invoiceId');
+    await apiFetch(`/payments/invoices/${invoiceId}/manual-report`, { method: 'POST', body: formData }, true);
+    revalidatePath(`/mi-cuenta/facturas/${invoiceId}/pagar`);
+    revalidatePath('/mi-cuenta');
+    return { success: 'Recibimos tu reporte de pago. Quedó pendiente de verificación.' };
+  } catch (error) {
+    return { error: messageOf(error) };
+  }
+}
+
+export async function reviewManualPaymentAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const paymentId = String(formData.get('paymentId'));
+    await apiFetch(`/payments/manual/${paymentId}/review`, {
+      method: 'PATCH',
+      body: JSON.stringify({ decision: formData.get('decision'), note: formData.get('note') || undefined }),
+    }, true);
+    revalidatePath('/admin/conciliacion');
+    revalidatePath('/admin/facturas');
+    revalidatePath('/mi-cuenta');
+    return { success: 'La decisión quedó registrada en la trazabilidad del pago.' };
+  } catch (error) {
+    return { error: messageOf(error) };
+  }
+}
+
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : 'No fue posible procesar la solicitud.';
 }

@@ -6,6 +6,8 @@ import { UsersService } from '../users/users.service.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 
+const dummyPasswordHash = '$2b$12$ZltX8z1V2X/FIi81VKZFe.SBukURYrDSWlfkU.lGmqbqIiaPLgW3u';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -65,7 +67,8 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.users.findByEmail(dto.email.toLowerCase().trim());
-    if (!user?.passwordHash || !(await bcrypt.compare(dto.password, user.passwordHash))) {
+    const validPassword = await bcrypt.compare(dto.password, user?.passwordHash ?? dummyPasswordHash);
+    if (!user?.passwordHash || !validPassword) {
       throw new UnauthorizedException('Correo o contraseña inválidos.');
     }
     return this.issueToken(user);

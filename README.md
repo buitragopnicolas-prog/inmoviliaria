@@ -98,20 +98,25 @@ Ruta: `/mi-cuenta`
 
 - Lista de facturas y estado de pago.
 - Flujo de pago de una factura pendiente.
-- En modo `mock`, botón de confirmación para validar todo el ciclo sin cobrar dinero.
+- En modo `manual`, medios configurados por el backend, reporte del pago y verificación administrativa.
+- En modo `mock`, botón de confirmación exclusivo para desarrollo local.
 
 ## Integración de pagos
 
-Por defecto, el entorno usa:
+Para pagos reales fuera de la plataforma use:
 
 ```env
-PAYMENT_PROVIDER=mock
+PAYMENT_MODE=manual
+PAYMENT_GATEWAY=none
 ```
+
+Los datos de QR, Bre-B y cuenta bancaria se configuran con `MANUAL_PAYMENT_*`; consulte `.env.example` y [la guía de pagos manuales](docs/PAGOS_MANUALES_Y_N8N.md). Si faltan datos autorizados, el medio permanece deshabilitado.
 
 Para habilitar Cybervestigio con redirección automática de checkout, configure:
 
 ```env
-PAYMENT_PROVIDER=cybervestigio
+PAYMENT_MODE=gateway
+PAYMENT_GATEWAY=cybervestigio
 CYBERVESTIGIO_CHECKOUT_URL=https://cybervestigio.com/pagos
 CYBERVESTIGIO_RETURN_URL=https://su-dominio/mi-cuenta
 ```
@@ -119,7 +124,8 @@ CYBERVESTIGIO_RETURN_URL=https://su-dominio/mi-cuenta
 También puede habilitar Wompi, configure llaves de sandbox o producción y cambie:
 
 ```env
-PAYMENT_PROVIDER=wompi
+PAYMENT_MODE=gateway
+PAYMENT_GATEWAY=wompi
 WOMPI_PUBLIC_KEY=pub_test_...
 WOMPI_INTEGRITY_SECRET=test_integrity_...
 WOMPI_EVENTS_SECRET=test_events_...

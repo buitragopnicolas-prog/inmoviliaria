@@ -13,10 +13,20 @@ spec:
       labels:
         app: asesoria-api
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: api
           image: asesoria-inmobiliaria-api:local
           imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
           ports:
             - name: http
               containerPort: 4000
@@ -79,10 +89,20 @@ spec:
       labels:
         app: asesoria-web
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: web
           image: asesoria-inmobiliaria-web:local
           imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
           ports:
             - name: http
               containerPort: 3000

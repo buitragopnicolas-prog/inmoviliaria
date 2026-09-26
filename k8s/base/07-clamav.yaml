@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clamav
+  namespace: asesoria-inmobiliaria
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: clamav
+  template:
+    metadata:
+      labels:
+        app: clamav
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: clamav
+          image: clamav/clamav@sha256:a5f03c12a79dbe9f6d8a527b6bb1ea053fa8dd061d3738a26897f055ee2d9303
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+          ports:
+            - name: clamd
+              containerPort: 3310
+          startupProbe:
+            exec:
+              command: ["/usr/local/bin/clamdcheck.sh"]
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["/usr/local/bin/clamdcheck.sh"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["/usr/local/bin/clamdcheck.sh"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1500m
+              memory: 1536Mi
+          volumeMounts:
+            - name: signatures
+              mountPath: /var/lib/clamav
+      volumes:
+        - name: signatures
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clamav-service
+  namespace: asesoria-inmobiliaria
+spec:
+  selector:
+    app: clamav
+  ports:
+    - name: clamd
+      port: 3310
+      targetPort: clamd

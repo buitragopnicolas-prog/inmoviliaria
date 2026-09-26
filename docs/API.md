@@ -60,3 +60,8 @@ Los uploads usan un backend S3-compatible, con MinIO por defecto en Docker Compo
 - `POST /payments/invoices/:invoiceId/intent` — crea intento del usuario.
 - `POST /payments/mock/:reference/approve` — únicamente modo local.
 - `POST /payments/wompi/webhook` — evento público verificado con `X-Event-Checksum` o `signature.checksum`.
+- `GET /payments/manual/config` — medios manuales autorizados para el usuario autenticado.
+- `POST /payments/invoices/:invoiceId/manual-report` — reporta un pago manual propio con comprobante opcional.
+- `GET /payments/manual/pending` — reportes pendientes para administración.
+- `PATCH /payments/manual/:paymentId/review` — confirma, rechaza o pasa a revisión un reporte.
+- `GET /payments/receipts/:fileId` — comprobante privado para titular o administrador.

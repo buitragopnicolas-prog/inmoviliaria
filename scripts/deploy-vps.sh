@@ -32,6 +32,9 @@ trap 'rm -f "$manifest" "$job_file"' EXIT
 
 kubectl -n "$namespace" get secret asesoria-secrets >/dev/null
 kubectl -n "$namespace" get service postgres-service minio-service >/dev/null
+if [[ "$stage" == dev ]]; then
+  bash "$repo/scripts/prepare-dev-security.sh"
+fi
 kubectl kustomize "$repo/k8s/overlays/$stage" | sed "s/RELEASE_TAG/$tag/g" > "$manifest"
 if grep -q RELEASE_TAG "$manifest"; then
   echo 'Quedó un marcador de imagen sin resolver.' >&2
@@ -43,10 +46,7 @@ if [[ "$stage" == prod ]]; then
     echo 'Falta aprobación explícita del SHA para producción en el VPS.' >&2
     exit 1
   fi
-  if grep -Eq 'PAYMENT_PROVIDER: *mock([[:space:]]|$)' "$manifest"; then
-    echo 'Producción sigue configurada con pagos mock.' >&2
-    exit 1
-  fi
+  node "$repo/scripts/payment-config-policy.mjs" "$manifest"
   if [[ ! -f /var/lib/asesoria-inmobiliaria-dev/verified-sha ]] ||
      [[ "$(cat /var/lib/asesoria-inmobiliaria-dev/verified-sha)" != "$release" ]]; then
     echo 'El SHA no pasó verificación completa en dev.' >&2
@@ -112,6 +112,7 @@ if [[ "$stage" == dev && ! -f /var/lib/asesoria-inmobiliaria-dev/seeded ]]; then
 fi
 
 kubectl apply -f "$manifest"
+kubectl -n "$namespace" rollout status deployment/clamav --timeout=600s
 kubectl -n "$namespace" rollout status deployment/api --timeout=300s
 kubectl -n "$namespace" rollout status deployment/web --timeout=300s
 smoke_ok=false
@@ -127,6 +128,10 @@ done
 if [[ "$smoke_ok" != true ]]; then
   echo "Fallaron las pruebas HTTP de $stage." >&2
   exit 1
+fi
+
+if [[ "$stage" == dev ]]; then
+  python3 "$repo/scripts/smoke-dev-vps.py" --upload
 fi
 
 if [[ "$stage" == dev && "$release" =~ ^[a-f0-9]{40}$ ]]; then

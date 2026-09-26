@@ -14,11 +14,17 @@ import { PropertiesModule } from './properties/properties.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 import { UsersModule } from './users/users.module.js';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{
+      ttl: Number(process.env.RATE_LIMIT_TTL_MS ?? 60_000),
+      limit: Number(process.env.RATE_LIMIT_DEFAULT ?? 120),
+    }]),
     PrismaModule,
     UsersModule,
     AuthModule,
@@ -33,5 +39,6 @@ import { UsersModule } from './users/users.module.js';
     PaymentsModule,
     DashboardModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

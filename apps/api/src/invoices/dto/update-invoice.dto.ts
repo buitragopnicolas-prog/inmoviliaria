@@ -1,9 +1,10 @@
-import { IsDateString, IsIn, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsDateString, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class UpdateInvoiceDto {
   @IsOptional()
   @IsInt()
   @Min(0)
+  @Max(2_000_000_000)
   amount?: number;
 
   @IsOptional()

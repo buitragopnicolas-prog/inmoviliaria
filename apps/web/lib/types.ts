@@ -2,7 +2,8 @@ export type Role = 'ADMIN' | 'USER';
 export type PropertyStatus = 'AVAILABLE' | 'RENTED' | 'ARCHIVED';
 export type InvoiceStatus = 'PENDING' | 'PAID' | 'OVERDUE' | 'VOID';
 export type ChargeCatalogType = 'SERVICE' | 'PRODUCT';
-export type StoredFilePurpose = 'PROPERTY_IMAGE' | 'GENERIC' | 'LEASE_CONTRACT';
+export type StoredFilePurpose = 'PROPERTY_IMAGE' | 'GENERIC' | 'LEASE_CONTRACT' | 'PAYMENT_RECEIPT';
+export type ManualPaymentMethodCode = 'QR' | 'BREB' | 'BANK_TRANSFER' | 'BANK_DEPOSIT';
 
 export interface ChargeCatalogItem {
   id: string;
@@ -108,7 +109,7 @@ export interface Invoice {
     total: number;
     catalogItem: { code: string; name: string; type: ChargeCatalogType };
   }>;
-  payments?: Array<{ id?: string; reference: string; amount: number; status: string; provider: string; createdAt?: string }>;
+  payments?: Array<{ id?: string; reference: string; amount: number; status: string; provider: string; manualMethod?: ManualPaymentMethodCode | null; bankReference?: string | null; createdAt?: string }>;
   adminNotes?: string | null;
   deletedReason?: string | null;
 }
@@ -207,6 +208,38 @@ export interface ImportBatch {
   startedAt: string;
   finishedAt?: string | null;
   _count: { records: number };
+}
+
+export interface ManualPaymentConfig {
+  mode: 'manual' | 'gateway' | 'mock';
+  enabled: boolean;
+  notice: string;
+  methods: Array<{
+    code: ManualPaymentMethodCode;
+    title: string;
+    description: string;
+    enabled: boolean;
+    details: Array<{ label: string; value: string }>;
+    qrImageUrl?: string;
+    instructions?: string;
+  }>;
+}
+
+export interface ManualPaymentReport {
+  id: string;
+  reference: string;
+  amount: number;
+  status: 'AWAITING_VERIFICATION' | 'UNDER_REVIEW';
+  manualMethod: ManualPaymentMethodCode;
+  bankReference: string;
+  paidAt: string;
+  reportedAt: string;
+  reviewNote?: string | null;
+  receiptFile?: { id: string; originalName: string; mimeType: string; size: number } | null;
+  user?: { id: string; name: string; email: string } | null;
+  tenant?: { id: string; name: string } | null;
+  invoice: { id: string; code: string; amount: number; lease: { property: { id: string; title: string; address: string } } };
+  auditEvents: Array<{ id: string; fromStatus?: string | null; toStatus: string; note?: string | null; createdAt: string; actor?: { name: string } | null }>;
 }
 
 export type UserFinancialState = 'NO_CHARGES' | 'PENDING' | 'OVERDUE' | 'PAID';

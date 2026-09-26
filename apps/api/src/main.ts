@@ -7,14 +7,17 @@ import cookieParser from 'cookie-parser';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AppModule } from './app.module.js';
+import { validateRuntimeConfiguration } from './config/runtime-config.js';
 
 async function bootstrap(): Promise<void> {
+  validateRuntimeConfiguration();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   app.setGlobalPrefix('api');
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(cookieParser());
+  app.set('trust proxy', 1);
   app.enableCors({
     origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
     credentials: true,

@@ -2,6 +2,7 @@
 
 import json
 import sys
+import urllib.error
 import urllib.request
 from uuid import uuid4
 
@@ -58,8 +59,27 @@ if "--upload" in sys.argv:
         token=token,
     )
     item = json.loads(uploaded)[0]
+    assert item["scanStatus"] == "CLEAN"
     status, content = request(f"/api/files/{item['id']}/content")
     assert status == 200 and content == payload
-    print("Dev API, web, login y carga/lectura MinIO: OK")
+    eicar = rb"X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"
+    boundary = uuid4().hex
+    body = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="files"; filename="eicar-{uuid4().hex}.com"\r\n'
+        "Content-Type: application/octet-stream\r\n\r\n"
+    ).encode() + eicar + f"\r\n--{boundary}--\r\n".encode()
+    try:
+        request(
+            "/api/admin/files",
+            method="POST",
+            data=body,
+            content_type=f"multipart/form-data; boundary={boundary}",
+            token=token,
+        )
+        raise AssertionError("EICAR no fue bloqueado")
+    except urllib.error.HTTPError as error:
+        assert error.code == 400
+    print("Dev API, web, login, MinIO y EICAR: OK")
 else:
     print("Dev API, web y login: OK")

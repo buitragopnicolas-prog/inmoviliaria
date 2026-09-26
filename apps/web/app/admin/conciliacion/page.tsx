@@ -4,21 +4,36 @@ import { apiFetch } from '@/lib/api';
 import { fecha, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { BankPaymentNotification, ImportBatch, ReceivingBankAccount } from '@/lib/types';
+import type { ManualPaymentReport } from '@/lib/types';
+import { ManualPaymentReviewForm } from '@/components/ManualPaymentReviewForm';
 
 export const metadata: Metadata = { title: 'Conciliación de pagos' };
 export const dynamic = 'force-dynamic';
 
 export default async function ReconciliationPage() {
   await requireUser('ADMIN');
-  const [notifications, accounts, imports] = await Promise.all([
+  const [notifications, accounts, imports, manualPayments] = await Promise.all([
     apiFetch<BankPaymentNotification[]>('/admin/reconciliation/notifications', {}, true),
     apiFetch<ReceivingBankAccount[]>('/admin/reconciliation/accounts', {}, true),
     apiFetch<ImportBatch[]>('/admin/reconciliation/imports', {}, true),
+    apiFetch<ManualPaymentReport[]>('/payments/manual/pending', {}, true),
   ]);
 
   return (
     <section className="section pageTop"><div className="container adminLayout"><AdminNav /><div className="adminContent">
       <div className="pageHeading compact"><span className="eyebrow">Automatización n8n</span><h1>Conciliación Bancolombia</h1><p>Consulta cuentas receptoras, cargas históricas de datos y notificaciones procesadas.</p></div>
+
+      <div className="card tableCard"><div className="tableTitle"><div><span className="eyebrow">Verificación humana</span><h2>Pagos manuales pendientes</h2></div><span>{manualPayments.length} por revisar</span></div>
+        <div className="manualPaymentsGrid">
+          {manualPayments.map((payment) => <article className="manualPaymentAdminCard" key={payment.id}>
+            <div className="manualPaymentAdminHead"><div><span className={`status ${payment.status === 'UNDER_REVIEW' ? 'review' : 'pending'}`}>{payment.status === 'UNDER_REVIEW' ? 'EN REVISIÓN' : 'PENDIENTE'}</span><h3>{payment.user?.name ?? payment.tenant?.name ?? 'Usuario'}</h3><p>{payment.invoice.lease.property.title} · {payment.invoice.code}</p></div><strong>{pesos(payment.amount)}</strong></div>
+            <dl className="paymentAuditData"><div><dt>Método</dt><dd>{manualMethod(payment.manualMethod)}</dd></div><div><dt>Referencia</dt><dd>{payment.bankReference}</dd></div><div><dt>Pago informado</dt><dd>{fecha(payment.paidAt)}</dd></div><div><dt>Reporte</dt><dd>{fecha(payment.reportedAt)}</dd></div></dl>
+            {payment.receiptFile ? <a className="button outline small" href={`/documentos/pagos/${payment.receiptFile.id}`} target="_blank" rel="noreferrer">Ver comprobante</a> : <p className="muted">Sin comprobante adjunto.</p>}
+            <ManualPaymentReviewForm paymentId={payment.id} />
+          </article>)}
+          {manualPayments.length === 0 && <div className="empty">No hay reportes manuales pendientes.</div>}
+        </div>
+      </div>
 
       <div className="card tableCard"><div className="tableTitle"><h2>Cuentas receptoras</h2><span>{accounts.length} configuradas</span></div>
         <div className="responsiveTable"><table><thead><tr><th>Banco</th><th>Cuenta</th><th>Contratos</th><th>Notificaciones</th><th>Estado</th></tr></thead><tbody>
@@ -42,4 +57,11 @@ export default async function ReconciliationPage() {
       </div>
     </div></div></section>
   );
+}
+
+function manualMethod(method: string): string {
+  if (method === 'QR') return 'Código QR';
+  if (method === 'BREB') return 'Bre-B / llave';
+  if (method === 'BANK_TRANSFER') return 'Transferencia bancaria';
+  return 'Consignación';
 }
