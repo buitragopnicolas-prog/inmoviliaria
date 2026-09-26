@@ -39,12 +39,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: asesoria-secrets
-                  key: STORAGE_ACCESS_KEY
+                  key: MINIO_ROOT_USER
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: asesoria-secrets
-                  key: STORAGE_SECRET_KEY
+                  key: MINIO_ROOT_PASSWORD
           readinessProbe:
             httpGet:
               path: /minio/health/ready
@@ -110,14 +110,25 @@ spec:
             - /bin/sh
             - -c
             - |
-              until mc alias set local http://minio-service:9000 "$STORAGE_ACCESS_KEY" "$STORAGE_SECRET_KEY"; do
+              until mc alias set local http://minio-service:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
                 echo "Esperando MinIO..."
                 sleep 3
               done
               mc mb --ignore-existing "local/$STORAGE_BUCKET"
               mc anonymous set none "local/$STORAGE_BUCKET"
+              mc admin user add local "$MINIO_APP_USER" "$MINIO_APP_PASSWORD"
+              mc admin policy create local inmobiliaria-app-policy /security/app-policy.json
+              mc admin policy attach local inmobiliaria-app-policy --user "$MINIO_APP_USER"
           envFrom:
             - configMapRef:
                 name: asesoria-config
             - secretRef:
                 name: asesoria-secrets
+          volumeMounts:
+            - name: app-policy
+              mountPath: /security
+              readOnly: true
+      volumes:
+        - name: app-policy
+          configMap:
+            name: minio-app-policy

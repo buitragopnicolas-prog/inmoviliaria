@@ -29,6 +29,5 @@ EOF
 fi
 
 chmod 600 "$secret_file"
-kubectl -n "$namespace" create secret generic asesoria-secrets \
-  --from-env-file="$secret_file" --dry-run=client -o yaml | kubectl apply -f -
+bash "$(cd "$(dirname "$0")" && pwd)/prepare-dev-security.sh" --secrets-only
 echo "Namespace y secretos de dev listos; archivo privado: $secret_file"

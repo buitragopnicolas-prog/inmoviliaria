@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - 01-configmap.yaml
   - 06-apps.yaml
+  - 07-clamav.yaml
   - 08-network-policies.yaml
 patches:
   - target:

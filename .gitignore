@@ -16,3 +16,6 @@ apps/api/uploads/*
 .local/
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
+
+__pycache__/
+*.pyc
