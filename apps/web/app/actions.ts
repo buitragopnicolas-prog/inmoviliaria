@@ -4,8 +4,11 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { apiFetch } from '@/lib/api';
+import { isLocalRegistrationEnabled } from '@/lib/registration-policy';
 
 export type ActionState = { error?: string; success?: string };
+
+const authCookieMaxAge = Math.min(Math.max(Number(process.env.AUTH_COOKIE_MAX_AGE_SECONDS ?? 3600) || 3600, 300), 3600);
 
 export async function loginAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   try {
@@ -18,7 +21,7 @@ export async function loginAction(_previous: ActionState, formData: FormData): P
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
       path: '/',
-      maxAge: 60 * 60 * 24,
+      maxAge: authCookieMaxAge,
     });
     redirect(response.user.role === 'ADMIN' ? '/admin' : '/mi-cuenta');
   } catch (error) {
@@ -28,6 +31,7 @@ export async function loginAction(_previous: ActionState, formData: FormData): P
 }
 
 export async function registerAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+  if (!isLocalRegistrationEnabled()) return { error: 'El registro público no está habilitado. Solicita la activación de tu cuenta a un asesor.' };
   try {
     const response = await apiFetch<{ accessToken: string }>('/auth/register', {
       method: 'POST',
@@ -35,7 +39,7 @@ export async function registerAction(_previous: ActionState, formData: FormData)
         name: formData.get('name'), email: formData.get('email'), phone: formData.get('phone'), password: formData.get('password'),
       }),
     });
-    (await cookies()).set('inmo_token', response.accessToken, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 86400 });
+    (await cookies()).set('inmo_token', response.accessToken, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: authCookieMaxAge });
     redirect('/mi-cuenta');
   } catch (error) {
     if (isRedirectError(error)) throw error;

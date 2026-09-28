@@ -18,6 +18,13 @@ export function validateRuntimeConfiguration(environment: NodeJS.ProcessEnv = pr
   if (!environment.STORAGE_ACCESS_KEY || environment.STORAGE_ACCESS_KEY === 'minioadmin') throw new Error('STORAGE_ACCESS_KEY segura es obligatoria en producción.');
   if (!environment.STORAGE_SECRET_KEY || environment.STORAGE_SECRET_KEY === 'minioadmin' || environment.STORAGE_SECRET_KEY.length < 16) throw new Error('STORAGE_SECRET_KEY segura es obligatoria en producción.');
   if ((environment.STORAGE_AUTO_CREATE_BUCKET ?? '').toLowerCase() !== 'false') throw new Error('STORAGE_AUTO_CREATE_BUCKET debe ser false en producción.');
+  if ((environment.PUBLIC_REGISTRATION_ENABLED ?? 'false').trim().toLowerCase() === 'true') {
+    throw new Error('El registro público debe permanecer deshabilitado en producción.');
+  }
+  const jwtLifetime = Number(environment.JWT_EXPIRES_IN_SECONDS ?? 3600);
+  if (!Number.isInteger(jwtLifetime) || jwtLifetime < 300 || jwtLifetime > 3600) {
+    throw new Error('JWT_EXPIRES_IN_SECONDS debe estar entre 300 y 3600 segundos en producción.');
+  }
 
   const mode = resolvePaymentMode(environment);
   if (mode === 'mock') throw new Error('PAYMENT_MODE=mock está bloqueado en producción.');

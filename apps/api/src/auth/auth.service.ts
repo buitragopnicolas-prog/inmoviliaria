@@ -1,10 +1,11 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UsersService } from '../users/users.service.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
+import { isPublicRegistrationEnabled } from './auth-policy.js';
 
 const dummyPasswordHash = '$2b$12$ZltX8z1V2X/FIi81VKZFe.SBukURYrDSWlfkU.lGmqbqIiaPLgW3u';
 
@@ -17,6 +18,9 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
+    if (!isPublicRegistrationEnabled()) {
+      throw new ForbiddenException('El registro público no está habilitado. Solicita la activación de tu cuenta a un asesor.');
+    }
     const email = dto.email.toLowerCase().trim();
     if (await this.users.findByEmail(email)) {
       throw new ConflictException('El correo ya se encuentra registrado.');

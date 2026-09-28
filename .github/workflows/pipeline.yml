@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       DATABASE_URL: postgresql://inmobiliaria:ci_password@localhost:5432/inmobiliaria?schema=public
       JWT_SECRET: ci-only-secret-not-for-deployment-1234567890
@@ -30,7 +30,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: '1'
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
         env:
           POSTGRES_USER: inmobiliaria
           POSTGRES_PASSWORD: ci_password
@@ -40,11 +40,11 @@ jobs:
           --health-cmd "pg_isready -U inmobiliaria -d inmobiliaria"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: '24'
           cache: npm
@@ -89,7 +89,7 @@ jobs:
   deploy-dev:
     needs: validate
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: development
       url: https://dev.asesoriainmobiliariajb.com
@@ -97,7 +97,7 @@ jobs:
       group: inmobiliaria-dev
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
       - name: SSH deploy dev
@@ -121,7 +121,7 @@ jobs:
   deploy-prod:
     needs: validate
     if: github.event_name == 'workflow_dispatch' && inputs.target == 'prod'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: production
       url: https://asesoriainmobiliariajb.com
@@ -129,7 +129,7 @@ jobs:
       group: inmobiliaria-production
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
       - name: SSH promote reviewed SHA

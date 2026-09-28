@@ -15,14 +15,14 @@ async function bootstrap(): Promise<void> {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   app.setGlobalPrefix('api');
-  app.use(helmet({ crossOriginResourcePolicy: false }));
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-origin' } }));
   app.use(cookieParser());
   app.set('trust proxy', 1);
   app.enableCors({
     origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
     credentials: true,
   });
-  app.useStaticAssets(join(__dirname, '../uploads'), { prefix: '/uploads/' });
+  app.useStaticAssets(join(__dirname, '../uploads/seed'), { prefix: '/uploads/seed/' });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
