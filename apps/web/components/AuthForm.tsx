@@ -7,7 +7,7 @@ import { loginAction, registerAction } from '@/app/actions';
 
 const initial: ActionState = {};
 
-export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
+export function AuthForm({ mode, showRegistrationLink = false }: { mode: 'login' | 'register'; showRegistrationLink?: boolean }) {
   const [state, action, pending] = useActionState(mode === 'login' ? loginAction : registerAction, initial);
   return (
     <form className="form card authForm" action={action}>
@@ -19,7 +19,9 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       <label>Contraseña<input type="password" name="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={8} /></label>
       {state.error && <p className="alert error" role="alert">{state.error}</p>}
       <button className="button wide" disabled={pending}>{pending ? 'Procesando…' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
-      <p className="center muted">{mode === 'login' ? <>¿No tienes cuenta? <Link href="/registro">Regístrate</Link></> : <>¿Ya tienes cuenta? <Link href="/login">Ingresa</Link></>}</p>
+      {(mode === 'register' || showRegistrationLink) && (
+        <p className="center muted">{mode === 'login' ? <>¿No tienes cuenta? <Link href="/registro">Regístrate</Link></> : <>¿Ya tienes cuenta? <Link href="/login">Ingresa</Link></>}</p>
+      )}
     </form>
   );
 }

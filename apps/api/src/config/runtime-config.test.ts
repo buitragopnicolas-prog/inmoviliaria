@@ -27,3 +27,15 @@ test('producción acepta manual completo', () => {
     MANUAL_PAYMENT_ACCOUNT_TYPE: 'Ahorros', MANUAL_PAYMENT_ACCOUNT_DISPLAY: '****1234',
   }));
 });
+
+test('producción limita las sesiones a una hora', () => {
+  const base = {
+    NODE_ENV: 'production', APP_ENV: 'production', DATABASE_URL: 'postgresql://db/app', WEB_ORIGIN: 'https://example.com',
+    JWT_SECRET: 'x'.repeat(48), STORAGE_ACCESS_KEY: 'storage-user', STORAGE_SECRET_KEY: 'x'.repeat(24), STORAGE_AUTO_CREATE_BUCKET: 'false',
+    PAYMENT_MODE: 'manual', MANUAL_PAYMENT_BANK_NAME: 'Banco', MANUAL_PAYMENT_ACCOUNT_HOLDER: 'Titular',
+    MANUAL_PAYMENT_ACCOUNT_TYPE: 'Ahorros', MANUAL_PAYMENT_ACCOUNT_DISPLAY: '****1234',
+  };
+  assert.throws(() => validateRuntimeConfiguration({ ...base, JWT_EXPIRES_IN_SECONDS: '3601' }), /JWT_EXPIRES_IN_SECONDS/);
+  assert.doesNotThrow(() => validateRuntimeConfiguration({ ...base, JWT_EXPIRES_IN_SECONDS: '3600' }));
+  assert.throws(() => validateRuntimeConfiguration({ ...base, PUBLIC_REGISTRATION_ENABLED: 'true' }), /registro público/);
+});

@@ -13,7 +13,7 @@ import { UsersModule } from '../users/users.module.js';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET ?? 'insecure-development-secret-change-it',
-      signOptions: { expiresIn: Number(process.env.JWT_EXPIRES_IN_SECONDS ?? 86400) },
+      signOptions: { expiresIn: Number(process.env.JWT_EXPIRES_IN_SECONDS ?? 3600) },
     }),
   ],
   controllers: [AuthController],
