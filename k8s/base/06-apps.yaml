@@ -27,6 +27,7 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
+            readOnlyRootFilesystem: true
           ports:
             - name: http
               containerPort: 4000
@@ -58,6 +59,12 @@ spec:
             limits:
               cpu: 1
               memory: 1Gi
+          volumeMounts:
+            - name: api-tmp
+              mountPath: /tmp
+      volumes:
+        - name: api-tmp
+          emptyDir: {}
 
 ---
 
@@ -103,6 +110,7 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
+            readOnlyRootFilesystem: true
           ports:
             - name: http
               containerPort: 3000
@@ -118,11 +126,26 @@ spec:
                 configMapKeyRef:
                   name: asesoria-config
                   key: API_INTERNAL_URL
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: asesoria-config
+                  key: APP_ENV
+            - name: PUBLIC_REGISTRATION_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: asesoria-config
+                  key: PUBLIC_REGISTRATION_ENABLED
             - name: NEXT_PUBLIC_API_URL
               valueFrom:
                 configMapKeyRef:
                   name: asesoria-config
                   key: NEXT_PUBLIC_API_URL
+            - name: AUTH_COOKIE_MAX_AGE_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  name: asesoria-config
+                  key: AUTH_COOKIE_MAX_AGE_SECONDS
           startupProbe:
             tcpSocket:
               port: http
@@ -144,6 +167,16 @@ spec:
             limits:
               cpu: 1
               memory: 1Gi
+          volumeMounts:
+            - name: web-tmp
+              mountPath: /tmp
+            - name: web-cache
+              mountPath: /app/apps/web/.next/cache
+      volumes:
+        - name: web-tmp
+          emptyDir: {}
+        - name: web-cache
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
