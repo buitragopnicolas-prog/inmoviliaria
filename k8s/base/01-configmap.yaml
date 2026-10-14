@@ -30,7 +30,8 @@ data:
   CONTRACT_MAX_FILE_SIZE: "25000000"
   PROPERTY_IMAGE_MAX_FILE_SIZE: "5000000"
   PROPERTY_360_MAX_FILE_SIZE: "15000000"
-  PAYMENT_PROVIDER: mock
+  PAYMENT_MODE: manual
+  PAYMENT_GATEWAY: none
   WOMPI_REDIRECT_URL: https://asesoriainmobiliariajb.com/mi-cuenta
   CYBERVESTIGIO_RETURN_URL: https://asesoriainmobiliariajb.com/mi-cuenta
   PAYMENT_AMOUNT_TOLERANCE_COP: "0"
