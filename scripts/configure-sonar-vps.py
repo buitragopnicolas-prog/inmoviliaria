@@ -60,6 +60,20 @@ projects = api('projects/search?' + urllib.parse.urlencode({'projects': PROJECT}
 if not any(item['key'] == PROJECT for item in projects.get('components', [])):
     api('projects/create', {'project': PROJECT, 'name': 'Asesoria Inmobiliaria JB', 'visibility': 'private', 'mainBranch': 'main'})
 
+# Service users inherit the default group. Remove its broad grants so explicit
+# project permissions are the only analysis/access rights of these accounts.
+users = api('users/search?ps=100')
+allowed_users = {'admin', 'inmo-github-ci', 'inmo-vps-verify'}
+if users.get('paging', {}).get('total', 0) > 3 or any(user['login'] not in allowed_users for user in users.get('users', [])):
+    raise SystemExit('Hay otros usuarios: no se modificaron permisos compartidos.')
+all_projects = api('projects/search?ps=100')
+if all_projects.get('paging', {}).get('total', 0) != 1 or any(item['key'] != PROJECT for item in all_projects.get('components', [])):
+    raise SystemExit('Hay otros proyectos: no se modificaron permisos compartidos.')
+for permission in ['scan', 'provisioning']:
+    api('permissions/remove_group', {'groupName': 'sonar-users', 'permission': permission})
+for permission in ['user', 'codeviewer', 'scan', 'issueadmin', 'securityhotspotadmin']:
+    api('permissions/remove_group', {'groupName': 'sonar-users', 'projectKey': PROJECT, 'permission': permission})
+
 for login, permissions in [('inmo-github-ci', ['user', 'scan']), ('inmo-vps-verify', ['user'])]:
     users = api('users/search?' + urllib.parse.urlencode({'q': login})).get('users', [])
     if not any(user['login'] == login for user in users):
