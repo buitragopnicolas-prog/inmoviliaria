@@ -108,7 +108,7 @@ export function AdminPropertyEditForm({ property, tenants }: { property: Propert
 
       {state.error && <p className="alert error">{state.error}</p>}
       {state.success && <p className="alert success">{state.success}</p>}
-      <button className="button" disabled={pending}>{pending ? 'Guardando…' : 'Guardar cambios'}</button>
+      <button type="submit" className="button" disabled={pending}>{pending ? 'Guardando…' : 'Guardar cambios'}</button>
     </form>
   );
 }

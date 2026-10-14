@@ -1,4 +1,68 @@
 services:
+  sonar-db:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    profiles: [sonar]
+    networks: [sonar]
+    environment:
+      POSTGRES_DB: sonar
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:-sonar_local_only}
+    volumes:
+      - sonar_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonar"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  sonarqube:
+    image: sonarqube:community@sha256:c0f1160bccfa435db4168c2d7df69af3c3ea7bfeb87395613014048fb33a68c1
+    profiles: [sonar]
+    networks: [sonar]
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:-sonar_local_only}
+    ports:
+      - "127.0.0.1:${SONAR_HOST_PORT:-9002}:9000"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+    depends_on:
+      sonar-db:
+        condition: service_healthy
+    ulimits:
+      nofile: { soft: 131072, hard: 131072 }
+      nproc: 8192
+
+  sonar-scanner:
+    image: sonarsource/sonar-scanner-cli@sha256:a3f4215076706c95a17a68c19322ee916e40a3acd081a8c1a1e839e0194afa57
+    profiles: [sonar-scan]
+    networks: [sonar]
+    working_dir: /usr/src
+    environment:
+      SONAR_HOST_URL: http://sonarqube:9000
+      SONAR_TOKEN: ${SONAR_TOKEN:-}
+    volumes:
+      - ./apps/api/src:/usr/src/apps/api/src:ro
+      - ./apps/api/tsconfig.json:/usr/src/apps/api/tsconfig.json:ro
+      - ./apps/web/app:/usr/src/apps/web/app:ro
+      - ./apps/web/components:/usr/src/apps/web/components:ro
+      - ./apps/web/lib:/usr/src/apps/web/lib:ro
+      - ./apps/web/tsconfig.json:/usr/src/apps/web/tsconfig.json:ro
+      - ./scripts:/usr/src/scripts:ro
+      - ./coverage:/usr/src/coverage:ro
+      - ./sonar-project.properties:/usr/src/sonar-project.properties:ro
+      - ./package.json:/usr/src/package.json:ro
+      - ./.git:/usr/src/.git:ro
+      - ./.gitignore:/usr/src/.gitignore:ro
+      - sonar_scanner_cache:/opt/sonar-scanner/.sonar
+    command:
+      - -Dsonar.projectKey=${SONAR_PROJECT_KEY:-inmobiliaria-raiz-platform}
+      - -Dsonar.qualitygate.wait=true
+      - -Dsonar.qualitygate.timeout=600
+
   postgres:
     image: postgres:17-alpine
     container_name: inmobiliaria_postgres
@@ -178,7 +242,15 @@ services:
     depends_on:
       - api
 
+networks:
+  sonar:
+
 volumes:
+  sonar_db:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:
+  sonar_scanner_cache:
   inmobiliaria_db:
   uploads:
   minio_data:

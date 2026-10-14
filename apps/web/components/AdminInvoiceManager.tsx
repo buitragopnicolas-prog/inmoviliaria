@@ -53,7 +53,7 @@ function InvoiceRows({ invoice }: { invoice: Invoice }) {
             <p className="muted">Pagos aprobados asociados: {pesos(invoice.approvedAmount ?? approvedTotal(invoice))}. El saldo visible se recalcula automáticamente.</p>
             {updateState.error && <p className="alert error">{updateState.error}</p>}
             {updateState.success && <p className="alert success">{updateState.success}</p>}
-            <button className="button small" disabled={updating}>{updating ? 'Guardando…' : 'Guardar cambios'}</button>
+            <button type="submit" className="button small" disabled={updating}>{updating ? 'Guardando…' : 'Guardar cambios'}</button>
           </form>
           <form
             className="form invoiceDeleteForm"
@@ -69,7 +69,7 @@ function InvoiceRows({ invoice }: { invoice: Invoice }) {
             <label>Motivo<textarea name="reason" rows={3} placeholder="Ejemplo: factura duplicada" /></label>
             {deleteState.error && <p className="alert error">{deleteState.error}</p>}
             {deleteState.success && <p className="alert success">{deleteState.success}</p>}
-            <button className="button danger small" disabled={deleting}>{deleting ? 'Eliminando…' : 'Eliminar factura'}</button>
+            <button type="submit" className="button danger small" disabled={deleting}>{deleting ? 'Eliminando…' : 'Eliminar factura'}</button>
           </form>
         </div>
       </td></tr>}

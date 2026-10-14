@@ -4,6 +4,7 @@ dist
 .env
 .env.local
 coverage
+.scannerwork/
 apps/api/src/generated/prisma
 apps/api/uploads/*
 !apps/api/uploads/seed

@@ -1,0 +1,8 @@
+{
+  "all": true,
+  "include": ["apps/api/src/**/*.ts", "apps/web/app/**/*.{ts,tsx}", "apps/web/components/**/*.{ts,tsx}", "apps/web/lib/**/*.{ts,mjs}", "scripts/*.mjs"],
+  "exclude": ["**/*.test.*", "apps/api/src/generated/**", "scripts/e2e-*.mjs", "scripts/test-web-errors.mjs", "scripts/generate-brand-assets.mjs"],
+  "exclude-after-remap": true,
+  "reporter": ["text-summary", "lcov"],
+  "reports-dir": "coverage"
+}

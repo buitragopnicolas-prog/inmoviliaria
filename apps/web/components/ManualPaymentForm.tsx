@@ -43,7 +43,7 @@ export function ManualPaymentForm({ invoiceId, amount, idempotencyKey, config }:
       <label>Comprobante (opcional)<input type="file" name="receipt" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf" /><span className="hint">JPG, PNG o PDF. Máximo 8 MB.</span></label>
       {state.error && <p className="alert error" role="alert">{state.error}</p>}
       {state.success && <p className="alert success" role="status">{state.success}</p>}
-      <button className="button wide" disabled={pending || Boolean(state.success)}>{pending ? 'Enviando reporte…' : 'Ya realicé el pago'}</button>
+      <button type="submit" className="button wide" disabled={pending || Boolean(state.success)}>{pending ? 'Enviando reporte…' : 'Ya realicé el pago'}</button>
       <p className="paymentNotice">{config.notice}</p>
     </form>}
   </div>;

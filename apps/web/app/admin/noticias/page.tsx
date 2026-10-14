@@ -19,7 +19,7 @@ export default async function AdminNewsPage() {
       <AdminNewsForm />
       <div className="card tableCard"><div className="tableTitle"><h2>Publicaciones</h2><span>{news.length} registros</span></div>
         <div className="responsiveTable"><table><thead><tr><th>Titular</th><th>Fuente</th><th>Fecha</th><th>Estado</th><th /></tr></thead><tbody>{news.map((newsPost) => <tr key={newsPost.id}>
-          <td>{newsPost.title}</td><td>{newsPost.sourceLabel || (newsPost.externalUrl ? 'Prensa digital' : 'Asesoría Inmobiliaria JB')}</td><td>{fecha(newsPost.createdAt)}</td><td><span className={`status ${newsPost.published ? 'published' : 'archived'}`}>{newsPost.published ? 'Publicada' : 'Oculta'}</span></td><td>{newsPost.published && <form action={archiveNewsAction}><input type="hidden" name="id" value={newsPost.id} /><button className="textButton">Ocultar</button></form>}</td>
+          <td>{newsPost.title}</td><td>{newsPost.sourceLabel || (newsPost.externalUrl ? 'Prensa digital' : 'Asesoría Inmobiliaria JB')}</td><td>{fecha(newsPost.createdAt)}</td><td><span className={`status ${newsPost.published ? 'published' : 'archived'}`}>{newsPost.published ? 'Publicada' : 'Oculta'}</span></td><td>{newsPost.published && <form action={archiveNewsAction}><input type="hidden" name="id" value={newsPost.id} /><button type="submit" className="textButton">Ocultar</button></form>}</td>
         </tr>)}</tbody></table></div>
       </div>
     </div></div></section>

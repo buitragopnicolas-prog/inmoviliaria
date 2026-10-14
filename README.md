@@ -19,6 +19,8 @@ Plataforma web para publicar inmuebles en arriendo, recibir contactos, administr
 
 Consulte [la guía de arranque y despliegues](docs/LOCAL_Y_DESPLIEGUES.md). Incluye el script Windows, los overlays Kubernetes y el despliegue con migraciones previas.
 
+Sonar es obligatorio antes de desplegar a dev o producción. Incluye [SonarQube local en Docker, cobertura y bloqueo por Quality Gate](docs/SONAR.md).
+
 ## Inicio rápido con Docker
 
 1. Copie las variables de entorno:

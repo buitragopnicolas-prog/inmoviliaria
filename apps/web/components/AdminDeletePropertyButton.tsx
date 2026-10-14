@@ -18,7 +18,7 @@ export function AdminDeletePropertyButton({ id, title }: { id: string; title: st
         }}
       >
         <input type="hidden" name="id" value={id} />
-        <button className="textButton danger" disabled={pending}>
+        <button type="submit" className="textButton danger" disabled={pending}>
           {pending ? 'Retirando…' : 'Retirar'}
         </button>
       </form>

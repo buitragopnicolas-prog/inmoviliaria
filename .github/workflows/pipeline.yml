@@ -43,7 +43,17 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Validate manual release
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          DEPLOY_SHA: ${{ inputs.sha }}
+        run: |
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+          [[ "$DEPLOY_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$(git rev-parse HEAD)" == "$DEPLOY_SHA" ]]
+          git merge-base --is-ancestor "$DEPLOY_SHA" origin/main
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: '24'
@@ -51,8 +61,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run check
-      - run: npm run test:regressions
-      - run: npm run test:payments
+      - run: npm run test:coverage
       - run: npm run test:web-errors
       - run: npm audit --audit-level=high
       - run: npm run db:migrate
@@ -86,6 +95,39 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.target == 'prod'
         run: npm audit --audit-level=high
 
+      - name: Require Sonar configuration
+        if: github.event_name != 'pull_request'
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: node scripts/sonar-gate.mjs --check-config
+      - name: Sonar analysis and mandatory quality gate
+        if: github.event_name != 'pull_request'
+        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        with:
+          args: >-
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.scm.revision=${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=600
+      - name: Verify Sonar approval for the release commit
+        if: github.event_name != 'pull_request'
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DEPLOY_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+        run: node scripts/sonar-gate.mjs "$DEPLOY_SHA"
+
   deploy-dev:
     needs: validate
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
@@ -99,6 +141,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
           persist-credentials: false
       - name: SSH deploy dev
         env:
@@ -131,6 +174,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ inputs.sha }}
           persist-credentials: false
       - name: SSH promote reviewed SHA
         env:

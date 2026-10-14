@@ -1,0 +1,42 @@
+name: inmobiliaria-sonar
+services:
+  db:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sonar
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:?required}
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U sonar -d sonar"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+  sonar:
+    image: sonarqube:community@sha256:c0f1160bccfa435db4168c2d7df69af3c3ea7bfeb87395613014048fb33a68c1
+    restart: unless-stopped
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:?required}
+      SONAR_WEB_CONTEXT: /sonar
+    ports: ["127.0.0.1:19002:9000"]
+    volumes:
+      - data:/opt/sonarqube/data
+      - extensions:/opt/sonarqube/extensions
+      - logs:/opt/sonarqube/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    ulimits:
+      nofile: { soft: 131072, hard: 131072 }
+      nproc: 8192
+    mem_limit: 3g
+volumes:
+  db:
+  data:
+  extensions:
+  logs:

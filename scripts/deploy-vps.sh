@@ -8,15 +8,23 @@ fi
 stage="$1"
 release="$2"
 [[ "$stage" == dev || "$stage" == prod ]] || exit 2
-[[ "$release" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]{5,39}$ ]] || exit 2
-if [[ "$stage" == prod && ! "$release" =~ ^[a-f0-9]{40}$ ]]; then
-  echo 'Producción exige el SHA completo de un commit.' >&2
+if [[ ! "$release" =~ ^[a-f0-9]{40}$ ]]; then
+  echo 'Dev y producción exigen el SHA completo aprobado por Sonar.' >&2
   exit 2
 fi
 
 exec 9>/run/lock/asesoria-inmobiliaria-deploy.lock
 flock 9
 repo="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ "$(git -C "$repo" rev-parse HEAD)" != "$release" ]] ||
+   [[ -n "$(git -C "$repo" status --porcelain --untracked-files=normal)" ]]; then
+  echo 'El código debe coincidir con el commit aprobado y no tener cambios locales.' >&2
+  exit 1
+fi
+# Protected server configuration, independent of the checked-out release.
+# Fail before building images, modifying secrets or applying migrations.
+export PATH="/opt/asesoria-inmobiliaria/sonar/runtime/bin:$PATH"
+node --env-file=/etc/asesoria-inmobiliaria/sonar.env "$repo/scripts/sonar-gate.mjs" "$release"
 namespace=asesoria-inmobiliaria
 domain=asesoriainmobiliariajb.com
 if [[ "$stage" == dev ]]; then

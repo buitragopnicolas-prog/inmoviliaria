@@ -18,7 +18,7 @@ export function AuthForm({ mode, showRegistrationLink = false }: { mode: 'login'
       {mode === 'register' && <label>Teléfono<input name="phone" type="tel" autoComplete="tel" /></label>}
       <label>Contraseña<input type="password" name="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={8} /></label>
       {state.error && <p className="alert error" role="alert">{state.error}</p>}
-      <button className="button wide" disabled={pending}>{pending ? 'Procesando…' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
+      <button type="submit" className="button wide" disabled={pending}>{pending ? 'Procesando…' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
       {(mode === 'register' || showRegistrationLink) && (
         <p className="center muted">{mode === 'login' ? <>¿No tienes cuenta? <Link href="/registro">Regístrate</Link></> : <>¿Ya tienes cuenta? <Link href="/login">Ingresa</Link></>}</p>
       )}
