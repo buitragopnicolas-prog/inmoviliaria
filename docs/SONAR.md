@@ -6,6 +6,16 @@ El servidor vuelve a consultar Sonar antes de construir imágenes, cambiar secre
 
 ## Docker local
 
+Las pruebas del control de despliegue requieren Python 3.12 o posterior y `coverage==7.10.7`. Instálelos en un entorno virtual local y actívelo antes de `sonar:local`:
+
+```powershell
+python -m venv .local/python-tests
+.local/python-tests/Scripts/Activate.ps1
+python -m pip install coverage==7.10.7
+```
+
+En Linux, active el entorno con `source .local/python-tests/bin/activate`. `npm run test:python-coverage` comprueba configuración completa, rechazo de datos incoherentes y la integridad del QR, y genera `coverage/python.xml`. GitHub crea su propio entorno virtual aislado y entrega este reporte a Sonar junto con LCOV; no omite las condiciones de cobertura para cambios pequeños.
+
 ```powershell
 npm run sonar:up
 npm run sonar:bootstrap
