@@ -48,6 +48,7 @@ qr_asset=/opt/asesoria-inmobiliaria/payments/bancolombia-breb.jpeg
 [[ -f "$qr_asset" ]] || { echo 'No existe el QR autorizado en el VPS.' >&2; exit 1; }
 node --input-type=module - "$payment_config" "$payment_overlay" "$repo" "$stage" <<'NODE'
 import fs from 'node:fs';
+import path from 'node:path';
 const [configPath, overlay, repo, stage] = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 if (config.apiVersion !== 'v1' || config.kind !== 'ConfigMap' || config.metadata?.name !== 'asesoria-config' ||
@@ -61,7 +62,7 @@ if (config.apiVersion !== 'v1' || config.kind !== 'ConfigMap' || config.metadata
 }
 fs.writeFileSync(`${overlay}/kustomization.yaml`, JSON.stringify({
   apiVersion: 'kustomize.config.k8s.io/v1beta1', kind: 'Kustomization',
-  resources: [`${repo}/k8s/overlays/${stage}`],
+  resources: [path.relative(overlay, `${repo}/k8s/overlays/${stage}`)],
   patches: [{target: {kind: 'ConfigMap', name: 'asesoria-config'}, path: configPath}],
 }));
 NODE
