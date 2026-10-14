@@ -59,7 +59,7 @@ if (config.apiVersion !== 'v1' || config.kind !== 'ConfigMap' || config.metadata
     config.data.MANUAL_PAYMENT_QR_IMAGE_URL !== '/payments/bancolombia-breb.jpeg') {
   throw new Error('El parche protegido solo admite configuración de pagos manuales autorizados.');
 }
-fs.writeFileSync(`${overlay}/kustomization.json`, JSON.stringify({
+fs.writeFileSync(`${overlay}/kustomization.yaml`, JSON.stringify({
   apiVersion: 'kustomize.config.k8s.io/v1beta1', kind: 'Kustomization',
   resources: [`${repo}/k8s/overlays/${stage}`],
   patches: [{target: {kind: 'ConfigMap', name: 'asesoria-config'}, path: configPath}],
