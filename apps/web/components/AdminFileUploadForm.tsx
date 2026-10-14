@@ -12,7 +12,7 @@ export function AdminFileUploadForm() {
       <label>Archivos <span className="hint">cualquier tipo; hasta 20 archivos, 25 MB por archivo y 70 MB en total</span><input type="file" name="files" multiple required /></label>
       {state.error && <p className="alert error">{state.error}</p>}
       {state.success && <p className="alert success">{state.success}</p>}
-      <button className="button" disabled={pending}>{pending ? 'Cargando…' : 'Cargar archivos'}</button>
+      <button type="submit" className="button" disabled={pending}>{pending ? 'Cargando…' : 'Cargar archivos'}</button>
     </form>
   );
 }

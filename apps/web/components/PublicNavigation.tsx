@@ -1,34 +1,36 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import { ActiveLink } from './ActiveLink';
 import { UiIcon } from './UiIcon';
 
 export function PublicNavigation({ role }: { role?: 'ADMIN' | 'USER' }) {
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
-  const links = <>
-    <ActiveLink href="/">Inicio</ActiveLink>
-    <ActiveLink href="/inmuebles">Inmuebles</ActiveLink>
-    <ActiveLink href="/noticias">Noticias</ActiveLink>
-    <ActiveLink href="/nosotros">Nosotros</ActiveLink>
-    <ActiveLink href="/contacto">Contacto</ActiveLink>
-    {role === 'ADMIN' && <ActiveLink href="/admin">Administración</ActiveLink>}
-    {role === 'USER' && <ActiveLink href="/mi-cuenta">Mi cuenta</ActiveLink>}
-  </>;
+  function closeMenu() { setOpen(false); toggle.current?.focus(); }
+  function handleEscape(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === 'Escape') closeMenu();
+  }
+  const destinations = [
+    { href: '/', label: 'Inicio' },
+    { href: '/inmuebles', label: 'Inmuebles' },
+    { href: '/noticias', label: 'Noticias' },
+    { href: '/nosotros', label: 'Nosotros' },
+    { href: '/contacto', label: 'Contacto' },
+    ...(role === 'ADMIN' ? [{ href: '/admin', label: 'Administración' }] : []),
+    ...(role === 'USER' ? [{ href: '/mi-cuenta', label: 'Mi cuenta' }] : []),
+  ];
+  const links = (mobile = false) => destinations.map(({ href, label }) =>
+    <ActiveLink key={href} href={href} onClick={mobile ? closeMenu : undefined} onKeyDown={mobile ? handleEscape : undefined}>{label}</ActiveLink>);
   return <>
-    <nav className="navLinks desktopNav" aria-label="Navegación principal">{links}</nav>
+    <nav className="navLinks desktopNav" aria-label="Navegación principal">{links()}</nav>
     <div className="mobileNavigation" onBlur={(event) => {
       if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
-    }} onKeyDown={(event) => {
-      if (event.key === 'Escape') { setOpen(false); toggle.current?.focus(); }
     }}>
-      <button ref={toggle} type="button" className="button outline small menuToggle" aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen(!open)}>
+      <button ref={toggle} type="button" className="button outline small menuToggle" aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen(!open)} onKeyDown={handleEscape}>
         <UiIcon name={open ? 'close' : 'menu'} /><span>Menú</span>
       </button>
-      <nav id="mobile-navigation" className="mobileLinks" aria-label="Navegación móvil" hidden={!open} onClick={(event) => {
-        if ((event.target as HTMLElement).closest('a')) { setOpen(false); toggle.current?.focus(); }
-      }}>{links}</nav>
+      <nav id="mobile-navigation" className="mobileLinks" aria-label="Navegación móvil" hidden={!open}>{links(true)}</nav>
     </div>
   </>;
 }

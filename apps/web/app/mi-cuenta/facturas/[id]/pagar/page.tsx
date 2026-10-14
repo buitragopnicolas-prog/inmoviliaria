@@ -34,8 +34,8 @@ export default async function PayInvoicePage({ params, searchParams }: { params:
           : invoice.status === 'VOID' ? <p className="alert error">Esta factura fue anulada.</p>
           : activeManual ? <div className="reportedPaymentState"><span className="status pending">{activeManual.status === 'UNDER_REVIEW' ? 'EN REVISIÓN' : 'PENDIENTE DE VERIFICACIÓN'}</span><h2>Recibimos tu reporte de pago</h2><p>Referencia interna: <strong>{activeManual.reference}</strong></p><p>Te notificaremos cuando el pago haya sido confirmado. La factura conserva su saldo mientras termina la validación.</p></div>
           : config.mode === 'manual' ? <ManualPaymentForm invoiceId={invoice.id} amount={invoice.balance} idempotencyKey={randomUUID()} config={config} />
-          : reference && config.mode === 'mock' ? <><p className="muted">Modo de desarrollo activo: confirma la aprobación para completar el ciclo sin realizar un cobro real.</p><form action={approveMockAction}><input type="hidden" name="reference" value={reference} /><button className="button wide">Simular pago aprobado</button></form></>
-          : <form action={beginPaymentAction}><input type="hidden" name="invoiceId" value={invoice.id} /><button className="button wide">Continuar al pago</button></form>}
+          : reference && config.mode === 'mock' ? <><p className="muted">Modo de desarrollo activo: confirma la aprobación para completar el ciclo sin realizar un cobro real.</p><form action={approveMockAction}><input type="hidden" name="reference" value={reference} /><button type="submit" className="button wide">Simular pago aprobado</button></form></>
+          : <form action={beginPaymentAction}><input type="hidden" name="invoiceId" value={invoice.id} /><button type="submit" className="button wide">Continuar al pago</button></form>}
       </div>
     </div>
   </section>;

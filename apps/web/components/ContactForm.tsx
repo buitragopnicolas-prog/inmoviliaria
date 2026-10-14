@@ -13,7 +13,7 @@ export function ContactForm({ propertyTitle }: { propertyTitle?: string }) {
       <label>Mensaje<textarea name="message" rows={5} required defaultValue={propertyTitle ? 'Me interesa este inmueble. Deseo recibir información y agendar una visita.' : ''} /></label>
       {state.error && <p className="alert error" role="alert">{state.error}</p>}
       {state.success && <p className="alert success" role="status">{state.success}</p>}
-      <button className="button" disabled={pending}>{pending ? 'Enviando…' : 'Enviar solicitud'}</button>
+      <button type="submit" className="button" disabled={pending}>{pending ? 'Enviando…' : 'Enviar solicitud'}</button>
     </form>
   );
 }

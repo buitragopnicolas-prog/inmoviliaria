@@ -14,7 +14,7 @@ export function AdminNewsForm() {
       <label>Enlace externo <span className="hint">Opcional. Si lo completas, la tarjeta pública abrirá esa noticia en el medio digital.</span><input name="externalUrl" type="url" placeholder="https://..." /></label>
       {state.error && <p className="alert error">{state.error}</p>}
       {state.success && <p className="alert success">{state.success}</p>}
-      <button className="button" disabled={pending}>{pending ? 'Publicando…' : 'Publicar noticia'}</button>
+      <button type="submit" className="button" disabled={pending}>{pending ? 'Publicando…' : 'Publicar noticia'}</button>
     </form>
   );
 }

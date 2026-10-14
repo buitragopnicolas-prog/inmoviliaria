@@ -48,7 +48,7 @@ export function AdminAssignPropertyForm({ userId, properties }: { userId: string
       </fieldset>
       {state.error && <p className="alert error">{state.error}</p>}
       {state.success && <p className="alert success">{state.success}</p>}
-      <button className="button" disabled={pending || properties.length === 0}>{pending ? 'Asignando…' : 'Asignar inmueble'}</button>
+      <button type="submit" className="button" disabled={pending || properties.length === 0}>{pending ? 'Asignando…' : 'Asignar inmueble'}</button>
     </form>
   );
 }

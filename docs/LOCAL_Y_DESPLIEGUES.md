@@ -32,6 +32,8 @@ El registro A `dev` apunta al VPS y responde en ambos DNS autoritativos de Hosti
 
 ## CI/CD
 
+Sonar es obligatorio para dev y producción. Consulte [la configuración de Sonar](SONAR.md) para iniciar el servidor local en Docker y configurar CI/VPS. El workflow espera el Quality Gate, y el VPS vuelve a comprobar la aprobación del SHA exacto antes de efectuar cambios. Sin Sonar accesible, sin análisis o con rechazo, no se despliega. Corrija los problemas y repita las pruebas y el análisis antes de volver a intentar el despliegue.
+
 `.github/workflows/pipeline.yml` valida cada PR y cada push a `main`: instalación limpia, compilación, tipos, migraciones/seed sobre PostgreSQL temporal, pruebas HTTP, render de Kubernetes e imágenes Docker. Un push a `main` que pasa CI despliega automáticamente en dev por SSH. El VPS obtiene exactamente el SHA de `main`, construye imágenes Linux locales, las importa a containerd, ejecuta migraciones, actualiza el namespace dev y comprueba las rutas web/API. Solo después guarda el SHA verificado.
 
 El workflow manual de producción exige un SHA completo de `main`, vuelve a ejecutar CI y espera la aprobación del entorno `production` en GitHub. El VPS exige además que ese SHA sea el que está funcionando en dev y que coincida con `/root/asesoria-production-approved-sha`, creado únicamente tras la revisión explícita. El script detiene la promoción si siguen activos los pagos `mock`. Las llaves SSH de dev y producción son distintas y tienen comandos forzados para su entorno en `authorized_keys`; no permiten una shell libre.

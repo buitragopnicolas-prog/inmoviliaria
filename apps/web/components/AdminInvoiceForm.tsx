@@ -117,7 +117,7 @@ export function AdminInvoiceForm({
       <input type="hidden" name="products" value={JSON.stringify(productDraft)} />
       {state.error && <p className="alert error">{state.error}</p>}
       {state.success && <p className="alert success">{state.success}</p>}
-      <button className="button" disabled={pending}>{pending ? 'Generando…' : 'Crear factura'}</button>
+      <button type="submit" className="button" disabled={pending}>{pending ? 'Generando…' : 'Crear factura'}</button>
     </form>
   );
 }

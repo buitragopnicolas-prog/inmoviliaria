@@ -20,7 +20,7 @@ export function AdminUserForm() {
       </div>
       {state.error && <p className="alert error">{state.error}</p>}
       {state.success && <p className="alert success">{state.success}</p>}
-      <button className="button" disabled={pending}>{pending ? 'Creando…' : 'Crear usuario'}</button>
+      <button type="submit" className="button" disabled={pending}>{pending ? 'Creando…' : 'Crear usuario'}</button>
     </form>
   );
 }
