@@ -20,3 +20,4 @@ apps/web/CLAUDE.md
 
 __pycache__/
 *.pyc
+.coverage

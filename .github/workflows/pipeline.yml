@@ -62,6 +62,12 @@ jobs:
       - run: npm run build
       - run: npm run check
       - run: npm run test:coverage
+      - name: Test deployment smoke checks with Python coverage
+        run: |
+          python3 -m venv /tmp/inmo-python-ci
+          /tmp/inmo-python-ci/bin/pip install coverage==7.10.7
+          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py' -m unittest discover -s scripts -p 'test_*.py'
+          /tmp/inmo-python-ci/bin/coverage xml -o coverage/python.xml
       - run: npm run test:web-errors
       - run: npm audit --audit-level=high
       - run: npm run db:migrate
