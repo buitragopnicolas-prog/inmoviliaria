@@ -1,6 +1,7 @@
 """Prueba privada del entorno dev desde el VPS; no imprime credenciales."""
 
 import json
+import hashlib
 import sys
 import urllib.error
 import urllib.request
@@ -42,6 +43,20 @@ status, login = request(
 token = json.loads(login)["accessToken"]
 status, profile = request("/api/auth/me", token=token)
 assert status == 200 and json.loads(profile)["role"] == "ADMIN"
+
+status, payment_config = request("/api/payments/manual/config", token=token)
+payment_config = json.loads(payment_config)
+assert status == 200 and payment_config["mode"] == "manual" and payment_config["enabled"]
+methods = {item["code"]: item for item in payment_config["methods"]}
+assert all(methods[code]["enabled"] for code in ("QR", "BREB", "BANK_TRANSFER", "BANK_DEPOSIT"))
+qr_url = methods["QR"]["qrImageUrl"]
+assert qr_url.startswith("/payments/")
+with urllib.request.urlopen(f"https://{HOST}{qr_url}", timeout=10) as qr_response:
+    status, qr_image = qr_response.status, qr_response.read()
+assert status == 200 and qr_image.startswith(b"\xff\xd8\xff")
+with open("/opt/asesoria-inmobiliaria/payments/bancolombia-breb.jpeg", "rb") as qr_source:
+    assert hashlib.sha256(qr_image).digest() == hashlib.sha256(qr_source.read()).digest()
+print("Dev pagos manuales y QR: OK")
 
 if "--upload" in sys.argv:
     boundary = uuid4().hex

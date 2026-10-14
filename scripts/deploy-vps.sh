@@ -36,14 +36,44 @@ api_image="asesoria-inmobiliaria-api:$tag"
 web_image="asesoria-inmobiliaria-web:$tag"
 manifest="$(mktemp)"
 job_file="$(mktemp)"
-trap 'rm -f "$manifest" "$job_file"' EXIT
+payment_overlay="$(mktemp -d)"
+trap 'rm -f "$manifest" "$job_file"; rm -rf "$payment_overlay"' EXIT
+
+payment_config=/etc/asesoria-inmobiliaria/manual-payments.json
+qr_asset=/opt/asesoria-inmobiliaria/payments/bancolombia-breb.jpeg
+[[ "$(stat -c '%u:%a' "$payment_config")" == '0:600' ]] || {
+  echo 'La configuración manual debe pertenecer a root con permisos 600.' >&2
+  exit 1
+}
+[[ -f "$qr_asset" ]] || { echo 'No existe el QR autorizado en el VPS.' >&2; exit 1; }
+node --input-type=module - "$payment_config" "$payment_overlay" "$repo" "$stage" <<'NODE'
+import fs from 'node:fs';
+import path from 'node:path';
+const [configPath, overlay, repo, stage] = process.argv.slice(2);
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+if (config.apiVersion !== 'v1' || config.kind !== 'ConfigMap' || config.metadata?.name !== 'asesoria-config' ||
+    Object.keys(config).some(key => !['apiVersion', 'kind', 'metadata', 'data'].includes(key)) ||
+    Object.keys(config.metadata).some(key => key !== 'name') ||
+    !config.data || Object.entries(config.data).some(([key, value]) =>
+      !(['PAYMENT_MODE', 'PAYMENT_GATEWAY'].includes(key) || /^MANUAL_PAYMENT_[A-Z_]+$/.test(key)) || typeof value !== 'string') ||
+    config.data.PAYMENT_MODE !== 'manual' || config.data.PAYMENT_GATEWAY !== 'none' ||
+    config.data.MANUAL_PAYMENT_QR_IMAGE_URL !== '/payments/bancolombia-breb.jpeg') {
+  throw new Error('El parche protegido solo admite configuración de pagos manuales autorizados.');
+}
+fs.writeFileSync(`${overlay}/kustomization.yaml`, JSON.stringify({
+  apiVersion: 'kustomize.config.k8s.io/v1beta1', kind: 'Kustomization',
+  resources: [path.relative(overlay, `${repo}/k8s/overlays/${stage}`)],
+  patches: [{target: {kind: 'ConfigMap', name: 'asesoria-config'}, path: configPath}],
+}));
+NODE
+payment_fingerprint="$(sha256sum "$payment_config" "$qr_asset" | sha256sum | cut -d' ' -f1)"
 
 kubectl -n "$namespace" get secret asesoria-secrets >/dev/null
 kubectl -n "$namespace" get service postgres-service minio-service >/dev/null
 if [[ "$stage" == dev ]]; then
   bash "$repo/scripts/prepare-dev-security.sh"
 fi
-kubectl kustomize "$repo/k8s/overlays/$stage" | sed "s/RELEASE_TAG/$tag/g" > "$manifest"
+kubectl kustomize "$payment_overlay" --load-restrictor LoadRestrictionsNone | sed "s/RELEASE_TAG/$tag/g" > "$manifest"
 if grep -q RELEASE_TAG "$manifest"; then
   echo 'Quedó un marcador de imagen sin resolver.' >&2
   exit 1
@@ -55,6 +85,11 @@ if [[ "$stage" == prod ]]; then
     exit 1
   fi
   node "$repo/scripts/payment-config-policy.mjs" "$manifest"
+  if [[ ! -f /var/lib/asesoria-inmobiliaria-dev/verified-manual-payment-config-sha ]] ||
+     [[ "$(cat /var/lib/asesoria-inmobiliaria-dev/verified-manual-payment-config-sha)" != "$payment_fingerprint" ]]; then
+    echo 'Los datos de pagos o el QR no coinciden con los verificados en dev.' >&2
+    exit 1
+  fi
   if [[ ! -f /var/lib/asesoria-inmobiliaria-dev/verified-sha ]] ||
      [[ "$(cat /var/lib/asesoria-inmobiliaria-dev/verified-sha)" != "$release" ]]; then
     echo 'El SHA no pasó verificación completa en dev.' >&2
@@ -144,5 +179,6 @@ fi
 
 if [[ "$stage" == dev && "$release" =~ ^[a-f0-9]{40}$ ]]; then
   printf '%s\n' "$release" > /var/lib/asesoria-inmobiliaria-dev/verified-sha
+  printf '%s\n' "$payment_fingerprint" > /var/lib/asesoria-inmobiliaria-dev/verified-manual-payment-config-sha
 fi
 echo "$stage $release verificado"
