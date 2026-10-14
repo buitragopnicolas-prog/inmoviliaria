@@ -24,6 +24,18 @@ def request(path, *, method="GET", data=None, content_type=None, token=None):
         return response.status, response.read()
 
 
+def payment_details(method):
+    details = {}
+    for item in method.get("details", []):
+        label, value = item.get("label"), item.get("value")
+        assert isinstance(label, str) and label.strip()
+        assert isinstance(value, str) and value.strip()
+        assert label not in details
+        details[label] = value
+    assert details.get("Entidad") and details.get("Titular")
+    return details
+
+
 status, ready = request("/api/health/ready")
 assert status == 200 and json.loads(ready)["status"] == "ok"
 status, catalog = request("/api/properties")
@@ -49,6 +61,13 @@ payment_config = json.loads(payment_config)
 assert status == 200 and payment_config["mode"] == "manual" and payment_config["enabled"]
 methods = {item["code"]: item for item in payment_config["methods"]}
 assert all(methods[code]["enabled"] for code in ("QR", "BREB", "BANK_TRANSFER", "BANK_DEPOSIT"))
+details = {code: payment_details(method) for code, method in methods.items()}
+for code in ("BREB", "BANK_TRANSFER", "BANK_DEPOSIT"):
+    assert details[code]["Entidad"] == details["QR"]["Entidad"]
+    assert details[code]["Titular"] == details["QR"]["Titular"]
+assert details["BREB"].get("Tipo de llave") and details["BREB"].get("Llave")
+assert details["BANK_TRANSFER"].get("Tipo de cuenta") and details["BANK_TRANSFER"].get("Cuenta")
+assert details["BANK_DEPOSIT"] == details["BANK_TRANSFER"]
 qr_url = methods["QR"]["qrImageUrl"]
 assert qr_url.startswith("/payments/")
 with urllib.request.urlopen(f"https://{HOST}{qr_url}", timeout=10) as qr_response:
