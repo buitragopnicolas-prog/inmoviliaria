@@ -30,6 +30,7 @@
     "sonar:local": "npm run build && npm run check && npm run test:coverage && npm run test:python-coverage && npm run test:web-errors && npm run sonar:scan",
     "test:payments": "npm run build -w @inmobiliaria/api && node --test apps/api/dist/auth/auth-policy.test.js apps/api/dist/auth/jwt.strategy.test.js apps/api/dist/config/runtime-config.test.js apps/api/dist/storage/antimalware.service.test.js apps/api/dist/storage/file-validation.test.js apps/api/dist/payments/payment-config.test.js apps/api/dist/payments/payments.service.test.js scripts/payment-config-policy.test.mjs",
     "test:e2e:local": "dotenv -e .env -- node scripts/e2e-manual-payments.mjs",
+    "test:e2e:ci": "node scripts/e2e-manual-payments-ci.mjs",
     "test:e2e:antimalware": "dotenv -e .env -- node scripts/e2e-antimalware.mjs",
     "infra:up": "docker compose up -d postgres minio minio-init"
   },
