@@ -3,6 +3,7 @@
 import json
 import hashlib
 import sys
+import time
 import urllib.error
 import urllib.request
 from uuid import uuid4
@@ -20,8 +21,18 @@ def request(path, *, method="GET", data=None, content_type=None, token=None):
     if token:
         headers["Authorization"] = f"Bearer {token}"
     query = urllib.request.Request(BASE + path, data=data, headers=headers, method=method)
-    with urllib.request.urlopen(query, timeout=10) as response:
-        return response.status, response.read()
+    attempts = 10 if method == "GET" else 1
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(query, timeout=10) as response:
+                return response.status, response.read()
+        except urllib.error.HTTPError as error:
+            if error.code not in (502, 503, 504) or attempt == attempts - 1:
+                raise
+        except (urllib.error.URLError, TimeoutError):
+            if attempt == attempts - 1:
+                raise
+        time.sleep(2)
 
 
 def payment_details(method):
