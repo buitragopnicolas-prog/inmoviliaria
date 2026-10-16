@@ -8,7 +8,7 @@ import pathlib
 import runpy
 import unittest
 from unittest.mock import patch
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 
 
@@ -30,6 +30,8 @@ class ManualPaymentSmokeTests(unittest.TestCase):
         }
         self.paths = []
         self.payment_error = False
+        self.failures = {}
+        self.delays = []
         for method in self.config["methods"]:
             method["details"] = [{"label": "Entidad", "value": "Banco autorizado"}, {"label": "Titular", "value": "Titular autorizado"}]
             if method["code"] == "BREB":
@@ -51,6 +53,9 @@ class ManualPaymentSmokeTests(unittest.TestCase):
             url = query if isinstance(query, str) else query.full_url
             path = urlsplit(url).path
             self.paths.append(path)
+            failures = self.failures.get(path, [])
+            if failures:
+                raise failures.pop(0)
             responses = {
                 "/api/health/ready": {"status": "ok"},
                 "/api/properties": [{"id": "test-property"}],
@@ -70,7 +75,8 @@ class ManualPaymentSmokeTests(unittest.TestCase):
             return Response(json.dumps(responses[path]).encode())
 
         with patch("builtins.open", open_file), patch("urllib.request.urlopen", urlopen), \
-             patch("sys.argv", ["smoke-dev-vps.py"]), patch("sys.stdout", io.StringIO()):
+             patch("sys.argv", ["smoke-dev-vps.py"]), patch("sys.stdout", io.StringIO()), \
+             patch("time.sleep", self.delays.append):
             runpy.run_path(str(pathlib.Path(__file__).with_name("smoke-dev-vps.py")), run_name="__main__")
 
     def test_accepts_complete_manual_methods_and_original_qr(self):
@@ -136,6 +142,54 @@ class ManualPaymentSmokeTests(unittest.TestCase):
         self.config["methods"][3]["details"][-1]["value"] = "999999"
         with self.assertRaises(AssertionError):
             self.run_smoke()
+
+    def test_recovers_from_transient_gateway_errors_on_reads(self):
+        for status in (502, 503, 504):
+            with self.subTest(status=status):
+                self.paths = []
+                self.delays = []
+                self.failures = {"/": [HTTPError("http://localhost/", status, "Gateway", {}, None)] * 2}
+                self.run_smoke()
+                self.assertEqual(self.paths.count("/"), 3)
+                self.assertEqual(self.delays, [2, 2])
+
+    def test_recovers_from_transient_connection_errors_on_reads(self):
+        for error in (URLError("Connection reset"), TimeoutError("Timeout")):
+            with self.subTest(error=type(error).__name__):
+                self.paths = []
+                self.failures = {"/": [error]}
+                self.run_smoke()
+                self.assertEqual(self.paths.count("/"), 2)
+
+    def test_persistent_gateway_errors_still_block_verification(self):
+        self.failures = {"/": [HTTPError("http://localhost/", 502, "Gateway", {}, None)] * 20}
+        with self.assertRaises(HTTPError):
+            self.run_smoke()
+        self.assertEqual(self.paths.count("/"), 10)
+        self.assertEqual(self.delays, [2] * 9)
+
+    def test_persistent_connection_errors_still_block_verification(self):
+        self.failures = {"/": [URLError("Connection reset")] * 20}
+        with self.assertRaises(URLError):
+            self.run_smoke()
+        self.assertEqual(self.paths.count("/"), 10)
+
+    def test_does_not_retry_application_or_authorization_errors(self):
+        for status in (401, 403, 404, 500):
+            with self.subTest(status=status):
+                self.paths = []
+                self.failures = {"/": [HTTPError("http://localhost/", status, "Rejected", {}, None)] * 20}
+                with self.assertRaises(HTTPError):
+                    self.run_smoke()
+                self.assertEqual(self.paths.count("/"), 1)
+        self.assertEqual(self.delays, [])
+
+    def test_never_retries_writes_even_on_gateway_failure(self):
+        self.failures = {"/api/auth/login": [HTTPError("http://localhost/", 503, "Gateway", {}, None)] * 20}
+        with self.assertRaises(HTTPError):
+            self.run_smoke()
+        self.assertEqual(self.paths.count("/api/auth/login"), 1)
+        self.assertEqual(self.delays, [])
 
 
 if __name__ == "__main__":
