@@ -22,8 +22,9 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
-      DATABASE_URL: postgresql://inmobiliaria:ci_password@localhost:5432/inmobiliaria?schema=public
+      DATABASE_URL: postgresql://inmobiliaria:ci_password@localhost:5432/inmobiliaria_ci?schema=public
       JWT_SECRET: ci-only-secret-not-for-deployment-1234567890
       ADMIN_INITIAL_PASSWORD: CI-admin-123456
       CUSTOMER_INITIAL_PASSWORD: CI-customer-123456
@@ -34,10 +35,10 @@ jobs:
         env:
           POSTGRES_USER: inmobiliaria
           POSTGRES_PASSWORD: ci_password
-          POSTGRES_DB: inmobiliaria
+          POSTGRES_DB: inmobiliaria_ci
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U inmobiliaria -d inmobiliaria"
+          --health-cmd "pg_isready -U inmobiliaria -d inmobiliaria_ci"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -72,22 +73,95 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npm run db:migrate
       - run: npm run db:seed
-      - name: Start MinIO for readiness checks
+      - name: Start disposable MinIO and real ClamAV for E2E
         run: |
-          docker run -d --name inmo-ci-minio -p 9000:9000 \
+          docker run -d --name inmo-ci-minio -p 127.0.0.1:9000:9000 \
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin \
             bitnamilegacy/minio@sha256:6dabb4a2088c9a79908de3bc05f4586c23ad2182c8908e7e3acbf61c1467fb20
-      - name: API smoke test
+          docker run -d --name inmo-ci-clamav -p 127.0.0.1:3310:3310 \
+            --health-cmd '/usr/local/bin/clamdcheck.sh' \
+            --health-interval 5s --health-timeout 5s --health-retries 100 \
+            --memory 1536m \
+            clamav/clamav@sha256:a5f03c12a79dbe9f6d8a527b6bb1ea053fa8dd061d3738a26897f055ee2d9303
+          for attempt in $(seq 1 120); do
+            if [[ "$(docker inspect --format '{{.State.Health.Status}}' inmo-ci-clamav)" == healthy ]]; then break; fi
+            sleep 5
+          done
+          [[ "$(docker inspect --format '{{.State.Health.Status}}' inmo-ci-clamav)" == healthy ]]
+      - name: Mandatory full manual payment E2E and API smoke
+        env:
+          APP_ENV: development
+          NODE_ENV: production
+          PUBLIC_REGISTRATION_ENABLED: 'false'
+          PAYMENT_MODE: manual
+          PAYMENT_GATEWAY: none
+          MANUAL_PAYMENT_BANK_NAME: Banco sintético CI
+          MANUAL_PAYMENT_ACCOUNT_HOLDER: Titular de pruebas CI
+          MANUAL_PAYMENT_ACCOUNT_TYPE: Ahorros
+          MANUAL_PAYMENT_ACCOUNT_DISPLAY: '0000000000'
+          MANUAL_PAYMENT_BREB_KEY_TYPE: Alfanumérica de prueba
+          MANUAL_PAYMENT_BREB_KEY_DISPLAY: '@ci-no-pagar'
+          MANUAL_PAYMENT_QR_IMAGE_URL: /ci-qr.svg
+          STORAGE_ENDPOINT: 127.0.0.1
+          STORAGE_PORT: '9000'
+          STORAGE_USE_SSL: 'false'
+          STORAGE_ACCESS_KEY: minioadmin
+          STORAGE_SECRET_KEY: minioadmin
+          STORAGE_BUCKET: inmobiliaria-ci
+          STORAGE_AUTO_CREATE_BUCKET: 'false'
+          ANTIMALWARE_ENABLED: 'true'
+          ANTIMALWARE_HOST: 127.0.0.1
+          ANTIMALWARE_PORT: '3310'
+          WEB_ORIGIN: http://127.0.0.1:3000
+          API_INTERNAL_URL: http://127.0.0.1:4000
+          E2E_BASE_URL: http://127.0.0.1:4000/api
+          E2E_WEB_URL: http://127.0.0.1:3000
+          E2E_ADMIN_EMAIL: admin@asesoriainmobiliariajb.com
+          E2E_ADMIN_PASSWORD: CI-admin-123456
+          E2E_CUSTOMER_EMAIL: cliente@asesoriainmobiliariajb.com
+          E2E_CUSTOMER_PASSWORD: CI-customer-123456
         run: |
-          npm run start:prod -w @inmobiliaria/api > /tmp/inmo-api.log 2>&1 &
-          trap 'cat /tmp/inmo-api.log' EXIT
+          node --input-type=module <<'NODE'
+          import { Client } from 'minio';
+          import { setTimeout as delay } from 'node:timers/promises';
+          const storage = new Client({endPoint:'127.0.0.1',port:9000,useSSL:false,accessKey:'minioadmin',secretKey:'minioadmin'});
+          let ready = false;
+          for (let attempt=0; attempt<60; attempt++) {
+            try {
+              if (!await storage.bucketExists('inmobiliaria-ci')) await storage.makeBucket('inmobiliaria-ci','us-east-1');
+              ready = true; break;
+            } catch { await delay(1000); }
+          }
+          if (!ready) throw new Error('MinIO CI no está disponible.');
+          NODE
+          cp scripts/fixtures/manual-payment-qr.svg apps/web/public/ci-qr.svg
+          cp -r apps/web/public apps/web/.next/standalone/apps/web/public
+          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+          node apps/api/dist/main.js > /tmp/inmo-api.log 2>&1 &
+          api_pid=$!
+          PORT=3000 HOSTNAME=127.0.0.1 node apps/web/.next/standalone/apps/web/server.js > /tmp/inmo-web.log 2>&1 &
+          web_pid=$!
+          trap 'kill "$api_pid" "$web_pid" 2>/dev/null || true; rm -f apps/web/public/ci-qr.svg; cat /tmp/inmo-api.log /tmp/inmo-web.log' EXIT
           for attempt in $(seq 1 30); do
-            if curl -fsS http://localhost:4000/api/health/ready; then break; fi
+            if curl -fsS http://127.0.0.1:4000/api/health/ready && curl -fsS -o /dev/null http://127.0.0.1:3000/login; then break; fi
             sleep 2
           done
-          curl -fsS http://localhost:4000/api/health/ready
-          curl -fsS http://localhost:4000/api/properties
+          curl -fsS http://127.0.0.1:4000/api/health/ready
+          curl -fsS http://127.0.0.1:4000/api/properties
+          curl -fsS -o /dev/null http://127.0.0.1:3000/login
+          npm run test:e2e:ci
+      - name: Save manual payment E2E evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: manual-payments-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          path: coverage/manual-payments-e2e.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Clean up disposable E2E services
+        if: always()
+        run: docker rm -f inmo-ci-minio inmo-ci-clamav || true
       - name: Validate manifests
         run: |
           kubectl kustomize k8s/infra/dev > /tmp/inmo-infra-dev.yaml
