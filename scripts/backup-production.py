@@ -18,7 +18,11 @@ from urllib.parse import unquote, urlsplit
 NAMESPACE = 'asesoria-inmobiliaria'
 BACKUPS = pathlib.Path('/root/backups/production')
 MINIO = pathlib.Path('/var/lib/asesoria-inmobiliaria/minio')
-LOCK = pathlib.Path('/run/lock/asesoria-inmobiliaria-deploy.lock')
+LOCK = pathlib.Path('/opt/asesoria-inmobiliaria/deploy.lock')
+POSTGRES_DUMP = 'postgres.dump'
+MINIO_ARCHIVE = 'minio.tar.gz'
+CHECKSUM_INDEX = 'checksums.json'
+VERIFIED_RECEIPT = 'verified.json'
 RESOURCES = ('deployments', 'statefulsets', 'configmaps', 'secrets', 'services', 'ingresses', 'networkpolicies')
 PROTECTED = {
     'manual-payments.json': pathlib.Path('/etc/asesoria-inmobiliaria/manual-payments.json'),
@@ -140,36 +144,36 @@ def create_backup(sha, backups, volume, *, backend=None, configuration=save_conf
         size = sum((volume / name).stat().st_size for name in before)
         require(shutil.disk_usage(backups).free > size * 3 + 1024 ** 3, 'Espacio insuficiente para respaldar y verificar MinIO.')
         pg = backend or Postgres(directory / 'diagnostic.log')
-        pg.dump(directory / 'postgres.dump')
-        restored_counts = pg.restore_check(directory / 'postgres.dump')
-        with tarfile.open(directory / 'minio.tar.gz', 'w:gz') as archive:
+        pg.dump(directory / POSTGRES_DUMP)
+        restored_counts = pg.restore_check(directory / POSTGRES_DUMP)
+        with tarfile.open(directory / MINIO_ARCHIVE, 'w:gz') as archive:
             archive.add(volume, arcname='.', recursive=True)
         with tempfile.TemporaryDirectory(prefix='restore-', dir=directory) as temporary:
-            restore_archive(directory / 'minio.tar.gz', pathlib.Path(temporary), before)
+            restore_archive(directory / MINIO_ARCHIVE, pathlib.Path(temporary), before)
         require(inventory(volume) == before, 'MinIO cambió durante el respaldo; no se despliega y debe repetirse.')
         configuration(directory)
         checksums = {path.name: digest(path) for path in sorted(directory.iterdir()) if path.is_file()}
-        (directory / 'checksums.json').write_text(json.dumps(checksums, sort_keys=True), encoding='utf-8')
+        (directory / CHECKSUM_INDEX).write_text(json.dumps(checksums, sort_keys=True), encoding='utf-8')
         report = {'version': 1, 'sha': sha, 'created_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                   'postgres_restore_verified': True, 'postgres_restored_counts': restored_counts,
                   'minio_restore_verified': True, 'minio_files_verified': len(before),
-                  'checksums_sha256': digest(directory / 'checksums.json')}
+                  'checksums_sha256': digest(directory / CHECKSUM_INDEX)}
         # A failed operation never creates the receipt consumed by deployment.
-        receipt = directory / 'verified.json'
+        receipt = directory / VERIFIED_RECEIPT
         receipt.write_text(json.dumps(report, sort_keys=True), encoding='utf-8')
         receipt.chmod(0o600)
         verify_backup(sha, receipt, backups)
         return receipt
     except Exception:
         (directory / 'failed.json').write_text(json.dumps({'sha': sha, 'failed_at': datetime.datetime.now(datetime.timezone.utc).isoformat()}), encoding='utf-8')
-        (directory / 'verified.json').unlink(missing_ok=True)
+        (directory / VERIFIED_RECEIPT).unlink(missing_ok=True)
         raise
 
 
 def verify_backup(sha, receipt, backups, *, now=None):
     require(bool(re.fullmatch('[a-f0-9]{40}', sha)), 'Se exige el SHA completo.')
     receipt = pathlib.Path(receipt)
-    require(receipt.is_absolute() and receipt.name == 'verified.json' and not receipt.is_symlink(), 'Recibo de respaldo inválido.')
+    require(receipt.is_absolute() and receipt.name == VERIFIED_RECEIPT and not receipt.is_symlink(), 'Recibo de respaldo inválido.')
     directory = receipt.parent
     require(directory.parent.resolve() == backups.resolve() and not directory.is_symlink(), 'El respaldo debe estar en su directorio protegido.')
     require(directory.stat().st_mode & 0o077 == 0 and receipt.stat().st_mode & 0o077 == 0, 'El respaldo no es privado.')
@@ -181,9 +185,9 @@ def verify_backup(sha, receipt, backups, *, now=None):
     created = datetime.datetime.fromisoformat(report['created_at'])
     age = ((now or datetime.datetime.now(datetime.timezone.utc)) - created).total_seconds()
     require(0 <= age < 3600, 'Se requiere un respaldo verificado reciente.')
-    checksums = json.loads((directory / 'checksums.json').read_text(encoding='utf-8'))
-    require(digest(directory / 'checksums.json') == report.get('checksums_sha256'), 'El índice de integridad está corrupto.')
-    require({'postgres.dump', 'minio.tar.gz'} <= checksums.keys(), 'Faltan los archivos de datos respaldados.')
+    checksums = json.loads((directory / CHECKSUM_INDEX).read_text(encoding='utf-8'))
+    require(digest(directory / CHECKSUM_INDEX) == report.get('checksums_sha256'), 'El índice de integridad está corrupto.')
+    require({POSTGRES_DUMP, MINIO_ARCHIVE} <= checksums.keys(), 'Faltan los archivos de datos respaldados.')
     for name, expected in checksums.items():
         require(pathlib.PurePath(name).name == name and name not in ('.', '..'), 'Ruta de archivo de respaldo inválida.')
         path = directory / name
