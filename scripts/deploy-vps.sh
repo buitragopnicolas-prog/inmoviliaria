@@ -181,4 +181,8 @@ if [[ "$stage" == dev && "$release" =~ ^[a-f0-9]{40}$ ]]; then
   printf '%s\n' "$release" > /var/lib/asesoria-inmobiliaria-dev/verified-sha
   printf '%s\n' "$payment_fingerprint" > /var/lib/asesoria-inmobiliaria-dev/verified-manual-payment-config-sha
 fi
-echo "$stage $release verificado"
+if [[ "$stage" == prod ]]; then
+  echo "prod $release aplicado; el comando SSH protegido debe completar el E2E de pagos."
+else
+  echo "$stage $release verificado"
+fi
