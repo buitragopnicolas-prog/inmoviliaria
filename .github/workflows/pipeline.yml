@@ -67,12 +67,18 @@ jobs:
         run: |
           python3 -m venv /tmp/inmo-python-ci
           /tmp/inmo-python-ci/bin/pip install coverage==7.10.7
-          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py' -m unittest discover -s scripts -p 'test_*.py'
+          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py,scripts/backup-production.py' -m unittest discover -s scripts -p 'test_*.py'
           /tmp/inmo-python-ci/bin/coverage xml -o coverage/python.xml
       - run: npm run test:web-errors
       - run: npm audit --audit-level=high
       - run: npm run db:migrate
       - run: npm run db:seed
+      - name: Restore-check production backup against disposable CI database
+        env:
+          BACKUP_CI_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          python3 scripts/backup-production.py ci "$(git rev-parse HEAD)"
+          bash -n scripts/production-release.sh scripts/vps-ssh-entry.sh
       - name: Start disposable MinIO and real ClamAV for E2E
         run: |
           docker run -d --name inmo-ci-minio -p 127.0.0.1:9000:9000 \
@@ -278,7 +284,7 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
-      - name: SSH promote reviewed SHA and mandatory production payment E2E
+      - name: SSH verified backup, reviewed SHA deployment and mandatory production E2E
         env:
           VPS_HOST: ${{ vars.VPS_HOST }}
           VPS_USER: ${{ vars.VPS_USER }}
@@ -294,4 +300,4 @@ jobs:
           umask 077
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/inmo-deploy-key
           ssh -i ~/.ssh/inmo-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA production-e2e"
+            "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA production-backup-e2e"

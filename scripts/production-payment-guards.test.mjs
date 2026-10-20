@@ -38,6 +38,8 @@ for (const [name, overrides, args, message] of cases) {
 
 for (const [stage, command] of [
   ['prod', 'a'.repeat(40)],
+  ['prod', `${'a'.repeat(40)} production-e2e`],
+  ['prod', `${'a'.repeat(40)} production-backup-e2e extra`],
   ['prod', `${'a'.repeat(40)} production-e2e extra`],
   ['dev', `${'a'.repeat(40)} production-e2e`],
 ]) {
