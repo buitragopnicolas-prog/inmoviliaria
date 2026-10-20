@@ -152,6 +152,8 @@ jobs:
           curl -fsS -o /dev/null http://127.0.0.1:3000/login
           npm run test:e2e:ci
           npm run test:e2e:production:ci
+          # Each probe logs in three synthetic actors. Respect the real five/minute login limit.
+          sleep 61
           # A deliberate failure must still void its payment and disable the temporary accounts.
           if npm run test:e2e:production:ci -- --ci-fail-after-report; then
             echo 'El fallo controlado no bloqueó la prueba.' >&2
