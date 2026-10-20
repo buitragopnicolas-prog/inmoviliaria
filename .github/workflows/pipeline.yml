@@ -151,12 +151,34 @@ jobs:
           curl -fsS http://127.0.0.1:4000/api/properties
           curl -fsS -o /dev/null http://127.0.0.1:3000/login
           npm run test:e2e:ci
+          npm run test:e2e:production:ci
+          # Each probe logs in three synthetic actors. Respect the real five/minute login limit.
+          sleep 61
+          # A deliberate failure must still void its payment and disable the temporary accounts.
+          if npm run test:e2e:production:ci -- --ci-fail-after-report; then
+            echo 'El fallo controlado no bloqueó la prueba.' >&2
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('coverage/production-payment-cleanup-e2e.json', 'utf8'));
+          assert.equal(report.error, 'Fallo controlado CI después del reporte.');
+          assert.equal(report.passed, false);
+          for (const key of ['cleanup', 'existingRecordsUnchanged', 'temporarySessionsRevoked']) assert.equal(report[key], true);
+          NODE
+          cleanup_run="$(node -p "JSON.parse(require('node:fs').readFileSync('coverage/production-payment-cleanup-e2e.json')).run")"
+          npm run test:e2e:production:ci -- --cleanup "$cleanup_run"
+          bash -n scripts/e2e-production-vps.sh scripts/vps-ssh-entry.sh
       - name: Save manual payment E2E evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: manual-payments-e2e-${{ github.run_id }}-${{ github.run_attempt }}
-          path: coverage/manual-payments-e2e.json
+          path: |
+            coverage/manual-payments-e2e.json
+            coverage/production-payment-*-e2e.json
+            coverage/production-payment-e2e.json
           if-no-files-found: warn
           retention-days: 7
       - name: Clean up disposable E2E services
@@ -256,7 +278,7 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
-      - name: SSH promote reviewed SHA
+      - name: SSH promote reviewed SHA and mandatory production payment E2E
         env:
           VPS_HOST: ${{ vars.VPS_HOST }}
           VPS_USER: ${{ vars.VPS_USER }}
@@ -272,4 +294,4 @@ jobs:
           umask 077
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/inmo-deploy-key
           ssh -i ~/.ssh/inmo-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA"
+            "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA production-e2e"

@@ -2,9 +2,15 @@
 set -euo pipefail
 
 stage="${1:-}"
-sha="${SSH_ORIGINAL_COMMAND:-}"
+request="${SSH_ORIGINAL_COMMAND:-}"
+sha="${request%% *}"
 [[ "$stage" == dev || "$stage" == prod ]] || exit 2
 [[ "$sha" =~ ^[a-f0-9]{40}$ ]] || exit 2
+if [[ "$stage" == prod ]]; then
+  [[ "$request" == "$sha production-e2e" ]] || { echo 'Producción requiere despliegue con E2E obligatorio.' >&2; exit 2; }
+else
+  [[ "$request" == "$sha" ]] || exit 2
+fi
 
 # Serialize checkout and deployment across both environments so another SSH
 # invocation cannot replace the source tree after its Sonar approval is checked.
@@ -27,4 +33,13 @@ git -C "$checkout" merge-base --is-ancestor "$sha" origin/main || {
   exit 1
 }
 git -C "$checkout" checkout --detach --force "$sha"
+if [[ "$stage" == prod ]]; then
+  # Fail before deployment for older releases without the mandatory production probe.
+  [[ -f "$checkout/scripts/e2e-production-vps.sh" && -f "$checkout/scripts/e2e-manual-payments-production.mjs" ]] || {
+    echo 'El commit no incluye el E2E obligatorio posterior al despliegue de producción.' >&2
+    exit 1
+  }
+  bash "$checkout/scripts/deploy-vps.sh" "$stage" "$sha"
+  exec bash "$checkout/scripts/e2e-production-vps.sh" "$sha"
+fi
 exec bash "$checkout/scripts/deploy-vps.sh" "$stage" "$sha"

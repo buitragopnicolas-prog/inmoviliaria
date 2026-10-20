@@ -21,7 +21,7 @@
     "test:sonar-gate": "node --test scripts/sonar-gate.test.mjs",
     "test:coverage": "c8 npm run test:unit && node scripts/normalize-lcov.mjs",
     "test:python-coverage": "python -m coverage run --branch --include=scripts/smoke-dev-vps.py -m unittest discover -s scripts -p test_*.py && python -m coverage xml -o coverage/python.xml",
-    "test:unit": "npm run test:regressions && npm run test:payments && npm run test:sonar-gate && npm run test:web-components",
+    "test:unit": "npm run test:regressions && npm run test:payments && npm run test:sonar-gate && npm run test:web-components && node --test scripts/production-payment-guards.test.mjs",
     "test:web-components": "node --test scripts/web-components.test.mjs",
     "sonar:verify": "node scripts/sonar-gate.mjs",
     "sonar:up": "docker compose --profile sonar up -d sonar-db sonarqube",
@@ -31,6 +31,7 @@
     "test:payments": "npm run build -w @inmobiliaria/api && node --test apps/api/dist/auth/auth-policy.test.js apps/api/dist/auth/jwt.strategy.test.js apps/api/dist/config/runtime-config.test.js apps/api/dist/storage/antimalware.service.test.js apps/api/dist/storage/file-validation.test.js apps/api/dist/payments/payment-config.test.js apps/api/dist/payments/payments.service.test.js scripts/payment-config-policy.test.mjs",
     "test:e2e:local": "dotenv -e .env -- node scripts/e2e-manual-payments.mjs",
     "test:e2e:ci": "node scripts/e2e-manual-payments-ci.mjs",
+    "test:e2e:production:ci": "node scripts/e2e-manual-payments-production.mjs --ci",
     "test:e2e:antimalware": "dotenv -e .env -- node scripts/e2e-antimalware.mjs",
     "infra:up": "docker compose up -d postgres minio minio-init"
   },
