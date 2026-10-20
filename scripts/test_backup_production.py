@@ -121,8 +121,9 @@ class BackupTests(unittest.TestCase):
             setattr(pg, method, Mock(side_effect=RuntimeError('expected failure')))
             with self.assertRaises(RuntimeError):
                 self.create(backend=pg)
+        configuration = Mock(side_effect=RuntimeError('configuration failed'))
         with self.assertRaises(RuntimeError):
-            self.create(configuration=Mock(side_effect=RuntimeError('configuration failed')))
+            self.create(configuration=configuration)
         for directory in self.backups.iterdir():
             self.assertFalse((directory / 'verified.json').exists())
             self.assertTrue((directory / 'failed.json').exists())
@@ -276,7 +277,8 @@ class ReleaseGateTests(unittest.TestCase):
             root = pathlib.Path(temporary)
             scripts = root/'scripts'
             scripts.mkdir()
-            (scripts/'deploy-vps.sh').write_bytes(SOURCE.with_name('deploy-vps.sh').read_bytes())
+            deployment = SOURCE.with_name('deploy-vps.sh').read_text().replace('/opt/asesoria-inmobiliaria/deploy.lock', str(root/'deploy.lock'))
+            (scripts/'deploy-vps.sh').write_text(deployment)
             tools = root/'bin'
             tools.mkdir()
             commands = {

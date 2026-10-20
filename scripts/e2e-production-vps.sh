@@ -3,7 +3,7 @@ set -euo pipefail
 [[ "$(id -u)" == 0 ]] || { echo 'El E2E de producción requiere el contexto protegido del VPS.' >&2; exit 1; }
 release="${1:-}"
 [[ "$release" =~ ^[a-f0-9]{40}$ ]] || exit 2
-exec 9>/run/lock/asesoria-inmobiliaria-deploy.lock
+exec 9>/opt/asesoria-inmobiliaria/deploy.lock
 flock 9
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 [[ "$(git -C "$repo" rev-parse HEAD)" == "$release" ]]

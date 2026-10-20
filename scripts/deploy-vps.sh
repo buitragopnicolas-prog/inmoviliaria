@@ -13,7 +13,7 @@ if [[ ! "$release" =~ ^[a-f0-9]{40}$ ]]; then
   exit 2
 fi
 
-exec 9>/run/lock/asesoria-inmobiliaria-deploy.lock
+exec 9>/opt/asesoria-inmobiliaria/deploy.lock
 flock 9
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 if [[ "$(git -C "$repo" rev-parse HEAD)" != "$release" ]] ||
