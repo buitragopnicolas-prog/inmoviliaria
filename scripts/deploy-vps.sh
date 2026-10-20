@@ -25,6 +25,9 @@ fi
 # Fail before building images, modifying secrets or applying migrations.
 export PATH="/opt/asesoria-inmobiliaria/sonar/runtime/bin:$PATH"
 node --env-file=/etc/asesoria-inmobiliaria/sonar.env "$repo/scripts/sonar-gate.mjs" "$release"
+if [[ "$stage" == prod ]]; then
+  python3 "$repo/scripts/backup-production.py" verify "$release" "${INMO_PRODUCTION_BACKUP_RECEIPT:-}"
+fi
 namespace=asesoria-inmobiliaria
 domain=asesoriainmobiliariajb.com
 if [[ "$stage" == dev ]]; then
