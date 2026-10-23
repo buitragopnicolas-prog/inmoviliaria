@@ -20,6 +20,35 @@ permissions:
   contents: read
 
 jobs:
+  backup-failure-gates:
+    name: backup-failure-gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+          persist-credentials: false
+      - name: Require simulated backup failures to block production
+        run: |
+          test_uid="$(id -u)"
+          test_gid="$(id -g)"
+          [[ "$test_uid" != 0 ]]
+          # No inherited credentials, network, root privileges or capabilities.
+          sudo unshare --net -- setpriv \
+            --reuid="$test_uid" --regid="$test_gid" --clear-groups \
+            --no-new-privs --bounding-set=-all --inh-caps=-all --ambient-caps=-all \
+            env -i PATH=/usr/bin:/bin CI=true \
+            /usr/bin/python3 scripts/test_backup_failure_gates.py "$(git rev-parse HEAD)"
+      - name: Save synthetic backup failure evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: backup-failure-gates-${{ github.run_id }}-${{ github.run_attempt }}
+          path: coverage/backup-failure-gates.json
+          if-no-files-found: error
+          retention-days: 7
+
   validate:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -270,7 +299,7 @@ jobs:
             "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA"
 
   deploy-prod:
-    needs: validate
+    needs: [validate, backup-failure-gates]
     if: github.event_name == 'workflow_dispatch' && inputs.target == 'prod'
     runs-on: ubuntu-24.04
     environment:
