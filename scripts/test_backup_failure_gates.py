@@ -135,14 +135,16 @@ def main():
     if any(name != 'lo' for _, name in socket.if_nameindex()):
         raise RuntimeError('Las simulaciones requieren un namespace sin red externa.')
     result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(BackupFailureGates))
-    report = {'sha': SHA, 'passed': result.wasSuccessful(), 'testsRun': result.testsRun,
+    passed = (result.wasSuccessful() and result.testsRun == 4 and len(RESULTS) == 2
+              and {item['failure'] for item in RESULTS} == {'backup', 'verification'})
+    report = {'sha': SHA, 'passed': passed, 'testsRun': result.testsRun,
               'unprivileged': True, 'networkIsolated': True, 'syntheticDataOnly': True,
-              'results': RESULTS, 'bypassMutationControlsPassed': result.wasSuccessful()}
+              'results': RESULTS, 'bypassMutationControlsPassed': passed}
     target = pathlib.Path('coverage/backup-failure-gates.json')
     target.parent.mkdir(exist_ok=True)
     target.write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps(report))
-    return 0 if result.wasSuccessful() else 1
+    return 0 if passed else 1
 
 
 if __name__ == '__main__':
