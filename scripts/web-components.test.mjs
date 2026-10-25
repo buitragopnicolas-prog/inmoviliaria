@@ -97,6 +97,25 @@ test('herramientas IA bloquean dobles ejecuciones y permiten reintentar después
   assert.equal(view.getByRole('button', { name: 'Procesar', exact: true }).disabled, false);
 });
 
+test('herramientas IA permiten descargar imágenes y audio y liberan sus vistas previas', async () => {
+  globalThis.__ui.aiCalls = [];
+  globalThis.__ui.aiRun = async () => ({ blob: new Blob(['synthetic'], { type: 'image/png' }), media: 'image' });
+  const view = component('AiTools');
+  const file = new File(['photo'], 'foto.png', { type: 'image/png' });
+  fireEvent.change(view.container.querySelector('input[type="file"]'), { target: { files: [file] } });
+  fireEvent.click(view.getByRole('button', { name: 'Procesar', exact: true }));
+  await waitFor(() => assert.ok(view.getByRole('img', { name: 'Resultado generado por la herramienta IA' })));
+  assert.equal(view.getByRole('link', { name: 'Descargar resultado' }).getAttribute('download'), 'jb-imagen-ia.png');
+  fireEvent.click(view.getByRole('button', { name: /Leer en voz alta/ }));
+  assert.equal(view.queryByRole('img'), null);
+  globalThis.__ui.aiRun = async () => ({ blob: new Blob(['synthetic'], { type: 'audio/wav' }), media: 'audio' });
+  fireEvent.change(view.getByRole('textbox', { name: /^Texto/ }), { target: { value: 'Casa luminosa' } });
+  fireEvent.click(view.getByRole('button', { name: 'Procesar', exact: true }));
+  await waitFor(() => assert.ok(view.getByLabelText('Escuchar narración generada')));
+  assert.equal(view.getByRole('link', { name: 'Descargar resultado' }).getAttribute('download'), 'jb-narracion.wav');
+  view.unmount();
+});
+
 async function submit(view, buttonName, actionName, expected = {}) {
   const button = view.getByRole('button', { name: buttonName });
   const form = button.closest('form');
