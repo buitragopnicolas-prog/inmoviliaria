@@ -50,7 +50,7 @@ export function AiTools() {
     const next = URL.createObjectURL(result.blob);
     let captions = '';
     if (result.media === 'audio' && result.text) {
-      const transcript = result.text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replace(/\s+/g, ' ');
+      const transcript = result.text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll(/\s+/g, ' ');
       captions = URL.createObjectURL(new Blob([`WEBVTT\n\n00:00:00.000 --> 24:00:00.000\n${transcript}\n`], { type: 'text/vtt' }));
     }
     setUrl(next);
