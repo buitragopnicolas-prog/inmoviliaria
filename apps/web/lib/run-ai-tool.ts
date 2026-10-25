@@ -20,7 +20,7 @@ export async function runAiTool(id: AiToolId, input: { text: string; secondText:
     case 'tts': {
       const { TextToSpeech } = await import('runonweb/tts');
       const speaker = new TextToSpeech({ ...options, size: 'multi', voice: 'st_f1', language: 'es' });
-      try { return { blob: await speaker.speakToBlob(input.text), media: 'audio' }; }
+      try { return { blob: await speaker.speakToBlob(input.text), media: 'audio', text: input.text }; }
       finally { speaker.dispose(); }
     }
     case 'translate': return { text: (await (await import('runonweb/translate')).translate(input.text, { ...options, from: input.from, to: input.from === 'es' ? 'en' : 'es' })).text };

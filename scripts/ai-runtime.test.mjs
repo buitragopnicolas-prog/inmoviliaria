@@ -80,7 +80,7 @@ test('detección y comparación conservan el carácter orientativo de sus result
 test('la narración libera su modelo tanto al completar como al fallar', async () => {
   const blob=new Blob(['synthetic-audio']);
   globalThis.__model={speakToBlob:async()=>blob};
-  assert.deepEqual(await runAiTool('tts',input,progress),{blob,media:'audio'});
+  assert.deepEqual(await runAiTool('tts',input,progress),{blob,media:'audio',text:input.text});
   assert.equal(globalThis.__model.speechOptions.language,'es');
   assert.equal(globalThis.__model.disposed,true);
   globalThis.__model={speakToBlob:async()=>{throw new Error('Synthetic model failure');}};

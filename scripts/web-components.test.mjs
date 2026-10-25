@@ -97,6 +97,31 @@ test('herramientas IA bloquean dobles ejecuciones y permiten reintentar después
   assert.equal(view.getByRole('button', { name: 'Procesar', exact: true }).disabled, false);
 });
 
+test('las narraciones conservan su texto accesible y liberan audio y subtítulos', async () => {
+  const create = URL.createObjectURL;
+  const revoke = URL.revokeObjectURL;
+  const blobs = [];
+  const revoked = [];
+  URL.createObjectURL = blob => { blobs.push(blob); return `blob:jb-${blobs.length}`; };
+  URL.revokeObjectURL = value => revoked.push(value);
+  globalThis.__ui.aiCalls = [];
+  globalThis.__ui.aiRun = async () => ({ blob: new Blob(['synthetic-audio']), media: 'audio', text: 'Casa <amplia> & luminosa' });
+  try {
+    const view = component('AiTools');
+    fireEvent.click(view.getByRole('button', { name: /Leer en voz alta/ }));
+    fireEvent.change(view.getByRole('textbox', { name: /^Texto/ }), { target: { value: 'Casa <amplia> & luminosa' } });
+    fireEvent.click(view.getByRole('button', { name: 'Procesar', exact: true }));
+    await waitFor(() => assert.ok(view.getByLabelText('Escuchar narración generada')));
+    const track = view.container.querySelector('track');
+    assert.equal(track.getAttribute('src'), 'blob:jb-2');
+    assert.equal(track.getAttribute('srclang'), 'es');
+    assert.match(await blobs[1].text(), /WEBVTT[\s\S]*Casa &lt;amplia&gt; &amp; luminosa/);
+    assert.equal(view.getByLabelText('Texto del resultado').value, 'Casa <amplia> & luminosa');
+    view.unmount();
+    assert.deepEqual(revoked, ['blob:jb-1', 'blob:jb-2']);
+  } finally { cleanup(); URL.createObjectURL = create; URL.revokeObjectURL = revoke; }
+});
+
 test('el buscador del inicio envía filtros compatibles con el catálogo sin acciones de escritura', () => {
   const view = component('HomeHero');
   const form = view.getByRole('form', { name: 'Buscar inmuebles en arriendo' });
