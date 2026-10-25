@@ -9,7 +9,7 @@ export function PropertyCard({ property }: { property: Property }) {
   const image = property.images[0];
   const isIllustration = /\.svg(?:[?#]|$)/i.test(image?.url ?? '');
   const isSeedIllustration = /\/uploads\/seed\/[^?#]+\.svg(?:[?#]|$)/i.test(image?.url ?? '');
-  const statusLabel = property.status === 'RENTED' ? 'Arrendado' : property.status === 'ARCHIVED' ? 'No disponible' : 'Disponible';
+  const statusLabel = { AVAILABLE: 'Disponible', RENTED: 'Arrendado', ARCHIVED: 'No disponible' }[property.status];
 
   return (
     <article className={styles.card}>

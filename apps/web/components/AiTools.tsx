@@ -1,9 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import { aiTools, validateAiInput, type AiToolId } from '@/lib/ai-tools';
 import type { AiResult } from '@/lib/run-ai-tool';
 import styles from './AiTools.module.css';
+
+function progressMessage(status: string, percent?: number) {
+  if (status === 'ready' || status === 'done') return 'Procesando…';
+  if (typeof percent !== 'number') return 'Descargando o preparando el modelo…';
+  const value = Math.min(100, Math.max(0, percent)).toFixed(0);
+  return `Descargando o preparando el modelo · ${value} % del archivo`;
+}
 
 export function AiTools() {
   const [id, setId] = useState<AiToolId>('ocr');
@@ -16,6 +23,7 @@ export function AiTools() {
   const [error, setError] = useState('');
   const [result, setResult] = useState<AiResult | null>(null);
   const [url, setUrl] = useState('');
+  const [captionUrl, setCaptionUrl] = useState('');
   const mounted = useRef(true);
   const running = useRef(false);
   const tool = aiTools.find((item) => item.id === id)!;
@@ -38,13 +46,19 @@ export function AiTools() {
     return () => { mounted.current = false; document.removeEventListener('click', navigate, true); };
   }, []);
   useEffect(() => {
-    if (!result?.blob) { setUrl(''); return; }
+    if (!result?.blob) { setUrl(''); setCaptionUrl(''); return; }
     const next = URL.createObjectURL(result.blob);
+    let captions = '';
+    if (result.media === 'audio' && result.text) {
+      const transcript = result.text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replace(/\s+/g, ' ');
+      captions = URL.createObjectURL(new Blob([`WEBVTT\n\n00:00:00.000 --> 24:00:00.000\n${transcript}\n`], { type: 'text/vtt' }));
+    }
     setUrl(next);
-    return () => URL.revokeObjectURL(next);
+    setCaptionUrl(captions);
+    return () => { URL.revokeObjectURL(next); if (captions) URL.revokeObjectURL(captions); };
   }, [result]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (running.current) return;
     setError('');
@@ -56,8 +70,7 @@ export function AiTools() {
       const { runAiTool } = await import('@/lib/run-ai-tool');
       const output = await runAiTool(id, { text, secondText, file, from }, (progress) => {
         if (!mounted.current) return;
-        const percent = progress.progress;
-        setStatus(progress.status === 'ready' || progress.status === 'done' ? 'Procesando…' : `Descargando o preparando el modelo${typeof percent === 'number' ? ` · ${Math.min(100, Math.max(0, percent)).toFixed(0)} % del archivo` : '…'}`);
+        setStatus(progressMessage(progress.status, progress.progress));
       });
       if (mounted.current) { setResult(output); setStatus('Proceso completado.'); }
     } catch (cause) {
@@ -76,7 +89,7 @@ export function AiTools() {
         {aiTools.map((item) => <button key={item.id} type="button" aria-pressed={id === item.id} disabled={busy} className={styles.tool} onClick={() => { setId(item.id); setFile(null); setResult(null); setError(''); setStatus(''); }}><span>{item.title}</span><small>{item.size}</small></button>)}
       </aside>
       <div className={`card ${styles.panel}`} aria-busy={busy}>
-        <div><span className="eyebrow">{tool.kind === 'image' ? 'Imágenes' : tool.kind === 'audio' ? 'Audio' : 'Texto'}</span><h2>{tool.title}</h2><p className="muted">{tool.description}</p></div>
+        <div><span className="eyebrow">{{ image: 'Imágenes', audio: 'Audio', text: 'Texto' }[tool.kind]}</span><h2>{tool.title}</h2><p className="muted">{tool.description}</p></div>
         <form className="form" onSubmit={handleSubmit}>
           <fieldset disabled={busy} className={styles.fields}>
             {tool.kind !== 'text' ? <label key={id}>Seleccionar {tool.kind === 'image' ? 'imagen' : 'audio'}<input type="file" accept={`${tool.kind}/*`} onChange={(event) => { setFile(event.target.files?.[0] ?? null); setResult(null); setError(''); }} /><span className="hint">Máximo 25 MB. {file ? `Seleccionado: ${file.name}` : 'El archivo se utiliza únicamente en tu dispositivo.'}</span></label> : <>
@@ -94,7 +107,7 @@ export function AiTools() {
         {result && <section className={styles.result} aria-label="Resultado"><h3>Resultado</h3>
           {result.text !== undefined && <label className="form">Texto generado<textarea aria-label="Texto del resultado" rows={8} readOnly value={result.text || 'El modelo no devolvió texto. Prueba con otro archivo o contenido.'} /></label>}
           {url && result.media === 'image' && <img src={url} alt="Resultado generado por la herramienta IA" />}
-          {url && result.media === 'audio' && <audio src={url} controls aria-label="Escuchar narración generada" />}
+          {url && result.media === 'audio' && <audio src={url} controls aria-label="Escuchar narración generada"><track kind="captions" src={captionUrl} srcLang="es" label="Texto de la narración" default /></audio>}
           {url && <a className="button outline" href={url} download={result.media === 'audio' ? 'jb-narracion.wav' : 'jb-imagen-ia.png'}>Descargar resultado</a>}
           <p className="hint">Revisa el resultado antes de utilizarlo. No se guarda en el catálogo ni en tus documentos.</p>
         </section>}
