@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Asesoría Inmobiliaria JB",
+    "productType": "Real estate rentals and tenant portal",
+    "stack": [
+      "Next.js App Router",
+      "React",
+      "TypeScript",
+      "CSS Modules"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "apps/web/app/globals.css"
+    ],
+    "components": [
+      "apps/web/components/PropertyCard.tsx",
+      "apps/web/components/home/HomeSections.tsx",
+      "apps/web/components/UiIcon.tsx"
+    ],
+    "assets": [
+      "apps/web/public/images"
+    ],
+    "instructions": [
+      "AGENTS.md"
+    ]
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "primary": "#102a43",
+      "gold": "#b79a48",
+      "goldDeep": "#8a7440",
+      "surface": "#ffffff",
+      "sand": "#f3ebe0"
+    },
+    "typography": {
+      "display": "Cormorant Garamond",
+      "body": "Source Sans 3"
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {},
+    "density": "comfortable"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [
+      "UiIcon",
+      "Reveal",
+      "next/image",
+      "next/link",
+      "native GET forms"
+    ],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [
+      "Spanish copy",
+      "JB identity",
+      "Accessible labels and visible focus",
+      "Responsive layouts and reduced motion",
+      "Keep dynamic catalog and API failure states"
+    ],
+    "avoid": [
+      "Paid subscriptions or hosted AI generation",
+      "New dependencies for static visual changes",
+      "Fictitious listings or financial data"
+    ]
+  },
+  "decisions": [],
+  "evidence": [
+    {
+      "fact": "project.instructions",
+      "source": "AGENTS.md"
+    },
+    {
+      "fact": "UI inspiration retrieved: Real Estate Search Hero, adapted as a native catalog GET form",
+      "source": "https://21st.dev/@felipemenezes098/components/hero-09"
+    },
+    {
+      "fact": "UI inspiration retrieved: Property Preview Card, adapted with actual rent, administration and status",
+      "source": "https://21st.dev/@shadcnspace/components/card-02"
+    }
+  ],
+  "generatedAt": "2026-10-25T01:58:23.321Z"
+}

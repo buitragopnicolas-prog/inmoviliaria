@@ -6,23 +6,37 @@ import styles from './HomeSections.module.css';
 export function HomeHero() {
   return (
     <section className={styles.hero} aria-labelledby="home-title">
-      <picture className={styles.heroImage}>
-        <source media="(max-width: 680px)" srcSet="/images/jb-architecture-hero-960.webp" />
-        <img src="/images/jb-architecture-hero-1920.webp" alt="" width="1920" height="1081" fetchPriority="high" />
-      </picture>
       <div className={`container ${styles.heroContent}`}>
-        <div className={styles.heroCopy}>
-          <span className={styles.heroKicker}>Bogotá, Colombia · Asesoría inmobiliaria JB</span>
-          <h1 id="home-title">Tu inmueble.<br />Nuestro <em>compromiso.</em></h1>
-          <p>Arriendos y administración con acompañamiento cercano. Espacios para vivir y claridad para cuidar tu patrimonio.</p>
-          <div className={styles.heroActions}>
-            <Link className={`${styles.heroPrimary} button`} href="/inmuebles">Ver inmuebles <span aria-hidden="true">↗</span></Link>
-            <Link className={styles.heroSecondary} href="/contacto">Hablar con un asesor <span aria-hidden="true">→</span></Link>
+        <div className={styles.heroMain}>
+          <div className={styles.heroCopy}>
+            <span className={styles.heroKicker}>Bogotá, Colombia · Asesoría inmobiliaria JB</span>
+            <h1 id="home-title">Tu inmueble.<br />Nuestro <em>compromiso.</em></h1>
+            <p>Arriendos y administración con acompañamiento cercano. Espacios para vivir y claridad para cuidar tu patrimonio.</p>
+            <div className={styles.heroActions}>
+              <a className={styles.heroBrowse} href="#buscar-inmueble">Encuentra tu espacio <span aria-hidden="true">↓</span></a>
+              <Link className={styles.heroSecondary} href="/contacto">Hablar con un asesor <span aria-hidden="true">→</span></Link>
+            </div>
           </div>
+          <div className={styles.heroVisual}>
+            <picture className={styles.heroImage}>
+              <source media="(max-width: 1000px)" srcSet="/images/jb-architecture-hero-960.webp" />
+              <img src="/images/jb-architecture-hero-1920.webp" alt="Arquitectura contemporánea con balcones y vegetación, imagen de referencia" width="1920" height="1081" fetchPriority="high" />
+            </picture>
+            <div className={styles.heroImageCaption}><span>EL COMIENZO DE ALGO TUYO</span><p>Un espacio para tu<br /><em>próxima etapa.</em></p><small>Imagen de referencia</small></div>
+          </div>
+        </div>
+        <div className={styles.searchPanel} id="buscar-inmueble">
+          <div className={styles.searchHeading}><UiIcon name="search" /><h2>¿Dónde quieres empezar?</h2><span>Inmuebles en arriendo</span></div>
+          <form action="/inmuebles" method="get" className={styles.heroSearch} aria-label="Buscar inmuebles en arriendo">
+            <label htmlFor="home-search">Barrio o inmueble<input id="home-search" name="search" type="search" placeholder="Ej. Chapinero o apartamento" /></label>
+            <label htmlFor="home-city">Ciudad<input id="home-city" name="city" placeholder="Ej. Bogotá" autoComplete="address-level2" /></label>
+            <label htmlFor="home-max-rent">Canon máximo (COP)<input id="home-max-rent" name="maxRent" type="number" min="1" step="1" placeholder="Ej. 2500000" /></label>
+            <button className="button" type="submit"><UiIcon name="search" />Buscar inmuebles</button>
+          </form>
         </div>
         <div className={styles.heroFoot}>
           <a className={styles.discoverLink} href="#nuestro-enfoque"><span aria-hidden="true">↓</span> Descubre nuestro enfoque</a>
-          <span className={styles.imageCredit}>Arquitectura contemporánea · Imagen de referencia</span>
+          <Link className={styles.catalogLink} href="/inmuebles">Ver todos los inmuebles <span aria-hidden="true">↗</span></Link>
         </div>
       </div>
     </section>

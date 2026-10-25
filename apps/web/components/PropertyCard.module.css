@@ -1,0 +1,41 @@
+.card { height: 100%; min-width: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); transition: border-color var(--transition), box-shadow var(--transition); }
+.card:hover, .card:focus-within { border-color: var(--gold-deep); box-shadow: var(--shadow-hover); }
+.link { display: flex; flex-direction: column; height: 100%; border-radius: inherit; }
+.link:focus-visible { outline: 3px solid var(--primary); outline-offset: -4px; }
+.image { position: relative; isolation: isolate; aspect-ratio: 4 / 3; overflow: hidden; background: var(--mint); }
+.image img { object-fit: cover; transition: transform 300ms ease; }
+.image img.illustration { filter: saturate(.2); }
+.card:hover .image img, .card:focus-within .image img { transform: scale(1.035); }
+.status, .tour, .photoCount, .reference { position: absolute; z-index: 1; font-size: 11px; line-height: 1.4; border-radius: 4px; }
+.status { top: 16px; left: 16px; display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; font-weight: 600; background: var(--surface); color: var(--primary); }
+.availableDot, .statusDot { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--success); }
+.statusDot { background: var(--text-secondary); }
+.tour { top: 16px; right: 16px; padding: 8px 10px; color: white; background: var(--primary); }
+.photoCount { left: 16px; bottom: 16px; padding: 6px 9px; color: white; background: var(--primary); }
+.reference { right: 16px; bottom: 16px; max-width: calc(100% - 32px); padding: 6px 9px; background: var(--surface); color: var(--text-secondary); }
+.body { display: flex; flex: 1; flex-direction: column; padding: 24px; }
+.location { display: flex; align-items: start; gap: 6px; font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.location svg { flex: 0 0 15px; width: 15px; height: 15px; margin-top: 3px; }
+.body h3 { font: 600 21px/1.35 var(--font-sans), sans-serif; color: var(--primary); margin-block: 10px 20px; overflow-wrap: anywhere; }
+.pricing { margin-top: auto; margin-bottom: 22px; }
+.rent { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; color: var(--primary); font-size: 27px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.035em; line-height: 1.3; overflow-wrap: anywhere; }
+.rent small { font-size: 12px; letter-spacing: 0; font-weight: 400; color: var(--text-secondary); }
+.fee { color: var(--text-secondary); font-size: 12px; margin-top: 5px; }
+.specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); gap: 12px 8px; margin: 0; padding-block: 18px; border-top: 1px solid var(--border); }
+.specs div { min-width: 0; }
+.specs dt { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+.specs dt span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+.specs dt svg { width: 18px; height: 18px; }
+.specs dd { margin: 7px 0 0; color: var(--primary); font-size: 14px; font-weight: 600; }
+.cta { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; border-top: 1px solid var(--border); color: var(--primary); font-size: 13px; font-weight: 600; }
+.cta > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--mint); font-size: 20px; transition: background var(--transition), color var(--transition); }
+.link:hover .cta > span, .link:focus-visible .cta > span { background: var(--primary); color: white; }
+@media (max-width: 680px) {
+  .body { padding: 20px; }
+  .body h3 { font-size: 20px; }
+  .image { aspect-ratio: 3 / 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .image img, .cta > span { transition: none; }
+  .card:hover .image img, .card:focus-within .image img { transform: none; }
+}

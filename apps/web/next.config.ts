@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  transpilePackages: ['runonweb'],
   experimental: {
     serverActions: {
       // El formulario de inmuebles puede enviar hasta ~65 MB entre fotos y tour 360.
@@ -31,9 +32,18 @@ const nextConfig: NextConfig = {
       { key: 'X-DNS-Prefetch-Control', value: 'off' },
     ];
     if (process.env.NODE_ENV === 'production') securityHeaders.push({ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' });
+    // AI models run only on this route. Keep the stricter policy elsewhere.
+    const aiContentPolicy = securityHeaders.find((header) => header.key === 'Content-Security-Policy')!.value
+      .replace(`script-src ${scriptPolicy}`, `script-src ${scriptPolicy} 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net`)
+      .replace("connect-src 'self'", "connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net")
+      .replace("media-src 'self' https:", "media-src 'self' https: blob:")
+      .concat("; worker-src 'self' blob:");
     return [{
       source: '/(.*)',
       headers: securityHeaders,
+    }, {
+      source: '/herramientas-ia',
+      headers: [{ key: 'Content-Security-Policy', value: aiContentPolicy }],
     }];
   },
 };

@@ -12,6 +12,8 @@ const paths = {
   bed: 'M3 18V7M21 18v-7H3M3 15h18M6 11V6h6v5',
   bath: 'M3 12h18M5 12V5a2 2 0 0 1 4 0M4 12v4a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-4M7 20v2M17 20v2',
   parking: 'M6 21V3h7a5 5 0 0 1 0 10H6',
+  search: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
+  pin: 'M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0ZM15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
 } as const;
 
 export type IconName = keyof typeof paths;
