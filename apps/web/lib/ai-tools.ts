@@ -18,15 +18,20 @@ export type AiToolId = typeof aiTools[number]['id'];
 
 export function validateAiInput(id: AiToolId, text: string, secondText: string, file: File | null): string | null {
   const tool = aiTools.find((item) => item.id === id)!;
-  if (tool.kind !== 'text') {
-    if (!file) return 'Selecciona un archivo para continuar.';
-    if (!file.type.startsWith(`${tool.kind}/`)) return tool.kind === 'image' ? 'Selecciona un archivo de imagen.' : 'Selecciona un archivo de audio.';
-    if (file.size > 25 * 1024 * 1024) return 'El archivo debe pesar como máximo 25 MB.';
-    if (!file.size) return 'El archivo está vacío.';
-  } else {
-    if (!text.trim()) return 'Escribe el texto que quieres procesar.';
-    if (text.length > 4000 || secondText.length > 4000) return 'Usa un máximo de 4000 caracteres por texto.';
-    if (id === 'embed' && !secondText.trim()) return 'Escribe también el segundo texto.';
-  }
+  return tool.kind === 'text' ? validateText(id, text, secondText) : validateFile(tool.kind, file);
+}
+
+function validateFile(kind: 'image' | 'audio', file: File | null): string | null {
+  if (!file) return 'Selecciona un archivo para continuar.';
+  if (!file.type.startsWith(`${kind}/`)) return kind === 'image' ? 'Selecciona un archivo de imagen.' : 'Selecciona un archivo de audio.';
+  if (file.size > 25 * 1024 * 1024) return 'El archivo debe pesar como máximo 25 MB.';
+  if (!file.size) return 'El archivo está vacío.';
+  return null;
+}
+
+function validateText(id: AiToolId, text: string, secondText: string): string | null {
+  if (!text.trim()) return 'Escribe el texto que quieres procesar.';
+  if (text.length > 4000 || secondText.length > 4000) return 'Usa un máximo de 4000 caracteres por texto.';
+  if (id === 'embed' && !secondText.trim()) return 'Escribe también el segundo texto.';
   return null;
 }
