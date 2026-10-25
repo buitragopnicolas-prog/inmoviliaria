@@ -1,0 +1,25 @@
+.root { display: grid; gap: 24px; }
+.privacy { padding: 20px 24px; background: var(--mint); border-left: 3px solid var(--accent); border-radius: var(--radius-control); color: var(--text-secondary); }
+.workspace { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px; align-items: start; }
+.tools { display: grid; gap: 6px; }
+.tool { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px; background: var(--surface); color: var(--primary); border: 1px solid var(--border); border-radius: var(--radius-control); cursor: pointer; text-align: left; font: inherit; }
+.tool span { font-weight: 600; }
+.tool small { color: var(--muted); white-space: nowrap; font-size: 11px; }
+.tool[aria-pressed='true'] { background: var(--primary); color: var(--surface); border-color: var(--primary); }
+.tool[aria-pressed='true'] small { color: var(--surface); }
+.root button:disabled { cursor: wait; opacity: .65; transform: none; }
+.root :is(button, a, summary):focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.panel { padding: clamp(20px, 4vw, 36px); display: grid; gap: 24px; min-width: 0; }
+.panel h2 { color: var(--primary); font-size: 32px; margin-bottom: 8px; }
+.fields { display: grid; gap: 20px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.download, .credit, .credits { color: var(--muted); font-size: 14px; }
+.result { display: grid; gap: 16px; border-top: 1px solid var(--border); padding-top: 24px; min-width: 0; }
+.result h3 { font-size: 26px; color: var(--primary); }
+.result textarea { width: 100%; padding: 14px; font: inherit; border: 1px solid var(--border); border-radius: var(--radius-control); resize: vertical; background: var(--background); color: var(--text); }
+.result img { max-width: 100%; max-height: 560px; object-fit: contain; border: 1px solid var(--border); border-radius: var(--radius-control); }
+.result audio { width: 100%; }
+.result a { justify-self: start; }
+.credits summary { cursor: pointer; color: var(--primary); }
+.credits p { margin-block: 12px; }
+@media (max-width: 760px) { .workspace { grid-template-columns: 1fr; gap: 20px; } .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tool { flex-direction: column; align-items: start; gap: 4px; } }
+@media (prefers-reduced-motion: reduce) { .root button { transition: none; } }

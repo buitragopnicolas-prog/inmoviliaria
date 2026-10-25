@@ -17,11 +17,12 @@ export function PublicNavigation({ role }: { role?: 'ADMIN' | 'USER' }) {
     { href: '/noticias', label: 'Noticias' },
     { href: '/nosotros', label: 'Nosotros' },
     { href: '/contacto', label: 'Contacto' },
+    { href: '/herramientas-ia', label: 'Herramientas IA' },
     ...(role === 'ADMIN' ? [{ href: '/admin', label: 'Administración' }] : []),
     ...(role === 'USER' ? [{ href: '/mi-cuenta', label: 'Mi cuenta' }] : []),
   ];
   const links = (mobile = false) => destinations.map(({ href, label }) =>
-    <ActiveLink key={href} href={href} onClick={mobile ? closeMenu : undefined} onKeyDown={mobile ? handleEscape : undefined}>{label}</ActiveLink>);
+    <ActiveLink key={href} href={href} reload={href === '/herramientas-ia'} onClick={mobile ? closeMenu : undefined} onKeyDown={mobile ? handleEscape : undefined}>{label}</ActiveLink>);
   return <>
     <nav className="navLinks desktopNav" aria-label="Navegación principal">{links()}</nav>
     <div className="mobileNavigation" onBlur={(event) => {

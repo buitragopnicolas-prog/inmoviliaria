@@ -6,7 +6,8 @@
     "dev": "next dev --port 3000",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:ai": "node --import tsx --test lib/ai-tools.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/cormorant-garamond": "5.3.0",
@@ -14,12 +15,14 @@
     "@photo-sphere-viewer/core": "^5.14.1",
     "next": "^16.4.3",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "runonweb": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.32",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@webgpu/types": "^0.1.74",
     "typescript": "^5.9.3"
   }
 }
