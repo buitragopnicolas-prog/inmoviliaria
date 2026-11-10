@@ -1,0 +1,38 @@
+name: jb-odoo
+services:
+  db:
+    image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
+    environment:
+      POSTGRES_PASSWORD: ${ODOO_POSTGRES_PASSWORD:?Configure .env.odoo}
+      ODOO_DB_PASSWORD: ${ODOO_DB_PASSWORD:?Configure .env.odoo}
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ../k8s/overlays/dev/odoo/init-postgres.sql:/docker-entrypoint-initdb.d/10-odoo.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  odoo:
+    image: odoo:19.0-20261102@sha256:5e755c725b3c43cf0be16d579904e1418300db3a2c44952f928eaddbcb0cc16d
+    entrypoint: ["/bin/sh", "/opt/jb/start-odoo.sh"]
+    environment:
+      ODOO_DB_HOST: db
+      ODOO_DB_PASSWORD: ${ODOO_DB_PASSWORD:?Configure .env.odoo}
+      ODOO_MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD:?Configure .env.odoo}
+    ports:
+      - "127.0.0.1:${ODOO_HOST_PORT:-8069}:8069"
+    volumes:
+      - filestore:/var/lib/odoo
+      - ../k8s/overlays/dev/odoo/start-odoo.sh:/opt/jb/start-odoo.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8069/web/health?db_server_status=1', timeout=3).close()"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+volumes:
+  database:
+  filestore:

@@ -4,6 +4,7 @@ namespace: asesoria-inmobiliaria-dev
 resources:
   - ../../base
   - ingress.yaml
+  - odoo
 images:
   - name: asesoria-inmobiliaria-api
     newName: asesoria-inmobiliaria-api

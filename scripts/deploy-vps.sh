@@ -75,6 +75,14 @@ kubectl -n "$namespace" get secret asesoria-secrets >/dev/null
 kubectl -n "$namespace" get service postgres-service minio-service >/dev/null
 if [[ "$stage" == dev ]]; then
   bash "$repo/scripts/prepare-dev-security.sh"
+  odoo_secret="$(kubectl -n "$namespace" get secret odoo-secrets --ignore-not-found -o name)"
+  if [[ -z "$odoo_secret" ]]; then
+    {
+      printf 'POSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+      printf 'ODOO_DB_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+      printf 'ODOO_MASTER_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+    } | kubectl -n "$namespace" create secret generic odoo-secrets --from-env-file=/dev/stdin
+  fi
 fi
 kubectl kustomize "$payment_overlay" --load-restrictor LoadRestrictionsNone | sed "s/RELEASE_TAG/$tag/g" > "$manifest"
 if grep -q RELEASE_TAG "$manifest"; then
@@ -177,6 +185,7 @@ if [[ "$smoke_ok" != true ]]; then
 fi
 
 if [[ "$stage" == dev ]]; then
+  kubectl -n "$namespace" rollout status deployment/odoo --timeout=300s
   python3 "$repo/scripts/smoke-dev-vps.py" --upload
 fi
 
