@@ -47,6 +47,9 @@
     "node": ">=22.0.0"
   },
   "overrides": {
+    "query-string": {
+      "decode-uri-component": "0.5.1"
+    },
     "@nestjs/platform-express": {
       "multer": "^2.4.0"
     },
