@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { PublicSiteChrome, SkipToContentLink } from '@/components/PublicSiteChrome';
 
 const displayFont = localFont({
   src: '../../../node_modules/@fontsource-variable/cormorant-garamond/files/cormorant-garamond-latin-wght-normal.woff2',
@@ -27,10 +28,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es" data-scroll-behavior="smooth">
       <body className={`${bodyFont.variable} ${displayFont.variable}`}>
-        <a className="skipLink" href="#contenido">Saltar al contenido</a>
-        <Header />
+        <SkipToContentLink />
+        <PublicSiteChrome><Header /></PublicSiteChrome>
         <main id="contenido" tabIndex={-1}>{children}</main>
-        <Footer />
+        <PublicSiteChrome><Footer /></PublicSiteChrome>
       </body>
     </html>
   );

@@ -21,15 +21,18 @@ const actionNames = [...actionSource.matchAll(/export async function (\w+)/g)].m
 const stubs = {
   ai: 'export async function runAiTool(...args) { globalThis.__ui.aiCalls.push(args); return globalThis.__ui.aiRun(...args); }',
   actions: actionNames.map((name) => `export async function ${name}(...args) { globalThis.__ui.calls.push({ name: '${name}', data: args.at(-1) }); return globalThis.__ui.result; }`).join('\n'),
-  api: 'export async function apiFetch(path) { return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
+  api: 'export async function apiFetch(path) { const responses = globalThis.__ui.apiResponses; if (responses && Object.hasOwn(responses, path)) { if (responses[path] instanceof Error) throw responses[path]; return responses[path]; } return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
   auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); }',
   navigation: 'export function usePathname() { return globalThis.__ui.pathname; }',
   link: 'import React from "react"; export default function Link({ children, onClick, ...props }) { return React.createElement("a", { ...props, onClick: event => { onClick?.(event); event.preventDefault(); } }, children); }',
   image: 'import React from "react"; export default function Image({ fill, priority, ...props }) { return React.createElement("img", props); }',
 };
 const names = ['AiTools', 'PropertyCard', 'PublicNavigation', 'ActiveLink', 'AuthForm', 'ContactForm', 'AdminNewsForm', 'AdminUserForm', 'AdminFileUploadForm', 'AdminPropertyForm', 'AdminPropertyEditForm', 'AdminAssignPropertyForm', 'AdminDeletePropertyButton', 'AdminInvoiceForm', 'AdminInvoiceManager', 'AdminLeaseContractForm', 'ManualPaymentForm', 'ManualPaymentReviewForm'];
+names.push('AdminWorkspace', 'AdminCreatePanel', 'AdminListControls', 'AdminContactStatusForm', 'PublicSiteChrome');
 const entry = names.map((name) => `export { ${name} } from './apps/web/components/${name}.tsx';`).join('\n') +
-  "\nexport { HomeHero } from './apps/web/components/home/HomeSections.tsx';\nexport { default as PayInvoicePage } from './apps/web/app/mi-cuenta/facturas/[id]/pagar/page.tsx';\nexport { default as AdminNewsPage } from './apps/web/app/admin/noticias/page.tsx';";
+  "\nexport { HomeHero } from './apps/web/components/home/HomeSections.tsx';\nexport { default as PayInvoicePage } from './apps/web/app/mi-cuenta/facturas/[id]/pagar/page.tsx';\nexport { default as AdminNewsPage } from './apps/web/app/admin/noticias/page.tsx';" +
+  ['inmuebles', 'usuarios', 'facturas', 'contactos', 'archivos', 'conciliacion'].map((route) => `\nexport { default as Admin_${route} } from './apps/web/app/admin/${route}/page.tsx';`).join('') +
+  "\nexport { default as AdminDashboardPage } from './apps/web/app/admin/page.tsx';\nexport * from './apps/web/lib/admin-lists.ts';\nexport { SkipToContentLink } from './apps/web/components/PublicSiteChrome.tsx';";
 await mkdir('.local', { recursive: true });
 const bundle = resolve('.local/ui-test-bundle.mjs');
 await build({
@@ -97,29 +100,23 @@ test('herramientas IA bloquean dobles ejecuciones y permiten reintentar después
   assert.equal(view.getByRole('button', { name: 'Procesar', exact: true }).disabled, false);
 });
 
-test('las narraciones conservan su texto accesible y liberan audio y subtítulos', async () => {
-  const create = URL.createObjectURL;
-  const revoke = URL.revokeObjectURL;
-  const blobs = [];
-  const revoked = [];
-  URL.createObjectURL = blob => { blobs.push(blob); return `blob:jb-${blobs.length}`; };
-  URL.revokeObjectURL = value => revoked.push(value);
+test('herramientas IA permiten descargar imágenes y audio y liberan sus vistas previas', async () => {
   globalThis.__ui.aiCalls = [];
-  globalThis.__ui.aiRun = async () => ({ blob: new Blob(['synthetic-audio']), media: 'audio', text: 'Casa <amplia> & luminosa' });
-  try {
-    const view = component('AiTools');
-    fireEvent.click(view.getByRole('button', { name: /Leer en voz alta/ }));
-    fireEvent.change(view.getByRole('textbox', { name: /^Texto/ }), { target: { value: 'Casa <amplia> & luminosa' } });
-    fireEvent.click(view.getByRole('button', { name: 'Procesar', exact: true }));
-    await waitFor(() => assert.ok(view.getByLabelText('Escuchar narración generada')));
-    const track = view.container.querySelector('track');
-    assert.equal(track.getAttribute('src'), 'blob:jb-2');
-    assert.equal(track.getAttribute('srclang'), 'es');
-    assert.match(await blobs[1].text(), /WEBVTT[\s\S]*Casa &lt;amplia&gt; &amp; luminosa/);
-    assert.equal(view.getByLabelText('Texto del resultado').value, 'Casa <amplia> & luminosa');
-    view.unmount();
-    assert.deepEqual(revoked, ['blob:jb-1', 'blob:jb-2']);
-  } finally { cleanup(); URL.createObjectURL = create; URL.revokeObjectURL = revoke; }
+  globalThis.__ui.aiRun = async () => ({ blob: new Blob(['synthetic'], { type: 'image/png' }), media: 'image' });
+  const view = component('AiTools');
+  const file = new File(['photo'], 'foto.png', { type: 'image/png' });
+  fireEvent.change(view.container.querySelector('input[type="file"]'), { target: { files: [file] } });
+  fireEvent.click(view.getByRole('button', { name: 'Procesar', exact: true }));
+  await waitFor(() => assert.ok(view.getByRole('img', { name: 'Resultado generado por la herramienta IA' })));
+  assert.equal(view.getByRole('link', { name: 'Descargar resultado' }).getAttribute('download'), 'jb-imagen-ia.png');
+  fireEvent.click(view.getByRole('button', { name: /Leer en voz alta/ }));
+  assert.equal(view.queryByRole('img'), null);
+  globalThis.__ui.aiRun = async () => ({ blob: new Blob(['synthetic'], { type: 'audio/wav' }), media: 'audio' });
+  fireEvent.change(view.getByRole('textbox', { name: /^Texto/ }), { target: { value: 'Casa luminosa' } });
+  fireEvent.click(view.getByRole('button', { name: 'Procesar', exact: true }));
+  await waitFor(() => assert.ok(view.getByLabelText('Escuchar narración generada')));
+  assert.equal(view.getByRole('link', { name: 'Descargar resultado' }).getAttribute('download'), 'jb-narracion.wav');
+  view.unmount();
 });
 
 test('el buscador del inicio envía filtros compatibles con el catálogo sin acciones de escritura', () => {
@@ -261,7 +258,10 @@ test('retirar inmuebles pide confirmación y no envía una decisión cancelada',
 
 test('editar y eliminar facturas envía acciones distintas con el mismo identificador', async () => {
   const view = component('AdminInvoiceManager', { invoices: [invoice] });
-  fireEvent.click(view.getByRole('button', { name: 'Editar' }));
+  const editButton = view.getByRole('button', { name: 'Editar FAC-1' });
+  assert.equal(editButton.getAttribute('aria-expanded'), 'false');
+  fireEvent.click(editButton);
+  assert.equal(view.getByRole('button', { name: 'Cerrar edición de FAC-1' }).getAttribute('aria-expanded'), 'true');
   await submit(view, 'Guardar cambios', 'updateInvoiceAction', { id: invoice.id });
   window.confirm = () => true;
   await submit(view, 'Eliminar factura', 'deleteInvoiceAction', { id: invoice.id });
@@ -307,7 +307,116 @@ test('página de pago permite checkout y confirmación mock sólo en su modo cor
 });
 
 test('noticias administrativas archivan el registro seleccionado', async () => {
-  const view = render(await ui.AdminNewsPage());
+  const view = render(await ui.AdminNewsPage({}));
   assert.deepEqual(globalThis.__ui.roles, ['ADMIN']);
   await submit(view, 'Ocultar', 'archiveNewsAction', { id: 'news-1' });
+});
+
+test('el menú administrativo conserva la sección activa y cierra con Escape y al navegar', () => {
+  globalThis.__ui.pathname = '/admin/usuarios/user-1';
+  const view = component('AdminWorkspace', { children: React.createElement('h1', null, 'Perfil') });
+  const nav = within(view.getByRole('navigation', { name: 'Administración', exact: true }));
+  assert.equal(nav.getByRole('link', { name: 'Usuarios', exact: true }).getAttribute('aria-current'), 'page');
+  assert.equal(nav.getByRole('link', { name: 'Resumen', exact: true }).getAttribute('aria-current'), null);
+  const toggle = view.getByRole('button', { name: 'Menú', exact: true });
+  fireEvent.click(toggle);
+  assert.equal(view.getByRole('button', { name: 'Cerrar menú', exact: true }).getAttribute('aria-expanded'), 'true');
+  fireEvent.keyDown(view.getByRole('button', { name: 'Cerrar menú', exact: true }), { key: 'Escape' });
+  assert.equal(toggle.getAttribute('aria-expanded'), 'false');
+  assert.equal(document.activeElement, toggle);
+  fireEvent.click(toggle);
+  fireEvent.click(nav.getByRole('link', { name: 'Facturación', exact: true }));
+  assert.equal(toggle.getAttribute('aria-expanded'), 'false');
+  fireEvent.click(toggle);
+  globalThis.__ui.pathname = '/admin/facturas';
+  view.rerender(React.createElement(ui.AdminWorkspace, { children: 'Facturas' }));
+  assert.equal(toggle.getAttribute('aria-expanded'), 'false');
+});
+
+test('búsqueda administrativa admite tildes y páginas inválidas sin perder filtros', () => {
+  assert.ok(ui.adminMatches('bogota atico', 'Ático', 'Bogotá'));
+  assert.equal(ui.adminMatches('ático medellín', 'Ático en Bogotá'), false);
+  for (const pagina of ['-2', '1.5', 'NaN', 'Infinity', ['3', '4']]) assert.equal(ui.readAdminQuery({ pagina }).pagina, 1);
+  assert.deepEqual(ui.readAdminQuery({ buscar: ['a', 'b'], estado: ['PAID'] }), { buscar: '', estado: '', pagina: 1 });
+  const query = { buscar: 'José & Ana', estado: 'PENDING', pagina: 99 };
+  const result = ui.paginateAdmin(Array.from({ length: 31 }, (_, i) => i), query.pagina);
+  assert.deepEqual(result.items, [30]);
+  const next = new URL(ui.adminListHref('/admin/facturas', query, 2), 'http://localhost');
+  assert.equal(next.searchParams.get('buscar'), 'José & Ana');
+  assert.equal(next.searchParams.get('estado'), 'PENDING');
+  assert.equal(next.searchParams.get('pagina'), '2');
+  assert.equal(ui.paginateAdmin([], 99).page, 1);
+});
+
+test('listas administrativas filtran datos reales de cada respuesta antes de paginar', async () => {
+  const user = { id: 'tenant-1', name: 'José García', counts: {}, financial: { state: 'PENDING', outstandingAmount: 1000000 } };
+  const file = { id: 'file-1', originalName: 'Ficha Ático.pdf', mimeType: 'application/pdf', size: 1024, publicPath: '/files/file-1', createdAt: '2026-10-01' };
+  const message = { id: 'contact-1', name: 'José García', email: 'jose@example.test', subject: 'Visita al ático', message: 'Solicito información.', status: 'NEW', createdAt: '2026-10-01' };
+  const cases = [
+    ['inmuebles', { buscar: 'bogota', estado: 'PUBLISHED_AVAILABLE' }, { '/admin/properties': [{ ...property, status: 'AVAILABLE' }, { ...property, id: 'hidden', published: false, title: 'Oculto', status: 'AVAILABLE' }], '/admin/tenants': [] }, 'Casa de prueba', 'Oculto'],
+    ['usuarios', { buscar: 'José', estado: 'PENDING' }, { '/admin/users?search=Jos%C3%A9': [user, { ...user, id: 'paid', name: 'Usuario pagado', financial: { ...user.financial, state: 'PAID' } }] }, 'José García', 'Usuario pagado'],
+    ['facturas', { estado: 'OUTSTANDING' }, { '/admin/invoices': [invoice, { ...invoice, id: 'paid', code: 'FAC-PAGADA', status: 'PAID' }], '/admin/leases': [], '/admin/invoices/catalog': { services: [], products: [] } }, 'FAC-1', 'FAC-PAGADA'],
+    ['archivos', { buscar: 'atico' }, { '/admin/files': [file, { ...file, id: 'other', originalName: 'Local.pdf' }] }, 'Ficha Ático.pdf', 'Local.pdf'],
+    ['contactos', { estado: 'NEW' }, { '/admin/contacts': [message, { ...message, id: 'closed', status: 'CLOSED', subject: 'Solicitud cerrada' }] }, 'Visita al ático', 'Solicitud cerrada'],
+    ['conciliacion', { estado: 'REVIEW_REQUIRED' }, { '/admin/reconciliation/notifications': [{ id: 'notification-1', payerName: 'José García', status: 'REVIEW_REQUIRED', receivedAt: '2026-10-01' }, { id: 'matched', payerName: 'Pagador conciliado', status: 'MATCHED', receivedAt: '2026-10-01' }], '/admin/reconciliation/accounts': [], '/admin/reconciliation/imports': [], '/payments/manual/pending': [] }, 'José García', 'Pagador conciliado'],
+  ];
+  for (const [route, params, responses, visible, absent] of cases) {
+    globalThis.__ui.apiResponses = responses;
+    globalThis.__ui.roles = [];
+    const view = render(await ui[`Admin_${route}`]({ searchParams: Promise.resolve(params) }));
+    assert.deepEqual(globalThis.__ui.roles, ['ADMIN']);
+    assert.ok(view.getByText(visible, { exact: true }));
+    assert.equal(view.queryByText(absent, { exact: true }), null);
+    assert.equal(view.getByRole('search', { name: 'Filtrar registros' }).method, 'get');
+    assert.equal(globalThis.__ui.calls.length, 0);
+    view.unmount();
+  }
+});
+
+test('noticias paginan los resultados y distinguen un filtro sin coincidencias', async () => {
+  globalThis.__ui.news = Array.from({ length: 17 }, (_, i) => ({ id: `news-${i}`, title: `Noticia ${i}`, createdAt: '2026-10-01', published: true }));
+  let view = render(await ui.AdminNewsPage({ searchParams: Promise.resolve({ pagina: '2' }) }));
+  assert.ok(view.getByText('Noticia 16', { exact: true }));
+  assert.equal(view.queryByText('Noticia 0', { exact: true }), null);
+  assert.equal(view.getByRole('link', { name: 'Anterior' }).getAttribute('href'), '/admin/noticias');
+  view.unmount();
+  view = render(await ui.AdminNewsPage({ searchParams: Promise.resolve({ buscar: 'inexistente', crear: '1' }) }));
+  assert.match(view.getByRole('status').textContent, /No encontramos coincidencias/);
+  assert.equal(view.container.querySelector('details').open, true);
+});
+
+test('dashboard distingue reportes no disponibles de cero y enlaza tareas filtradas', async () => {
+  globalThis.__ui.apiResponses = { '/admin/dashboard': { availableProperties: 2, pendingInvoices: 4, newContacts: 3, collectedAmount: 1000000 }, '/payments/manual/pending': new Error('Servicio temporalmente no disponible') };
+  const view = render(await ui.AdminDashboardPage());
+  assert.match(view.getByText(/No pudimos consultar los reportes/).textContent, /conciliación/);
+  assert.equal(view.getByRole('link', { name: /Facturas por cobrar/ }).getAttribute('href'), '/admin/facturas?estado=OUTSTANDING');
+  assert.equal(view.getByRole('link', { name: /Contactos nuevos/ }).getAttribute('href'), '/admin/contactos?estado=NEW');
+  assert.equal(globalThis.__ui.calls.length, 0);
+});
+
+test('el seguimiento de contactos envía el estado elegido y el contacto correcto', async () => {
+  const view = component('AdminContactStatusForm', { id: 'contact-1', status: 'NEW' });
+  fireEvent.change(view.getByLabelText('Estado del contacto'), { target: { value: 'REVIEWED' } });
+  await submit(view, 'Actualizar estado', 'updateContactStatusAction', { id: 'contact-1', status: 'REVIEWED' });
+  assert.ok(view.getByRole('status'));
+});
+
+test('el administrador usa su propia cabecera y el sitio público conserva la suya', () => {
+  globalThis.__ui.pathname = '/admin/inmuebles';
+  const view = component('PublicSiteChrome', { children: React.createElement('p', null, 'Navegación pública') });
+  assert.equal(view.queryByText('Navegación pública'), null);
+  globalThis.__ui.pathname = '/inmuebles';
+  view.rerender(React.createElement(ui.PublicSiteChrome, { children: 'Navegación pública' }));
+  assert.ok(view.getByText('Navegación pública'));
+});
+
+test('el salto al contenido evita el menú y la cabecera del administrador', () => {
+  globalThis.__ui.pathname = '/admin/inmuebles';
+  const view = render(React.createElement(React.Fragment, null, React.createElement(ui.SkipToContentLink), React.createElement(ui.AdminWorkspace, { children: 'Registros' })));
+  const link = view.getByRole('link', { name: 'Saltar al contenido' });
+  assert.equal(link.getAttribute('href'), '#contenido-admin');
+  assert.equal(view.container.querySelector('#contenido-admin').getAttribute('tabindex'), '-1');
+  globalThis.__ui.pathname = '/inmuebles';
+  view.rerender(React.createElement(ui.SkipToContentLink));
+  assert.equal(view.getByRole('link', { name: 'Saltar al contenido' }).getAttribute('href'), '#contenido');
 });

@@ -34,7 +34,7 @@ export function AdminAssignPropertyForm({ userId, properties }: { userId: string
           ))}
         </select>
       </label>
-      {properties.length === 0 && <p className="alert error">No hay inmuebles disponibles para asignar.</p>}
+      {properties.length === 0 && <p className="alert error" role="alert">No hay inmuebles disponibles para asignar.</p>}
       <div className="threeCols">
         <label>Inicio del contrato<input name="leaseStartDate" type="date" defaultValue={dateInput(today)} /></label>
         <label>Fin del contrato<input name="leaseEndDate" type="date" /></label>
@@ -46,8 +46,8 @@ export function AdminAssignPropertyForm({ userId, properties }: { userId: string
         <label>Fecha de vencimiento<input name="invoiceDueDate" type="date" defaultValue={dateInput(due)} /></label>
         <p className="hint">La factura permite ver de inmediato si el usuario tiene saldo pendiente y conservar el historial cuando pague.</p>
       </fieldset>
-      {state.error && <p className="alert error">{state.error}</p>}
-      {state.success && <p className="alert success">{state.success}</p>}
+      {state.error && <p className="alert error" role="alert">{state.error}</p>}
+      {state.success && <p className="alert success" role="status">{state.success}</p>}
       <button type="submit" className="button" disabled={pending || properties.length === 0}>{pending ? 'Asignando…' : 'Asignar inmueble'}</button>
     </form>
   );

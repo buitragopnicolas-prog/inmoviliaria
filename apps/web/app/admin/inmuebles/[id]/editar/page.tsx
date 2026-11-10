@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { AdminNav } from '@/components/AdminNav';
 import { AdminPropertyEditForm } from '@/components/AdminPropertyEditForm';
 import { apiFetch } from '@/lib/api';
 import { requireUser } from '@/lib/auth';
@@ -18,10 +17,7 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
   ]);
 
   return (
-    <section className="section pageTop">
-      <div className="container adminLayout">
-        <AdminNav />
-        <div className="adminContent">
+    <>
           <div className="pageHeading compact">
             <span className="eyebrow">Administración</span>
             <h1>Editar inmueble</h1>
@@ -29,8 +25,6 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
             <Link className="textLink" href="/admin/inmuebles">← Volver a inmuebles</Link>
           </div>
           <AdminPropertyEditForm property={property} tenants={tenants} />
-        </div>
-      </div>
-    </section>
+        </>
   );
 }
