@@ -13,7 +13,7 @@ const sections: Record<string, string> = {
 };
 const details: Record<string, string> = { inmuebles: 'Editar inmueble', contratos: 'Contrato firmado' };
 
-export function AdminWorkspace({ children }: { children: React.ReactNode }) {
+export function AdminWorkspace({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const [openPath, setOpenPath] = useState<string | null>(null);
   const toggle = useRef<HTMLButtonElement>(null);

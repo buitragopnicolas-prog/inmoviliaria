@@ -12,7 +12,7 @@ import { adminMatches, paginateAdmin, readAdminQuery, type AdminSearchParams } f
 export const metadata: Metadata = { title: 'Archivos públicos' };
 export const dynamic = 'force-dynamic';
 
-export default async function AdminFilesPage({ searchParams }: { searchParams?: Promise<AdminSearchParams> }) {
+export default async function AdminFilesPage({ searchParams }: Readonly<{ searchParams?: Promise<AdminSearchParams> }>) {
   await requireUser('ADMIN');
   const params = await searchParams;
   const query = readAdminQuery(params);

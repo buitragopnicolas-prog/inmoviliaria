@@ -5,7 +5,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { logoutAction } from '@/app/actions';
 import styles from '@/components/AdminWorkspace.module.css';
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await requireUser('ADMIN');
   return <>
     <header className={styles.topbar}>

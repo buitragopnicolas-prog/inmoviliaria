@@ -8,7 +8,7 @@ const groups: Array<{ label: string; items: Array<[string, string, IconName]> }>
   { label: 'Contenido', items: [['/admin/noticias', 'Noticias', 'document'], ['/admin/archivos', 'Archivos', 'folder']] },
 ];
 
-export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
+export function AdminNav({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   return (
     <nav className={styles.navigation} aria-label="Administración">
       <div className={styles.navBrand}><span>JB</span><div><strong>Administración</strong><small>Asesoría Inmobiliaria</small></div></div>

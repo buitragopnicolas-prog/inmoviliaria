@@ -15,7 +15,7 @@ import { adminMatches, adminStatusLabel, paginateAdmin, readAdminQuery, type Adm
 export const metadata: Metadata = { title: 'Administrar inmuebles' };
 export const dynamic = 'force-dynamic';
 
-export default async function AdminPropertiesPage({ searchParams }: { searchParams?: Promise<AdminSearchParams> }) {
+export default async function AdminPropertiesPage({ searchParams }: Readonly<{ searchParams?: Promise<AdminSearchParams> }>) {
   await requireUser('ADMIN');
   const params = await searchParams;
   const query = readAdminQuery(params);

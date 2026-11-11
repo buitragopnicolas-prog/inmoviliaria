@@ -2,7 +2,7 @@
 
 import { useCallback, type ReactNode } from 'react';
 
-export function AdminTableRegion({ label, children }: { label: string; children: ReactNode }) {
+export function AdminTableRegion({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   const watchOverflow = useCallback((region: HTMLElement | null) => {
     if (!region) return;
 
