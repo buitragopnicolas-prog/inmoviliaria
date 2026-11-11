@@ -16,6 +16,10 @@ export default async function AdminPage() {
     apiFetch<{ availableProperties: number; pendingInvoices: number; newContacts: number; collectedAmount: number }>('/admin/dashboard', {}, true),
     apiFetch<ManualPaymentReport[]>('/payments/manual/pending', {}, true).catch(() => null),
   ]);
+  const pendingPaymentCount = manualPayments?.length;
+  let paymentSummary = 'No hay reportes pendientes de verificación.';
+  if (pendingPaymentCount === undefined) paymentSummary = 'No pudimos consultar los reportes. Revisar en conciliación.';
+  else if (pendingPaymentCount > 0) paymentSummary = 'Comprueba los soportes antes de confirmar cada pago.';
   const cards: Array<{ label: string; value: string | number; description: string; href: string; icon: IconName }> = [
     { label: 'Inmuebles disponibles', value: metrics.availableProperties, description: 'Publicados en el catálogo', href: '/admin/inmuebles?estado=PUBLISHED_AVAILABLE', icon: 'home' },
     { label: 'Facturas por cobrar', value: metrics.pendingInvoices, description: 'Pendientes y vencidas', href: '/admin/facturas?estado=OUTSTANDING', icon: 'document' },
@@ -37,7 +41,7 @@ export default async function AdminPage() {
           </div>
           <div className={styles.dashboardGrid}>
             <section className={styles.panel} aria-labelledby="admin-priorities"><h2 id="admin-priorities">Necesita tu atención</h2><p className={styles.panelIntro}>Accede directamente a cada tarea pendiente.</p><ul className={styles.taskList}>
-              <li><Link href="/admin/conciliacion#pagos-manuales"><span className={styles.taskCount}>{manualPayments?.length ?? '—'}</span><span><strong>Verificar pagos reportados</strong><small>{manualPayments === null ? 'No pudimos consultar los reportes. Revisar en conciliación.' : manualPayments.length ? 'Comprueba los soportes antes de confirmar cada pago.' : 'No hay reportes pendientes de verificación.'}</small></span><span aria-hidden="true">→</span></Link></li>
+              <li><Link href="/admin/conciliacion#pagos-manuales"><span className={styles.taskCount}>{pendingPaymentCount ?? '—'}</span><span><strong>Verificar pagos reportados</strong><small>{paymentSummary}</small></span><span aria-hidden="true">→</span></Link></li>
               <li><Link href="/admin/facturas?estado=OUTSTANDING"><span className={styles.taskCount}>{metrics.pendingInvoices}</span><span><strong>Dar seguimiento a los cobros</strong><small>{metrics.pendingInvoices ? 'Consulta facturas pendientes y vencidas.' : 'No hay facturas pendientes ni vencidas.'}</small></span><span aria-hidden="true">→</span></Link></li>
               <li><Link href="/admin/contactos?estado=NEW"><span className={styles.taskCount}>{metrics.newContacts}</span><span><strong>Atender nuevos contactos</strong><small>{metrics.newContacts ? 'Consulta los mensajes y los datos para responder.' : 'No hay solicitudes nuevas por atender.'}</small></span><span aria-hidden="true">→</span></Link></li>
             </ul></section>

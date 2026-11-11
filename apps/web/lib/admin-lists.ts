@@ -11,7 +11,7 @@ export function readAdminQuery(params: AdminSearchParams = {}): AdminQuery {
   };
 }
 
-export function adminMatches(query: string, ...values: unknown[]): boolean {
+export function adminMatches(query: string, ...values: Array<string | null | undefined>): boolean {
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
   const text = normalize(values.filter((value) => value != null).join(' '));
   return normalize(query).split(/\s+/).every((word) => text.includes(word));
@@ -28,7 +28,7 @@ export function adminListHref(path: string, query: AdminQuery, page = 1): string
   if (query.buscar) params.set('buscar', query.buscar);
   if (query.estado) params.set('estado', query.estado);
   if (page > 1) params.set('pagina', String(page));
-  return `${path}${params.size ? `?${params}` : ''}`;
+  return params.size ? `${path}?${params.toString()}` : path;
 }
 
 const labels: Record<string, string> = {

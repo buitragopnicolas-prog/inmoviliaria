@@ -12,6 +12,11 @@ for (const name of ['window', 'document', 'Element', 'HTMLElement', 'HTMLInputEl
   Object.defineProperty(globalThis, name, { value: dom.window[name], configurable: true });
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+globalThis.ResizeObserver = class {
+  constructor(callback) { globalThis.__ui.onResize = callback; }
+  observe() {}
+  disconnect() { globalThis.__ui.resizeDisconnected = true; }
+};
 const { render, fireEvent, cleanup, waitFor, within, act } = await import('@testing-library/react');
 
 // Keep real React state, DOM and application components; isolate only Next's
@@ -21,18 +26,21 @@ const actionNames = [...actionSource.matchAll(/export async function (\w+)/g)].m
 const stubs = {
   ai: 'export async function runAiTool(...args) { globalThis.__ui.aiCalls.push(args); return globalThis.__ui.aiRun(...args); }',
   actions: actionNames.map((name) => `export async function ${name}(...args) { globalThis.__ui.calls.push({ name: '${name}', data: args.at(-1) }); return globalThis.__ui.result; }`).join('\n'),
-  api: 'export async function apiFetch(path) { const responses = globalThis.__ui.apiResponses; if (responses && Object.hasOwn(responses, path)) { if (responses[path] instanceof Error) throw responses[path]; return responses[path]; } return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
-  auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); }',
-  navigation: 'export function usePathname() { return globalThis.__ui.pathname; }',
+  api: 'export async function apiFetch(path, ...args) { globalThis.__ui.requests.push([path, ...args]); const responses = globalThis.__ui.apiResponses; if (responses && Object.hasOwn(responses, path)) { if (responses[path] instanceof Error) throw responses[path]; return responses[path]; } return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
+  auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); return { name: "Admin JB" }; }',
+  cache: 'export function revalidatePath(path) { globalThis.__ui.revalidated.push(path); }',
+  headers: 'export function cookies() { throw new Error("Cookies are unavailable in this test"); }',
+  navigation: 'export function usePathname() { return globalThis.__ui.pathname; } export function redirect() { throw new Error("Unexpected redirect"); }',
   link: 'import React from "react"; export default function Link({ children, onClick, ...props }) { return React.createElement("a", { ...props, onClick: event => { onClick?.(event); event.preventDefault(); } }, children); }',
   image: 'import React from "react"; export default function Image({ fill, priority, ...props }) { return React.createElement("img", props); }',
 };
 const names = ['AiTools', 'PropertyCard', 'PublicNavigation', 'ActiveLink', 'AuthForm', 'ContactForm', 'AdminNewsForm', 'AdminUserForm', 'AdminFileUploadForm', 'AdminPropertyForm', 'AdminPropertyEditForm', 'AdminAssignPropertyForm', 'AdminDeletePropertyButton', 'AdminInvoiceForm', 'AdminInvoiceManager', 'AdminLeaseContractForm', 'ManualPaymentForm', 'ManualPaymentReviewForm'];
-names.push('AdminWorkspace', 'AdminCreatePanel', 'AdminListControls', 'AdminContactStatusForm', 'PublicSiteChrome');
+names.push('AdminWorkspace', 'AdminCreatePanel', 'AdminListControls', 'AdminContactStatusForm', 'AdminTableRegion', 'PublicSiteChrome');
 const entry = names.map((name) => `export { ${name} } from './apps/web/components/${name}.tsx';`).join('\n') +
   "\nexport { HomeHero } from './apps/web/components/home/HomeSections.tsx';\nexport { default as PayInvoicePage } from './apps/web/app/mi-cuenta/facturas/[id]/pagar/page.tsx';\nexport { default as AdminNewsPage } from './apps/web/app/admin/noticias/page.tsx';" +
   ['inmuebles', 'usuarios', 'facturas', 'contactos', 'archivos', 'conciliacion'].map((route) => `\nexport { default as Admin_${route} } from './apps/web/app/admin/${route}/page.tsx';`).join('') +
-  "\nexport { default as AdminDashboardPage } from './apps/web/app/admin/page.tsx';\nexport * from './apps/web/lib/admin-lists.ts';\nexport { SkipToContentLink } from './apps/web/components/PublicSiteChrome.tsx';";
+  "\nexport { default as AdminDashboardPage } from './apps/web/app/admin/page.tsx';\nexport * from './apps/web/lib/admin-lists.ts';\nexport { SkipToContentLink } from './apps/web/components/PublicSiteChrome.tsx';" +
+  "\nexport { default as AdminLayout } from './apps/web/app/admin/layout.tsx';\nexport { default as AdminLoading } from './apps/web/app/admin/loading.tsx';\nexport { default as AdminError } from './apps/web/app/admin/error.tsx';\nexport { default as AdminUserDetail } from './apps/web/app/admin/usuarios/[id]/page.tsx';\nexport { updateContactStatusAction } from './apps/web/app/actions.ts';";
 await mkdir('.local', { recursive: true });
 const bundle = resolve('.local/ui-test-bundle.mjs');
 await build({
@@ -41,7 +49,7 @@ await build({
   tsconfig: 'apps/web/tsconfig.json', sourcemap: 'inline', sourcesContent: true,
   plugins: [{ name: 'server-boundary', setup(builder) {
     builder.onResolve({ filter: /^@\/lib\/run-ai-tool$/ }, () => ({ path: 'ai', namespace: 'ui-stub' }));
-    builder.onResolve({ filter: /^(@\/app\/actions|@\/lib\/api|@\/lib\/auth|next\/(link|navigation|image))$/ }, ({ path }) => {
+    builder.onResolve({ filter: /^(@\/app\/actions|@\/lib\/api|@\/lib\/auth|next\/(link|navigation|image|cache|headers))$/ }, ({ path }) => {
       const key = path === '@/app/actions' ? 'actions' : path.split('/').at(-1);
       return { path: key, namespace: 'ui-stub' };
     });
@@ -52,7 +60,7 @@ const ui = await import(pathToFileURL(bundle).href);
 const property = { id: 'property-1', title: 'Casa de prueba', address: 'Calle 1', city: 'Bogotá', neighborhood: 'Centro', monthlyRent: 1000000, description: 'Casa', features: [], images: [], published: true, bedrooms: 2, bathrooms: 1, parking: 0, areaM2: 50 };
 const invoice = { id: 'invoice-1', code: 'FAC-1', amount: 1000000, balance: 1000000, status: 'PENDING', period: '2026-10-01', dueDate: '2026-10-10', lease: { property }, user: { name: 'Cliente' }, payments: [] };
 const config = { enabled: true, mode: 'manual', notice: 'Requiere verificación', methods: [{ code: 'BANK_TRANSFER', title: 'Transferencia', description: 'Cuenta autorizada', enabled: true, details: [] }] };
-function reset() { globalThis.__ui = { calls: [], roles: [], result: { success: 'Solicitud recibida' }, pathname: '/', invoice: structuredClone(invoice), config: structuredClone(config), news: [{ id: 'news-1', title: 'Noticia de prueba', createdAt: '2026-10-01', published: true }] }; }
+function reset() { globalThis.__ui = { calls: [], roles: [], requests: [], revalidated: [], result: { success: 'Solicitud recibida' }, pathname: '/', invoice: structuredClone(invoice), config: structuredClone(config), news: [{ id: 'news-1', title: 'Noticia de prueba', createdAt: '2026-10-01', published: true }] }; }
 reset();
 afterEach(() => { cleanup(); reset(); });
 function component(name, props = {}) { return render(React.createElement(ui[name], props)); }
@@ -419,4 +427,79 @@ test('el salto al contenido evita el menú y la cabecera del administrador', () 
   globalThis.__ui.pathname = '/inmuebles';
   view.rerender(React.createElement(ui.SkipToContentLink));
   assert.equal(view.getByRole('link', { name: 'Saltar al contenido' }).getAttribute('href'), '#contenido');
+});
+
+test('una tabla desbordada se puede enfocar y deja de ser una parada cuando vuelve a caber', () => {
+  const table = React.createElement('table', null, React.createElement('tbody'));
+  const view = component('AdminTableRegion', { label: 'Facturas', children: table });
+  const region = view.getByRole('region', { name: 'Facturas' });
+  Object.defineProperty(region, 'clientWidth', { value: 300 });
+  Object.defineProperty(region, 'scrollWidth', { value: 600, configurable: true });
+  globalThis.__ui.onResize();
+  assert.equal(region.tabIndex, 0);
+  region.focus();
+  assert.equal(document.activeElement, region);
+  Object.defineProperty(region, 'scrollWidth', { value: 300 });
+  globalThis.__ui.onResize();
+  assert.equal(region.hasAttribute('tabindex'), false);
+  view.unmount();
+  assert.equal(globalThis.__ui.resizeDisconnected, true);
+});
+
+test('el panel exige acceso de administrador y ofrece recuperación de errores', async () => {
+  globalThis.__ui.pathname = '/admin';
+  const layout = render(await ui.AdminLayout({ children: React.createElement('h1', null, 'Resumen JB') }));
+  assert.deepEqual(globalThis.__ui.roles, ['ADMIN']);
+  assert.ok(layout.getByRole('button', { name: 'Salir' }));
+  assert.ok(layout.getByText('Admin JB'));
+  assert.ok(layout.getByRole('heading', { name: 'Resumen JB' }));
+  layout.unmount();
+
+  const loading = component('AdminLoading');
+  assert.match(loading.getByRole('status').textContent, /Cargando administración/);
+  loading.unmount();
+  let retried = false;
+  const error = component('AdminError', { retry() { retried = true; } });
+  assert.match(error.getByRole('alert').textContent, /No pudimos cargar esta sección/);
+  fireEvent.click(error.getByRole('button', { name: 'Volver a intentar' }));
+  assert.equal(retried, true);
+});
+
+test('el perfil administrativo muestra contratos, cartera y pagos de la persona consultada', async () => {
+  const user = {
+    id: 'profile-1', name: 'Cliente JB', email: 'cliente@example.test', createdAt: '2026-10-01', updatedAt: '2026-10-02',
+    user: { email: 'cliente@example.test', role: 'CUSTOMER' },
+    aliases: [{ alias: 'Nombre histórico' }],
+    financial: { state: 'OVERDUE', invoiceCount: 1, outstandingAmount: 600000, pendingAmount: 0, overdueAmount: 600000, paidAmount: 0, approvedPayments: 400000 },
+    leases: [{ id: 'lease-1', property, active: true, startDate: '2026-10-01' }],
+    invoices: [{ ...invoice, status: 'OVERDUE', balance: undefined, payments: [{ status: 'APPROVED', amount: 400000 }] }],
+    payments: [{ id: 'pay-1', bankReference: 'REF-JB', status: 'APPROVED', createdAt: '2026-10-02', provider: 'manual', amount: 400000, invoice }],
+  };
+  globalThis.__ui.apiResponses = { '/admin/users/profile-1': user, '/admin/properties': [] };
+  const view = render(await ui.AdminUserDetail({ params: Promise.resolve({ id: user.id }) }));
+  assert.deepEqual(globalThis.__ui.roles, ['ADMIN']);
+  assert.ok(view.getByRole('heading', { name: 'Cliente JB' }));
+  assert.ok(view.getByText('Nombre histórico'));
+  assert.ok(within(view.getByRole('region', { name: 'Inmuebles asignados' })).getByText('Activo'));
+  assert.ok(within(view.getByRole('region', { name: 'Historial de facturación' })).getByText('FAC-1'));
+  assert.ok(within(view.getByRole('region', { name: 'Historial de pagos' })).getByText('REF-JB'));
+});
+
+test('la acción de contacto rechaza archivos y conserva el seguimiento si falla la API', async () => {
+  const data = new FormData();
+  data.set('id', new File(['id'], 'id.txt'));
+  data.set('status', 'REVIEWED');
+  assert.match((await ui.updateContactStatusAction({}, data)).error, /estado válido/);
+  assert.deepEqual(globalThis.__ui.requests, []);
+
+  data.set('id', 'contact/1');
+  const path = '/admin/contacts/contact%2F1/status';
+  globalThis.__ui.apiResponses = { [path]: new Error('No se pudo guardar') };
+  assert.equal((await ui.updateContactStatusAction({}, data)).error, 'No se pudo guardar');
+  assert.deepEqual(globalThis.__ui.revalidated, []);
+
+  globalThis.__ui.apiResponses[path] = {};
+  assert.match((await ui.updateContactStatusAction({}, data)).success, /actualizado/);
+  assert.deepEqual(globalThis.__ui.requests.at(-1), [path, { method: 'PATCH', body: '{"status":"REVIEWED"}' }, true]);
+  assert.deepEqual(globalThis.__ui.revalidated, ['/admin/contactos', '/admin']);
 });

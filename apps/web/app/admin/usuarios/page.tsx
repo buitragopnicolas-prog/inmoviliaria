@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AdminTableRegion } from '@/components/AdminTableRegion';
 import Link from 'next/link';
 import { AdminUserForm } from '@/components/AdminUserForm';
 import { apiFetch } from '@/lib/api';
@@ -38,7 +39,7 @@ export default async function AdminUsersPage({
           <div className="card tableCard">
             <div className="tableTitle"><h2>Directorio de usuarios</h2><span>{users.length} registros</span></div>
             <AdminListControls path="/admin/usuarios" query={listQuery} placeholder="Nombre, correo, documento o teléfono" statuses={[[ 'OVERDUE', 'Vencido' ], ['PENDING', 'Pendiente'], ['PAID', 'Al día'], ['NO_CHARGES', 'Sin cobros']]} />
-            {result.total > 0 ? <div className="responsiveTable" role="region" aria-label="Directorio de usuarios" tabIndex={0}>
+            {result.total > 0 ? <AdminTableRegion label="Directorio de usuarios">
               <table>
                 <thead><tr><th scope="col">Usuario</th><th scope="col">Contacto</th><th scope="col">Acceso web</th><th scope="col">Inmueble actual</th><th scope="col">Estado de pago</th><th scope="col">Saldo</th><th scope="col">Acciones</th></tr></thead>
                 <tbody>
@@ -54,8 +55,7 @@ export default async function AdminUsersPage({
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div> : <AdminEmptyState filtered={Boolean(listQuery.buscar || listQuery.estado)} noun="usuarios" />}
+              </table></AdminTableRegion> : <AdminEmptyState filtered={Boolean(listQuery.buscar || listQuery.estado)} noun="usuarios" />}
             <AdminPagination path="/admin/usuarios" query={listQuery} {...result} />
           </div>
         </>

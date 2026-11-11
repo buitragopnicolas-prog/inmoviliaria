@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AdminTableRegion } from '@/components/AdminTableRegion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AdminPropertyForm } from '@/components/AdminPropertyForm';
@@ -31,7 +32,7 @@ export default async function AdminPropertiesPage({ searchParams }: { searchPara
       <AdminCreatePanel title="Publicar inmueble" description="Agrega los datos, fotografías y la asignación del inmueble." open={params?.crear === '1'}><AdminPropertyForm tenants={tenants} /></AdminCreatePanel>
       <div className="card tableCard"><div className="tableTitle"><h2>Publicaciones</h2><span>{properties.length} registros</span></div>
         <AdminListControls path="/admin/inmuebles" query={query} placeholder="Título, dirección, barrio o arrendatario" statuses={[[ 'AVAILABLE', 'Disponible' ], ['PUBLISHED_AVAILABLE', 'Disponibles y publicados'], ['RENTED', 'Arrendado'], ['ARCHIVED', 'Archivado']]} />
-        {result.total > 0 ? <div className="responsiveTable" role="region" aria-label="Publicaciones de inmuebles" tabIndex={0}><table><thead><tr><th scope="col">Inmueble</th><th scope="col">Ubicación</th><th scope="col">Canon</th><th scope="col">Asignado a</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead><tbody>{result.items.map((property) => {
+        {result.total > 0 ? <AdminTableRegion label="Publicaciones de inmuebles"><table><thead><tr><th scope="col">Inmueble</th><th scope="col">Ubicación</th><th scope="col">Canon</th><th scope="col">Asignado a</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead><tbody>{result.items.map((property) => {
           const activeLease = property.leases?.[0];
           const assignedName = activeLease?.tenant?.name ?? activeLease?.user?.name;
           return <tr key={property.id}>
@@ -42,7 +43,7 @@ export default async function AdminPropertiesPage({ searchParams }: { searchPara
             <td><span className={`status ${property.status.toLowerCase()}`}>{adminStatusLabel(property.status)}</span><small className="tableHint">{property.published ? 'Publicado' : 'Oculto'}</small></td>
             <td><div className="tableActions"><Link className="textButton" href={`/admin/inmuebles/${property.id}/editar`}>Editar</Link><AdminDeletePropertyButton id={property.id} title={property.title} /></div></td>
           </tr>;
-        })}</tbody></table></div> : <AdminEmptyState filtered={Boolean(query.buscar || query.estado)} noun="inmuebles" />}
+        })}</tbody></table></AdminTableRegion> : <AdminEmptyState filtered={Boolean(query.buscar || query.estado)} noun="inmuebles" />}
         <AdminPagination path="/admin/inmuebles" query={query} {...result} />
       </div>
     </>

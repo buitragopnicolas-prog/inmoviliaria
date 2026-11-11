@@ -114,11 +114,20 @@ if [[ "$stage" == prod ]]; then
 fi
 
 echo "Construyendo $tag para $stage"
-docker build -f "$repo/apps/api/Dockerfile" -t "$api_image" "$repo"
-docker build -f "$repo/apps/web/Dockerfile" \
-  --build-arg "NEXT_PUBLIC_API_URL=https://$domain" -t "$web_image" "$repo"
-docker save "$api_image" | ctr -n k8s.io images import -
-docker save "$web_image" | ctr -n k8s.io images import -
+if [[ "$stage" == dev ]]; then
+  # Stream directly to Kubernetes to avoid a second unpacked copy in Docker.
+  docker buildx build -f "$repo/apps/api/Dockerfile" -t "$api_image" \
+    --provenance=false --output type=docker,dest=- "$repo" | ctr -n k8s.io images import -
+  docker buildx build -f "$repo/apps/web/Dockerfile" -t "$web_image" \
+    --build-arg "NEXT_PUBLIC_API_URL=https://$domain" \
+    --provenance=false --output type=docker,dest=- "$repo" | ctr -n k8s.io images import -
+else
+  docker build -f "$repo/apps/api/Dockerfile" -t "$api_image" "$repo"
+  docker build -f "$repo/apps/web/Dockerfile" \
+    --build-arg "NEXT_PUBLIC_API_URL=https://$domain" -t "$web_image" "$repo"
+  docker save "$api_image" | ctr -n k8s.io images import -
+  docker save "$web_image" | ctr -n k8s.io images import -
+fi
 
 kubectl apply -f "$manifest" -l deployment-phase=config
 job_name="asesoria-migrate-$(date +%s)"

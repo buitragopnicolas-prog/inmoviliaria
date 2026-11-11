@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AdminTableRegion } from '@/components/AdminTableRegion';
 import { apiFetch } from '@/lib/api';
 import { fecha, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
@@ -11,6 +12,9 @@ import styles from '@/components/AdminWorkspace.module.css';
 
 export const metadata: Metadata = { title: 'Conciliación de pagos' };
 export const dynamic = 'force-dynamic';
+
+const importStatusClass: Record<string, string> = { COMPLETED: 'paid', FAILED: 'overdue' };
+const notificationStatusClass: Record<string, string> = { MATCHED: 'paid', REJECTED: 'overdue', ERROR: 'overdue' };
 
 export default async function ReconciliationPage({ searchParams }: { searchParams?: Promise<AdminSearchParams> }) {
   await requireUser('ADMIN');
@@ -42,24 +46,24 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
       </div>
 
       <div className="card tableCard" id="cuentas"><div className="tableTitle"><h2>Cuentas receptoras</h2><span>{accounts.length} configuradas</span></div>
-        <div className="responsiveTable" role="region" aria-label="Cuentas receptoras" tabIndex={0}><table><thead><tr><th scope="col">Banco</th><th scope="col">Cuenta</th><th scope="col">Contratos</th><th scope="col">Notificaciones</th><th scope="col">Estado</th></tr></thead><tbody>
+        <AdminTableRegion label="Cuentas receptoras"><table><thead><tr><th scope="col">Banco</th><th scope="col">Cuenta</th><th scope="col">Contratos</th><th scope="col">Notificaciones</th><th scope="col">Estado</th></tr></thead><tbody>
           {accounts.map((account) => <tr key={account.id}><td>{account.bank}</td><td>****{account.accountLast4}</td><td>{account._count.leaseLinks}</td><td>{account._count.notifications}</td><td><span className={`status ${account.active ? 'paid' : 'void'}`}>{account.active ? 'ACTIVA' : 'INACTIVA'}</span></td></tr>)}
           {accounts.length === 0 && <tr><td colSpan={5}>No hay cuentas receptoras configuradas. Solicita su configuración al responsable del sistema.</td></tr>}
-        </tbody></table></div>
+        </tbody></table></AdminTableRegion>
       </div>
 
       <div className="card tableCard" id="cargas"><div className="tableTitle"><h2>Cargas históricas</h2><span>{imports.length} lotes</span></div>
-        <div className="responsiveTable" role="region" aria-label="Cargas históricas" tabIndex={0}><table><thead><tr><th scope="col">Archivo</th><th scope="col">Inicio</th><th scope="col">Importados</th><th scope="col">Revisión</th><th scope="col">Estado</th></tr></thead><tbody>
-          {imports.map((batch) => <tr key={batch.id}><td>{batch.sourceFile}</td><td>{fecha(batch.startedAt)}</td><td>{batch.importedRows}/{batch.totalRows}</td><td>{batch.reviewRows}</td><td><span className={`status ${batch.status === 'COMPLETED' ? 'paid' : batch.status === 'FAILED' ? 'overdue' : 'pending'}`}>{adminStatusLabel(batch.status)}</span></td></tr>)}
+        <AdminTableRegion label="Cargas históricas"><table><thead><tr><th scope="col">Archivo</th><th scope="col">Inicio</th><th scope="col">Importados</th><th scope="col">Revisión</th><th scope="col">Estado</th></tr></thead><tbody>
+          {imports.map((batch) => <tr key={batch.id}><td>{batch.sourceFile}</td><td>{fecha(batch.startedAt)}</td><td>{batch.importedRows}/{batch.totalRows}</td><td>{batch.reviewRows}</td><td><span className={`status ${importStatusClass[batch.status] ?? 'pending'}`}>{adminStatusLabel(batch.status)}</span></td></tr>)}
           {imports.length === 0 && <tr><td colSpan={5}>Todavía no se ha ejecutado el importador de arrendamientos.</td></tr>}
-        </tbody></table></div>
+        </tbody></table></AdminTableRegion>
       </div>
 
       <div className="card tableCard" id="notificaciones"><div className="tableTitle"><h2>Notificaciones bancarias</h2><span>{notifications.length} registros recientes</span></div>
         <AdminListControls path="/admin/conciliacion" query={query} placeholder="Pagador, referencia, factura o cuenta" statuses={[[ 'RECEIVED', 'Recibida' ], ['MATCHED', 'Conciliada'], ['REVIEW_REQUIRED', 'Requiere revisión'], ['REJECTED', 'Rechazada'], ['DUPLICATE', 'Duplicada'], ['ERROR', 'Error']]} />
-        {result.total > 0 ? <div className="responsiveTable" role="region" aria-label="Notificaciones bancarias" tabIndex={0}><table><thead><tr><th scope="col">Fecha</th><th scope="col">Pagador</th><th scope="col">Valor</th><th scope="col">Cuenta</th><th scope="col">Factura</th><th scope="col">Estado</th><th scope="col">Motivo</th></tr></thead><tbody>
-          {result.items.map((notification) => <tr key={notification.id}><td>{fecha(notification.receivedAt)}</td><td>{notification.payerName ?? 'Sin identificar'}</td><td>{notification.amount != null ? pesos(notification.amount) : '—'}</td><td>{notification.accountLast4 ? `****${notification.accountLast4}` : '—'}</td><td>{notification.matchedInvoice?.code ?? '—'}</td><td><span className={`status ${notification.status === 'MATCHED' ? 'paid' : notification.status === 'REJECTED' || notification.status === 'ERROR' ? 'overdue' : 'pending'}`}>{adminStatusLabel(notification.status)}</span></td><td>{notification.reviewReason ?? notification.payment?.reference ?? 'Procesada'}</td></tr>)}
-        </tbody></table></div> : <AdminEmptyState filtered={Boolean(query.buscar || query.estado)} noun="notificaciones bancarias" />}
+        {result.total > 0 ? <AdminTableRegion label="Notificaciones bancarias"><table><thead><tr><th scope="col">Fecha</th><th scope="col">Pagador</th><th scope="col">Valor</th><th scope="col">Cuenta</th><th scope="col">Factura</th><th scope="col">Estado</th><th scope="col">Motivo</th></tr></thead><tbody>
+          {result.items.map((notification) => <tr key={notification.id}><td>{fecha(notification.receivedAt)}</td><td>{notification.payerName ?? 'Sin identificar'}</td><td>{notification.amount != null ? pesos(notification.amount) : '—'}</td><td>{notification.accountLast4 ? `****${notification.accountLast4}` : '—'}</td><td>{notification.matchedInvoice?.code ?? '—'}</td><td><span className={`status ${notificationStatusClass[notification.status] ?? 'pending'}`}>{adminStatusLabel(notification.status)}</span></td><td>{notification.reviewReason ?? notification.payment?.reference ?? 'Procesada'}</td></tr>)}
+        </tbody></table></AdminTableRegion> : <AdminEmptyState filtered={Boolean(query.buscar || query.estado)} noun="notificaciones bancarias" />}
         <AdminPagination path="/admin/conciliacion" query={query} {...result} />
       </div>
     </>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AdminTableRegion } from '@/components/AdminTableRegion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AdminAssignPropertyForm } from '@/components/AdminAssignPropertyForm';
@@ -22,6 +23,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
     apiFetch<Property[]>('/admin/properties', {}, true),
   ]);
   const availableProperties = properties.filter((property) => property.status === 'AVAILABLE');
+  const accessRole = user.user?.role === 'ADMIN' ? 'Administrador' : 'Cliente';
 
   return (
     <>
@@ -48,7 +50,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 <div><dt>Correo</dt><dd>{user.email || 'No registrado'}</dd></div>
                 <div><dt>Teléfono</dt><dd>{user.phone || 'No registrado'}</dd></div>
                 <div><dt>Acceso web</dt><dd>{user.user ? `Sí · ${user.user.email}` : 'Todavía no tiene contraseña de acceso'}</dd></div>
-                <div><dt>Rol de acceso</dt><dd>{user.user ? user.user.role === 'ADMIN' ? 'Administrador' : 'Cliente' : 'Sin cuenta web'}</dd></div>
+                <div><dt>Rol de acceso</dt><dd>{user.user ? accessRole : 'Sin cuenta web'}</dd></div>
                 <div><dt>Nombres asociados</dt><dd>{user.aliases.length > 0 ? user.aliases.map((alias) => alias.alias).join(', ') : 'Sin nombres adicionales'}</dd></div>
                 <div><dt>Creado</dt><dd>{fecha(user.createdAt)}</dd></div>
                 <div><dt>Actualizado</dt><dd>{fecha(user.updatedAt)}</dd></div>
@@ -84,7 +86,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
 
           <div className="card tableCard" id="inmuebles">
             <div className="tableTitle"><h2>Inmuebles asignados</h2><span>{user.leases.length} contratos</span></div>
-            <div className="responsiveTable" role="region" aria-label="Inmuebles asignados" tabIndex={0}><table>
+            <AdminTableRegion label="Inmuebles asignados"><table>
               <thead><tr><th scope="col">Inmueble</th><th scope="col">Dirección</th><th scope="col">Vigencia</th><th scope="col">Valor mensual</th><th scope="col">Novedades</th><th scope="col">Estado</th></tr></thead>
               <tbody>{user.leases.map((lease) => (
                 <tr key={lease.id}>
@@ -96,12 +98,12 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <td><span className={`status ${lease.active ? 'paid' : 'archived'}`}>{lease.active ? 'Activo' : 'Finalizado'}</span></td>
                 </tr>
               ))}{user.leases.length === 0 && <tr><td colSpan={6} className="muted">Este usuario todavía no tiene inmuebles asignados.</td></tr>}</tbody>
-            </table></div>
+            </table></AdminTableRegion>
           </div>
 
           <div className="card tableCard" id="facturacion">
             <div className="tableTitle"><h2>Historial de facturación</h2><span>{user.invoices.length} facturas</span></div>
-            <div className="responsiveTable" role="region" aria-label="Historial de facturación" tabIndex={0}><table>
+            <AdminTableRegion label="Historial de facturación"><table>
               <thead><tr><th scope="col">Código</th><th scope="col">Inmueble</th><th scope="col">Periodo</th><th scope="col">Vencimiento</th><th scope="col">Facturado</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col">Pagado</th></tr></thead>
               <tbody>{user.invoices.map((invoice) => (
                 <tr key={invoice.id}>
@@ -115,12 +117,12 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <td>{invoice.paidAt ? fecha(invoice.paidAt) : '—'}</td>
                 </tr>
               ))}{user.invoices.length === 0 && <tr><td colSpan={8} className="muted">No hay facturas para este usuario.</td></tr>}</tbody>
-            </table></div>
+            </table></AdminTableRegion>
           </div>
 
           <div className="card tableCard" id="pagos">
             <div className="tableTitle"><h2>Historial de pagos</h2><span>{user.payments.length} movimientos</span></div>
-            <div className="responsiveTable" role="region" aria-label="Historial de pagos" tabIndex={0}><table>
+            <AdminTableRegion label="Historial de pagos"><table>
               <thead><tr><th scope="col">Fecha</th><th scope="col">Referencia</th><th scope="col">Inmueble</th><th scope="col">Proveedor</th><th scope="col">Valor</th><th scope="col">Estado</th></tr></thead>
               <tbody>{user.payments.map((payment) => (
                 <tr key={payment.id}>
@@ -132,7 +134,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <td><span className={`status ${payment.status.toLowerCase()}`}>{adminStatusLabel(payment.status)}</span></td>
                 </tr>
               ))}{user.payments.length === 0 && <tr><td colSpan={6} className="muted">Todavía no hay pagos registrados.</td></tr>}</tbody>
-            </table></div>
+            </table></AdminTableRegion>
           </div>
         </>
   );

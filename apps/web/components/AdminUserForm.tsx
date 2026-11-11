@@ -19,7 +19,7 @@ export function AdminUserForm() {
         <label>Teléfono<input name="phone" /></label>
       </div>
       {state.error && <p className="alert error" role="alert">{state.error}</p>}
-      {state.success && <p className="alert success" role="status">{state.success}</p>}
+      {state.success && <output className="alert success">{state.success}</output>}
       <button type="submit" className="button" disabled={pending}>{pending ? 'Creando…' : 'Crear usuario'}</button>
     </form>
   );

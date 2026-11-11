@@ -67,9 +67,11 @@ export async function contactAction(_previous: ActionState, formData: FormData):
 }
 
 export async function updateContactStatusAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
-  const id = String(formData.get('id') ?? '');
-  const status = String(formData.get('status') ?? '');
-  if (!id || !['NEW', 'REVIEWED', 'CLOSED'].includes(status)) return { error: 'Selecciona un estado válido para el contacto.' };
+  const id = formData.get('id');
+  const status = formData.get('status');
+  if (typeof id !== 'string' || !id || typeof status !== 'string' || !['NEW', 'REVIEWED', 'CLOSED'].includes(status)) {
+    return { error: 'Selecciona un estado válido para el contacto.' };
+  }
   try {
     await apiFetch(`/admin/contacts/${encodeURIComponent(id)}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }, true);
     revalidatePath('/admin/contactos');

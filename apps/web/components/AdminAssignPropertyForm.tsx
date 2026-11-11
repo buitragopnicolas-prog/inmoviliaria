@@ -47,7 +47,7 @@ export function AdminAssignPropertyForm({ userId, properties }: { userId: string
         <p className="hint">La factura permite ver de inmediato si el usuario tiene saldo pendiente y conservar el historial cuando pague.</p>
       </fieldset>
       {state.error && <p className="alert error" role="alert">{state.error}</p>}
-      {state.success && <p className="alert success" role="status">{state.success}</p>}
+      {state.success && <output className="alert success">{state.success}</output>}
       <button type="submit" className="button" disabled={pending || properties.length === 0}>{pending ? 'Asignando…' : 'Asignar inmueble'}</button>
     </form>
   );

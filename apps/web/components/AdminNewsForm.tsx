@@ -13,7 +13,7 @@ export function AdminNewsForm() {
       <label>Contenido<textarea name="content" rows={8} required minLength={30} placeholder="Escribe la noticia o un resumen ampliado para la página interna." /></label>
       <label>Enlace externo <span className="hint">Opcional. Si lo completas, la tarjeta pública abrirá esa noticia en el medio digital.</span><input name="externalUrl" type="url" placeholder="https://..." /></label>
       {state.error && <p className="alert error" role="alert">{state.error}</p>}
-      {state.success && <p className="alert success" role="status">{state.success}</p>}
+      {state.success && <output className="alert success">{state.success}</output>}
       <button type="submit" className="button" disabled={pending}>{pending ? 'Publicando…' : 'Publicar noticia'}</button>
     </form>
   );

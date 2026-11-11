@@ -27,5 +27,5 @@ export function AdminPagination({ path, query, page, pages, total, pageSize }: {
 }
 
 export function AdminEmptyState({ filtered, noun }: { filtered: boolean; noun: string }) {
-  return <div className={styles.emptyState} role="status"><strong>{filtered ? 'No encontramos coincidencias' : `Todavía no hay ${noun}`}</strong><p>{filtered ? 'Prueba con otro término o limpia los filtros para ver todos los registros.' : 'Los registros aparecerán aquí cuando se agreguen.'}</p></div>;
+  return <output className={styles.emptyState}><strong>{filtered ? 'No encontramos coincidencias' : `Todavía no hay ${noun}`}</strong><span>{filtered ? 'Prueba con otro término o limpia los filtros para ver todos los registros.' : 'Los registros aparecerán aquí cuando se agreguen.'}</span></output>;
 }
