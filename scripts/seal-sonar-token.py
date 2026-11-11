@@ -10,7 +10,11 @@ import sys
 os.umask(0o077)
 key = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8-sig'))
 env_lines = pathlib.Path('/opt/asesoria-inmobiliaria/sonar/github.env').read_text().splitlines()
-config = {name: value for name, value in (line.split('=', 1) for line in env_lines if '=' in line)}
+config = {}
+for line in env_lines:
+    name, separator, value = line.partition('=')
+    if separator:
+        config[name] = value
 message = config['SONAR_TOKEN'].encode()
 public_key = base64.b64decode(key['key'], validate=True)
 sodium = ctypes.CDLL('libsodium.so.23')
