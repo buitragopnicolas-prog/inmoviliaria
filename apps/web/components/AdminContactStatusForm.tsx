@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { updateContactStatusAction } from '@/app/actions';
 import styles from './AdminWorkspace.module.css';
 
-export function AdminContactStatusForm({ id, status }: { id: string; status: string }) {
+export function AdminContactStatusForm({ id, status }: Readonly<{ id: string; status: string }>) {
   const [state, action, pending] = useActionState(updateContactStatusAction, {});
   return <form className={styles.contactStatus} action={action} aria-busy={pending}>
     <input type="hidden" name="id" value={id} />

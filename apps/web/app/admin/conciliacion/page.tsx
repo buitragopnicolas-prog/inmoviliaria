@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 const importStatusClass: Record<string, string> = { COMPLETED: 'paid', FAILED: 'overdue' };
 const notificationStatusClass: Record<string, string> = { MATCHED: 'paid', REJECTED: 'overdue', ERROR: 'overdue' };
 
-export default async function ReconciliationPage({ searchParams }: { searchParams?: Promise<AdminSearchParams> }) {
+export default async function ReconciliationPage({ searchParams }: Readonly<{ searchParams?: Promise<AdminSearchParams> }>) {
   await requireUser('ADMIN');
   const query = readAdminQuery(await searchParams);
   const [notifications, accounts, imports, manualPayments] = await Promise.all([

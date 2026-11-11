@@ -11,7 +11,7 @@ import { AdminContactStatusForm } from '@/components/AdminContactStatusForm';
 export const metadata: Metadata = { title: 'Contactos recibidos' };
 export const dynamic = 'force-dynamic';
 
-export default async function AdminContactsPage({ searchParams }: { searchParams?: Promise<AdminSearchParams> }) {
+export default async function AdminContactsPage({ searchParams }: Readonly<{ searchParams?: Promise<AdminSearchParams> }>) {
   await requireUser('ADMIN');
   const query = readAdminQuery(await searchParams);
   const messages = await apiFetch<ContactMessage[]>('/admin/contacts', {}, true);

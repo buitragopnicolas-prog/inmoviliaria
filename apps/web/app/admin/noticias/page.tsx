@@ -13,7 +13,7 @@ import { adminMatches, paginateAdmin, readAdminQuery, type AdminSearchParams } f
 export const metadata: Metadata = { title: 'Administrar noticias' };
 export const dynamic = 'force-dynamic';
 
-export default async function AdminNewsPage({ searchParams }: { searchParams?: Promise<AdminSearchParams> }) {
+export default async function AdminNewsPage({ searchParams }: Readonly<{ searchParams?: Promise<AdminSearchParams> }>) {
   await requireUser('ADMIN');
   const params = await searchParams;
   const query = readAdminQuery(params);
