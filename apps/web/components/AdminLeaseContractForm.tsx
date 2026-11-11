@@ -34,8 +34,8 @@ export function AdminLeaseContractForm({
         <input type="hidden" name="leaseId" value={leaseId} />
         <input type="hidden" name="userId" value={userId} />
         <label>{contractFile ? 'Reemplazar contrato PDF' : 'Subir contrato firmado en PDF'}<input type="file" name="file" accept="application/pdf,.pdf" required /></label>
-        {uploadState.error && <p className="alert error">{uploadState.error}</p>}
-        {uploadState.success && <p className="alert success">{uploadState.success}</p>}
+        {uploadState.error && <p className="alert error" role="alert">{uploadState.error}</p>}
+        {uploadState.success && <output className="alert success">{uploadState.success}</output>}
         <button type="submit" className="button small" disabled={uploading}>{uploading ? 'Cargando…' : contractFile ? 'Reemplazar PDF' : 'Subir PDF'}</button>
       </form>
 
@@ -47,8 +47,8 @@ export function AdminLeaseContractForm({
       >
         <input type="hidden" name="leaseId" value={leaseId} />
         <input type="hidden" name="userId" value={userId} />
-        {removeState.error && <p className="alert error">{removeState.error}</p>}
-        {removeState.success && <p className="alert success">{removeState.success}</p>}
+        {removeState.error && <p className="alert error" role="alert">{removeState.error}</p>}
+        {removeState.success && <output className="alert success">{removeState.success}</output>}
         <button type="submit" className="button danger small" disabled={removing}>{removing ? 'Retirando…' : 'Retirar contrato'}</button>
       </form>}
     </div>

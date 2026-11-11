@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odoo
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: odoo }
+  template:
+    metadata:
+      labels: { app: odoo }
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: srv1704143
+      initContainers:
+        - name: prepare-filestore
+          image: &odooImage odoo:19.0-20261102@sha256:5e755c725b3c43cf0be16d579904e1418300db3a2c44952f928eaddbcb0cc16d
+          command: ["/bin/sh", "-ec", "chmod 0700 /var/lib/odoo && chown odoo /var/lib/odoo"]
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: filestore
+              mountPath: /var/lib/odoo
+      containers:
+        - name: postgres
+          image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
+          args: ["postgres", "-c", "listen_addresses=127.0.0.1"]
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: odoo-secrets, key: POSTGRES_PASSWORD }
+            - name: ODOO_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: odoo-secrets, key: ODOO_DB_PASSWORD }
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { memory: 512Mi }
+          volumeMounts:
+            - name: database
+              mountPath: /var/lib/postgresql/data
+            - name: bootstrap
+              mountPath: /docker-entrypoint-initdb.d/10-odoo.sql
+              subPath: init-postgres.sql
+              readOnly: true
+        - name: odoo
+          image: *odooImage
+          command: ["/bin/sh", "/opt/jb/start-odoo.sh"]
+          env:
+            - { name: ODOO_DB_HOST, value: "127.0.0.1" }
+            - { name: ODOO_HTTP_INTERFACE, value: "127.0.0.1" }
+            - name: ODOO_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: odoo-secrets, key: ODOO_DB_PASSWORD }
+            - name: ODOO_MASTER_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: odoo-secrets, key: ODOO_MASTER_PASSWORD }
+          readinessProbe:
+            exec:
+              command: ["python3", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8069/web/health?db_server_status=1', timeout=3).close()"]
+            periodSeconds: 5
+            timeoutSeconds: 4
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: filestore
+              mountPath: /var/lib/odoo
+            - name: bootstrap
+              mountPath: /opt/jb/start-odoo.sh
+              subPath: start-odoo.sh
+              readOnly: true
+      volumes:
+        - name: bootstrap
+          configMap: { name: odoo-bootstrap }
+        - name: database
+          hostPath:
+            path: /var/lib/asesoria-inmobiliaria-dev/odoo/postgres
+            type: DirectoryOrCreate
+        - name: filestore
+          hostPath:
+            path: /var/lib/asesoria-inmobiliaria-dev/odoo/filestore
+            type: DirectoryOrCreate

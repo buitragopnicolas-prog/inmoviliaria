@@ -22,8 +22,8 @@ export function AdminDeletePropertyButton({ id, title }: { id: string; title: st
           {pending ? 'Retirando…' : 'Retirar'}
         </button>
       </form>
-      {state.error && <small className="alert error">{state.error}</small>}
-      {state.success && <small className="alert success">{state.success}</small>}
+      {state.error && <small className="alert error" role="alert">{state.error}</small>}
+      {state.success && <output className="alert success">{state.success}</output>}
     </div>
   );
 }

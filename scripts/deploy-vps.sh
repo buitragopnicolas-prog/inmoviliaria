@@ -75,6 +75,14 @@ kubectl -n "$namespace" get secret asesoria-secrets >/dev/null
 kubectl -n "$namespace" get service postgres-service minio-service >/dev/null
 if [[ "$stage" == dev ]]; then
   bash "$repo/scripts/prepare-dev-security.sh"
+  odoo_secret="$(kubectl -n "$namespace" get secret odoo-secrets --ignore-not-found -o name)"
+  if [[ -z "$odoo_secret" ]]; then
+    {
+      printf 'POSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+      printf 'ODOO_DB_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+      printf 'ODOO_MASTER_PASSWORD=%s\n' "$(openssl rand -hex 32)"
+    } | kubectl -n "$namespace" create secret generic odoo-secrets --from-env-file=/dev/stdin
+  fi
 fi
 kubectl kustomize "$payment_overlay" --load-restrictor LoadRestrictionsNone | sed "s/RELEASE_TAG/$tag/g" > "$manifest"
 if grep -q RELEASE_TAG "$manifest"; then
@@ -106,11 +114,20 @@ if [[ "$stage" == prod ]]; then
 fi
 
 echo "Construyendo $tag para $stage"
-docker build -f "$repo/apps/api/Dockerfile" -t "$api_image" "$repo"
-docker build -f "$repo/apps/web/Dockerfile" \
-  --build-arg "NEXT_PUBLIC_API_URL=https://$domain" -t "$web_image" "$repo"
-docker save "$api_image" | ctr -n k8s.io images import -
-docker save "$web_image" | ctr -n k8s.io images import -
+if [[ "$stage" == dev ]]; then
+  # Stream directly to Kubernetes to avoid a second unpacked copy in Docker.
+  docker buildx build -f "$repo/apps/api/Dockerfile" -t "$api_image" \
+    --provenance=false --output type=docker,dest=- "$repo" | ctr -n k8s.io images import -
+  docker buildx build -f "$repo/apps/web/Dockerfile" -t "$web_image" \
+    --build-arg "NEXT_PUBLIC_API_URL=https://$domain" \
+    --provenance=false --output type=docker,dest=- "$repo" | ctr -n k8s.io images import -
+else
+  docker build -f "$repo/apps/api/Dockerfile" -t "$api_image" "$repo"
+  docker build -f "$repo/apps/web/Dockerfile" \
+    --build-arg "NEXT_PUBLIC_API_URL=https://$domain" -t "$web_image" "$repo"
+  docker save "$api_image" | ctr -n k8s.io images import -
+  docker save "$web_image" | ctr -n k8s.io images import -
+fi
 
 kubectl apply -f "$manifest" -l deployment-phase=config
 job_name="asesoria-migrate-$(date +%s)"
@@ -177,6 +194,7 @@ if [[ "$smoke_ok" != true ]]; then
 fi
 
 if [[ "$stage" == dev ]]; then
+  kubectl -n "$namespace" rollout status deployment/odoo --timeout=300s
   python3 "$repo/scripts/smoke-dev-vps.py" --upload
 fi
 

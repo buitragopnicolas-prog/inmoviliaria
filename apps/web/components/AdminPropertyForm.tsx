@@ -40,8 +40,8 @@ export function AdminPropertyForm({ tenants }: { tenants: TenantOption[] }) {
       />
 
       <input type="hidden" name="published" value="true" />
-      {state.error && <p className="alert error">{state.error}</p>}
-      {state.success && <p className="alert success">{state.success}</p>}
+      {state.error && <p className="alert error" role="alert">{state.error}</p>}
+      {state.success && <output className="alert success">{state.success}</output>}
       <button type="submit" className="button" disabled={pending}>{pending ? 'Publicando…' : 'Publicar inmueble'}</button>
     </form>
   );

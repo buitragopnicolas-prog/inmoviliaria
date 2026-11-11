@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
+import { AdminTableRegion } from '@/components/AdminTableRegion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AdminNav } from '@/components/AdminNav';
 import { AdminAssignPropertyForm } from '@/components/AdminAssignPropertyForm';
 import { AdminLeaseContractForm } from '@/components/AdminLeaseContractForm';
 import { apiFetch } from '@/lib/api';
 import { assetUrl, fecha, fechaCalendario, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { AdminUserDetail, AdminUserInvoice, Property, UserFinancialState } from '@/lib/types';
+import { AdminCreatePanel } from '@/components/AdminCreatePanel';
+import { adminStatusLabel } from '@/lib/admin-lists';
+import styles from '@/components/AdminWorkspace.module.css';
 
 export const metadata: Metadata = { title: 'Detalle del usuario' };
 export const dynamic = 'force-dynamic';
@@ -20,12 +23,10 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
     apiFetch<Property[]>('/admin/properties', {}, true),
   ]);
   const availableProperties = properties.filter((property) => property.status === 'AVAILABLE');
+  const accessRole = user.user?.role === 'ADMIN' ? 'Administrador' : 'Cliente';
 
   return (
-    <section className="section pageTop">
-      <div className="container adminLayout">
-        <AdminNav />
-        <div className="adminContent">
+    <>
           <div className="pageHeading compact">
             <span className="eyebrow">Administración · Usuarios</span>
             <h1>{user.name}</h1>
@@ -33,6 +34,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             <Link className="textLink" href="/admin/usuarios">← Volver al directorio</Link>
           </div>
 
+          <nav className={styles.detailLinks} aria-label="Secciones del usuario"><a href="#perfil">Perfil</a><a href="#contratos">Contratos</a><a href="#inmuebles">Inmuebles</a><a href="#facturacion">Facturación</a><a href="#pagos">Pagos</a></nav>
           <div className="metricGrid userMetrics">
             <div className="metric"><span>Estado de cartera</span><strong>{financialLabel(user.financial.state)}</strong><small>{user.financial.invoiceCount} facturas registradas</small></div>
             <div className="metric"><span>Saldo pendiente</span><strong>{pesos(user.financial.outstandingAmount)}</strong><small>pendiente y vencido</small></div>
@@ -40,7 +42,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
           </div>
 
           <div className="userDetailGrid">
-            <article className="card userProfileCard">
+            <article className="card userProfileCard" id="perfil">
               <div className="tableTitle"><h2>Información del usuario</h2><span>{user.user ? 'Cuenta web vinculada' : 'Perfil administrativo'}</span></div>
               <dl className="dataList">
                 <div><dt>Nombre</dt><dd>{user.name}</dd></div>
@@ -48,7 +50,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 <div><dt>Correo</dt><dd>{user.email || 'No registrado'}</dd></div>
                 <div><dt>Teléfono</dt><dd>{user.phone || 'No registrado'}</dd></div>
                 <div><dt>Acceso web</dt><dd>{user.user ? `Sí · ${user.user.email}` : 'Todavía no tiene contraseña de acceso'}</dd></div>
-                <div><dt>Rol de acceso</dt><dd>{user.user?.role ?? 'Sin cuenta web'}</dd></div>
+                <div><dt>Rol de acceso</dt><dd>{user.user ? accessRole : 'Sin cuenta web'}</dd></div>
                 <div><dt>Nombres asociados</dt><dd>{user.aliases.length > 0 ? user.aliases.map((alias) => alias.alias).join(', ') : 'Sin nombres adicionales'}</dd></div>
                 <div><dt>Creado</dt><dd>{fecha(user.createdAt)}</dd></div>
                 <div><dt>Actualizado</dt><dd>{fecha(user.updatedAt)}</dd></div>
@@ -65,9 +67,9 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             </article>
           </div>
 
-          <AdminAssignPropertyForm userId={user.id} properties={availableProperties} />
+          <AdminCreatePanel title="Asignar inmueble" description="Selecciona un inmueble disponible y define las condiciones del contrato."><AdminAssignPropertyForm userId={user.id} properties={availableProperties} /></AdminCreatePanel>
 
-          <div className="card tableCard">
+          <div className="card tableCard" id="contratos">
             <div className="tableTitle"><h2>Contratos firmados</h2><span>{user.leases.filter((lease) => lease.contractFile).length} PDF cargados</span></div>
             <div className="contractAdminList">
               {user.leases.map((lease) => <article className="contractAdminItem" key={lease.id}>
@@ -82,10 +84,10 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             </div>
           </div>
 
-          <div className="card tableCard">
+          <div className="card tableCard" id="inmuebles">
             <div className="tableTitle"><h2>Inmuebles asignados</h2><span>{user.leases.length} contratos</span></div>
-            <div className="responsiveTable"><table>
-              <thead><tr><th>Inmueble</th><th>Dirección</th><th>Vigencia</th><th>Valor mensual</th><th>Novedades</th><th>Estado</th></tr></thead>
+            <AdminTableRegion label="Inmuebles asignados"><table>
+              <thead><tr><th scope="col">Inmueble</th><th scope="col">Dirección</th><th scope="col">Vigencia</th><th scope="col">Valor mensual</th><th scope="col">Novedades</th><th scope="col">Estado</th></tr></thead>
               <tbody>{user.leases.map((lease) => (
                 <tr key={lease.id}>
                   <td className="propertyRow"><div className="thumb"><Image src={assetUrl(lease.property.images[0]?.url)} alt={lease.property.title} fill sizes="54px" /></div>{lease.property.title}</td>
@@ -96,13 +98,13 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <td><span className={`status ${lease.active ? 'paid' : 'archived'}`}>{lease.active ? 'Activo' : 'Finalizado'}</span></td>
                 </tr>
               ))}{user.leases.length === 0 && <tr><td colSpan={6} className="muted">Este usuario todavía no tiene inmuebles asignados.</td></tr>}</tbody>
-            </table></div>
+            </table></AdminTableRegion>
           </div>
 
-          <div className="card tableCard">
+          <div className="card tableCard" id="facturacion">
             <div className="tableTitle"><h2>Historial de facturación</h2><span>{user.invoices.length} facturas</span></div>
-            <div className="responsiveTable"><table>
-              <thead><tr><th>Código</th><th>Inmueble</th><th>Periodo</th><th>Vencimiento</th><th>Facturado</th><th>Saldo</th><th>Estado</th><th>Pagado</th></tr></thead>
+            <AdminTableRegion label="Historial de facturación"><table>
+              <thead><tr><th scope="col">Código</th><th scope="col">Inmueble</th><th scope="col">Periodo</th><th scope="col">Vencimiento</th><th scope="col">Facturado</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col">Pagado</th></tr></thead>
               <tbody>{user.invoices.map((invoice) => (
                 <tr key={invoice.id}>
                   <td>{invoice.code}</td>
@@ -115,13 +117,13 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <td>{invoice.paidAt ? fecha(invoice.paidAt) : '—'}</td>
                 </tr>
               ))}{user.invoices.length === 0 && <tr><td colSpan={8} className="muted">No hay facturas para este usuario.</td></tr>}</tbody>
-            </table></div>
+            </table></AdminTableRegion>
           </div>
 
-          <div className="card tableCard">
+          <div className="card tableCard" id="pagos">
             <div className="tableTitle"><h2>Historial de pagos</h2><span>{user.payments.length} movimientos</span></div>
-            <div className="responsiveTable"><table>
-              <thead><tr><th>Fecha</th><th>Referencia</th><th>Inmueble</th><th>Proveedor</th><th>Valor</th><th>Estado</th></tr></thead>
+            <AdminTableRegion label="Historial de pagos"><table>
+              <thead><tr><th scope="col">Fecha</th><th scope="col">Referencia</th><th scope="col">Inmueble</th><th scope="col">Proveedor</th><th scope="col">Valor</th><th scope="col">Estado</th></tr></thead>
               <tbody>{user.payments.map((payment) => (
                 <tr key={payment.id}>
                   <td>{fecha(payment.createdAt)}</td>
@@ -129,14 +131,12 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   <td>{payment.invoice?.lease.property.title || 'Sin inmueble'}</td>
                   <td>{payment.provider}</td>
                   <td>{pesos(payment.amount)}</td>
-                  <td><span className={`status ${payment.status.toLowerCase()}`}>{payment.status}</span></td>
+                  <td><span className={`status ${payment.status.toLowerCase()}`}>{adminStatusLabel(payment.status)}</span></td>
                 </tr>
               ))}{user.payments.length === 0 && <tr><td colSpan={6} className="muted">Todavía no hay pagos registrados.</td></tr>}</tbody>
-            </table></div>
+            </table></AdminTableRegion>
           </div>
-        </div>
-      </div>
-    </section>
+        </>
   );
 }
 

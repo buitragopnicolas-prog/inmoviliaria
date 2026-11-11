@@ -106,8 +106,8 @@ export function AdminPropertyEditForm({ property, tenants }: { property: Propert
         defaultEndDate={currentLease?.endDate}
       />
 
-      {state.error && <p className="alert error">{state.error}</p>}
-      {state.success && <p className="alert success">{state.success}</p>}
+      {state.error && <p className="alert error" role="alert">{state.error}</p>}
+      {state.success && <output className="alert success">{state.success}</output>}
       <button type="submit" className="button" disabled={pending}>{pending ? 'Guardando…' : 'Guardar cambios'}</button>
     </form>
   );

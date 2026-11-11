@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useActionState, useState } from 'react';
+import { AdminTableRegion } from '@/components/AdminTableRegion';
 import { deleteInvoiceAction, updateInvoiceAction, type ActionState } from '@/app/actions';
 import { fechaCalendario, pesos } from '@/lib/format';
 import type { Invoice, InvoiceStatus } from '@/lib/types';
@@ -8,12 +9,11 @@ import type { Invoice, InvoiceStatus } from '@/lib/types';
 export function AdminInvoiceManager({ invoices }: { invoices: Invoice[] }) {
   if (invoices.length === 0) return <div className="empty">No hay facturas emitidas.</div>;
   return (
-    <div className="responsiveTable">
+    <AdminTableRegion label="Facturas emitidas">
       <table>
         <thead><tr><th>Código</th><th>Usuario</th><th>Inmueble</th><th>Vence</th><th>Facturado</th><th>Saldo</th><th>Estado de pago</th><th>Acciones</th></tr></thead>
         <tbody>{invoices.map((invoice) => <InvoiceRows invoice={invoice} key={invoice.id} />)}</tbody>
-      </table>
-    </div>
+      </table></AdminTableRegion>
   );
 }
 
@@ -35,9 +35,9 @@ function InvoiceRows({ invoice }: { invoice: Invoice }) {
           <span className={`status ${invoice.status.toLowerCase()}`}>{statusLabel(invoice.status)}</span>
           {lastPayment && <small className="tableHint">Último movimiento: {paymentLabel(lastPayment.status)}</small>}
         </td>
-        <td><button type="button" className="button ghost small" onClick={() => setOpen((value) => !value)}>{open ? 'Cerrar' : 'Editar'}</button></td>
+        <td><button type="button" className="button ghost small" aria-expanded={open} aria-controls={`invoice-editor-${invoice.id}`} aria-label={`${open ? 'Cerrar edición de' : 'Editar'} ${invoice.code}`} onClick={() => setOpen((value) => !value)}>{open ? 'Cerrar' : 'Editar'}</button></td>
       </tr>
-      {open && <tr className="invoiceEditorRow"><td colSpan={8}>
+      {open && <tr className="invoiceEditorRow" id={`invoice-editor-${invoice.id}`}><td colSpan={8}>
         <div className="invoiceEditorGrid">
           <form className="form invoiceEditForm" action={updateAction}>
             <input type="hidden" name="id" value={invoice.id} />
@@ -51,8 +51,8 @@ function InvoiceRows({ invoice }: { invoice: Invoice }) {
             </div>
             <label>Observación administrativa<textarea name="note" rows={2} defaultValue={invoice.adminNotes ?? ''} placeholder="Motivo del ajuste o nota interna" /></label>
             <p className="muted">Pagos aprobados asociados: {pesos(invoice.approvedAmount ?? approvedTotal(invoice))}. El saldo visible se recalcula automáticamente.</p>
-            {updateState.error && <p className="alert error">{updateState.error}</p>}
-            {updateState.success && <p className="alert success">{updateState.success}</p>}
+            {updateState.error && <p className="alert error" role="alert">{updateState.error}</p>}
+            {updateState.success && <output className="alert success">{updateState.success}</output>}
             <button type="submit" className="button small" disabled={updating}>{updating ? 'Guardando…' : 'Guardar cambios'}</button>
           </form>
           <form
@@ -67,8 +67,8 @@ function InvoiceRows({ invoice }: { invoice: Invoice }) {
             <h3>Eliminar factura</h3>
             <p className="muted">Se retira de las vistas y la cartera, pero se conserva una trazabilidad técnica para no perder el historial.</p>
             <label>Motivo<textarea name="reason" rows={3} placeholder="Ejemplo: factura duplicada" /></label>
-            {deleteState.error && <p className="alert error">{deleteState.error}</p>}
-            {deleteState.success && <p className="alert success">{deleteState.success}</p>}
+            {deleteState.error && <p className="alert error" role="alert">{deleteState.error}</p>}
+            {deleteState.success && <output className="alert success">{deleteState.success}</output>}
             <button type="submit" className="button danger small" disabled={deleting}>{deleting ? 'Eliminando…' : 'Eliminar factura'}</button>
           </form>
         </div>

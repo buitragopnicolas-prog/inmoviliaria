@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { ContactStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateContactDto } from './dto/create-contact.dto.js';
 
@@ -12,5 +13,11 @@ export class ContactsService {
 
   list() {
     return this.prisma.contactMessage.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  async updateStatus(id: string, status: ContactStatus) {
+    const result = await this.prisma.contactMessage.updateMany({ where: { id }, data: { status } });
+    if (!result.count) throw new NotFoundException('Solicitud de contacto no encontrada.');
+    return { id, status };
   }
 }

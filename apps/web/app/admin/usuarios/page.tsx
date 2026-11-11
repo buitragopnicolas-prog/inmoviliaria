@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
+import { AdminTableRegion } from '@/components/AdminTableRegion';
 import Link from 'next/link';
-import { AdminNav } from '@/components/AdminNav';
 import { AdminUserForm } from '@/components/AdminUserForm';
 import { apiFetch } from '@/lib/api';
 import { pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { AdminUserSummary, UserFinancialState } from '@/lib/types';
+import { AdminCreatePanel } from '@/components/AdminCreatePanel';
+import { AdminEmptyState, AdminListControls, AdminPagination } from '@/components/AdminListControls';
+import { paginateAdmin, readAdminQuery, type AdminSearchParams } from '@/lib/admin-lists';
 
 export const metadata: Metadata = { title: 'Administrar usuarios' };
 export const dynamic = 'force-dynamic';
@@ -13,42 +16,34 @@ export const dynamic = 'force-dynamic';
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ buscar?: string }>;
+  searchParams: Promise<AdminSearchParams>;
 }) {
   await requireUser('ADMIN');
-  const { buscar = '' } = await searchParams;
+  const params = await searchParams;
+  const listQuery = readAdminQuery(params);
+  const { buscar } = listQuery;
   const query = buscar.trim() ? `?search=${encodeURIComponent(buscar.trim())}` : '';
   const users = await apiFetch<AdminUserSummary[]>(`/admin/users${query}`, {}, true);
+  const result = paginateAdmin(users.filter((user) => !listQuery.estado || user.financial.state === listQuery.estado), listQuery.pagina);
 
   return (
-    <section className="section pageTop">
-      <div className="container adminLayout">
-        <AdminNav />
-        <div className="adminContent">
+    <>
           <div className="pageHeading compact">
             <span className="eyebrow">Administración</span>
             <h1>Usuarios</h1>
             <p>Consulta los perfiles de clientes, sus inmuebles, saldos y pagos. Los datos históricos y las cuentas creadas en la web se muestran en una sola vista.</p>
           </div>
 
-          <AdminUserForm />
-
-          <form className="card adminSearch" method="get">
-            <label>
-              Buscar usuario
-              <input name="buscar" defaultValue={buscar} placeholder="Nombre, correo, documento o teléfono" />
-            </label>
-            <button className="button small" type="submit">Buscar</button>
-            {buscar && <Link className="button ghost small" href="/admin/usuarios">Limpiar</Link>}
-          </form>
+          <AdminCreatePanel title="Crear usuario" description="Registra un cliente para gestionar inmuebles, cobros y pagos." open={params.crear === '1'}><AdminUserForm /></AdminCreatePanel>
 
           <div className="card tableCard">
             <div className="tableTitle"><h2>Directorio de usuarios</h2><span>{users.length} registros</span></div>
-            <div className="responsiveTable">
+            <AdminListControls path="/admin/usuarios" query={listQuery} placeholder="Nombre, correo, documento o teléfono" statuses={[[ 'OVERDUE', 'Vencido' ], ['PENDING', 'Pendiente'], ['PAID', 'Al día'], ['NO_CHARGES', 'Sin cobros']]} />
+            {result.total > 0 ? <AdminTableRegion label="Directorio de usuarios">
               <table>
-                <thead><tr><th>Usuario</th><th>Contacto</th><th>Acceso web</th><th>Inmueble actual</th><th>Estado de pago</th><th>Saldo</th><th /></tr></thead>
+                <thead><tr><th scope="col">Usuario</th><th scope="col">Contacto</th><th scope="col">Acceso web</th><th scope="col">Inmueble actual</th><th scope="col">Estado de pago</th><th scope="col">Saldo</th><th scope="col">Acciones</th></tr></thead>
                 <tbody>
-                  {users.map((user) => (
+                  {result.items.map((user) => (
                     <tr key={user.id}>
                       <td><strong>{user.name}</strong><br /><span className="muted">{user.documentNumber || 'Sin documento'}</span></td>
                       <td>{user.email || 'Sin correo'}<br /><span className="muted">{user.phone || 'Sin teléfono'}</span></td>
@@ -59,14 +54,11 @@ export default async function AdminUsersPage({
                       <td><Link className="textLink" href={`/admin/usuarios/${user.id}`}>Ver detalle →</Link></td>
                     </tr>
                   ))}
-                  {users.length === 0 && <tr><td colSpan={7} className="muted">No se encontraron usuarios.</td></tr>}
                 </tbody>
-              </table>
-            </div>
+              </table></AdminTableRegion> : <AdminEmptyState filtered={Boolean(listQuery.buscar || listQuery.estado)} noun="usuarios" />}
+            <AdminPagination path="/admin/usuarios" query={listQuery} {...result} />
           </div>
-        </div>
-      </div>
-    </section>
+        </>
   );
 }
 

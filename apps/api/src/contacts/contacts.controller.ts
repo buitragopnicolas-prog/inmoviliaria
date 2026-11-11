@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ContactsService } from './contacts.service.js';
 import { CreateContactDto } from './dto/create-contact.dto.js';
 import { Throttle } from '@nestjs/throttler';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
+import { UpdateContactStatusDto } from './dto/update-contact-status.dto.js';
 
 @Controller()
 export class ContactsController {
@@ -21,5 +22,12 @@ export class ContactsController {
   @Roles('ADMIN')
   list() {
     return this.contacts.list();
+  }
+
+  @Patch('admin/contacts/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateContactStatusDto) {
+    return this.contacts.updateStatus(id, dto.status);
   }
 }

@@ -22,6 +22,39 @@ El script crea `.env` solo si falta, instala desde `package-lock.json`, inicia P
 
 Las contraseñas locales de prueba están en `.env.example`; sustitúyalas si el equipo es compartido. La carga inicial de prueba solo se ejecuta en local y, una única vez, en dev.
 
+## Odoo Community para JB
+
+[Odoo Community 19](https://github.com/odoo/odoo/tree/19.0) funciona como ERP independiente, con PostgreSQL y almacenamiento de adjuntos propios. Los contactos, inmuebles, contratos, facturas y pagos de JB siguen gestionándose en la plataforma inmobiliaria. Los dos sistemas operan sin sincronización de registros.
+
+### Local
+
+Con Docker Desktop iniciado, ejecute desde la raíz en PowerShell 7:
+
+```powershell
+if (!(Test-Path .env.odoo)) {
+  $odooEnv = foreach ($name in 'ODOO_POSTGRES_PASSWORD', 'ODOO_DB_PASSWORD', 'ODOO_MASTER_PASSWORD') {
+    $password = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+    "$name=$password"
+  }
+  $odooEnv | Set-Content -Encoding ascii .env.odoo
+}
+docker compose --env-file .env.odoo -f docker/odoo.compose.yml up -d --wait
+```
+
+Abra [Odoo local](http://127.0.0.1:8069). En el primer inicio, use la clave maestra de `.env.odoo` para crear la base `jb_odoo`. Elija Español (CO), Colombia y una cuenta administradora propia. Puede instalar CRM desde Aplicaciones. Si la base ya existe, entre con la cuenta administradora configurada.
+
+La [comprobación de salud](http://127.0.0.1:8069/web/health?db_server_status=1) verifica la conexión con PostgreSQL. El archivo `.env.odoo` está excluido de Git. Conserve ese archivo y los dos volúmenes Docker al reiniciar o actualizar Odoo.
+
+### Dev
+
+El flujo de dev instala Odoo en `asesoria-inmobiliaria-dev` y crea claves aleatorias exclusivas de ese entorno en el primer despliegue. Odoo escucha dentro de su pod y requiere acceso autorizado a Kubernetes. Desde un equipo con acceso al clúster, ejecute:
+
+```sh
+kubectl -n asesoria-inmobiliaria-dev port-forward deployment/odoo 8070:8069
+```
+
+Abra [Odoo dev a través del túnel](http://127.0.0.1:8070). En el primer inicio, un administrador del clúster debe obtener la clave `ODOO_MASTER_PASSWORD` del secreto `odoo-secrets` y crear la base `jb_odoo` con credenciales propias de dev. Para conservar el ERP se deben respaldar juntos PostgreSQL y los adjuntos de `/var/lib/asesoria-inmobiliaria-dev/odoo`.
+
 ## Dev en el VPS
 
 El clúster es de un solo nodo y no tiene StorageClass predeterminada. `k8s/infra/dev` crea PV estáticos, PVC y servicios exclusivos de dev. `scripts/bootstrap-dev-vps.sh` genera secretos aleatorios exclusivos de dev en `/root/asesoria-inmobiliaria-dev-secrets.env` con permisos 600. No copia secretos ni datos de producción.
