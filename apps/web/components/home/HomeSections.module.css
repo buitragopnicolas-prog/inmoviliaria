@@ -13,9 +13,8 @@
 .heroVisual { grid-area: photo; align-self: center; position: relative; min-width: 0; height: clamp(420px, 39vw, 540px); overflow: hidden; border-radius: 4px clamp(48px, 7vw, 104px) 4px 4px; background: var(--primary); }
 .heroImage { position: absolute; inset: 0; }
 .heroImage img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 65% 50%; }
-.heroImageCaption { position: absolute; inset: auto 0 0; padding: 60px 30px 26px; color: white; background: linear-gradient(transparent, rgb(6 22 40 / 88%)); }
+.heroImageCaption { display:flex; align-items:center; gap:12px; position: absolute; inset: auto 0 0; padding: 60px 30px 26px; color: white; background: linear-gradient(transparent, rgb(6 22 40 / 88%)); }
 .heroImageCaption small { font-size: 10px; color: #e0e5eb; }
-.heroImageCaption { display: flex; align-items: center; gap: 12px; }
 .heroImageCaption::before { content: ''; width: 32px; height: 1px; background: var(--gold-soft); transform-origin: left; }
 .titleLine { display: block; }
 .heroKicker { display: flex; align-items: center; gap: 14px; color: #f1f3f5; font-size: 11px; letter-spacing: .17em; text-transform: uppercase; line-height: 1.6; }

@@ -54,7 +54,7 @@ export default async function HomePage({searchParams}:{searchParams:Promise<{est
             <div><h2 id="featured-title">{copy.portada.featured}</h2></div>
             <div className={styles.headingAside}><p>{copy.portada.featuredIntro}</p><Link className={styles.arrowLink} href="/inmuebles">{copy.portada.featuredLink} <span aria-hidden="true">↗</span></Link></div>
           </Reveal>
-          <Suspense fallback={<p role="status">Cargando inmuebles destacados…</p>}>
+          <Suspense fallback={<output>Cargando inmuebles destacados…</output>}>
             <FeaturedProperties />
           </Suspense>
         </div>
@@ -68,7 +68,7 @@ export default async function HomePage({searchParams}:{searchParams:Promise<{est
             <div><h2 id="news-title">{copy.portada.news}</h2></div>
             <Link className={styles.arrowLink} href="/noticias">{copy.portada.newsLink} <span aria-hidden="true">↗</span></Link>
           </Reveal>
-          <Suspense fallback={<p role="status">Cargando noticias…</p>}>
+          <Suspense fallback={<output>Cargando noticias…</output>}>
             <FeaturedNews />
           </Suspense>
         </div>

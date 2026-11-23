@@ -14,17 +14,17 @@ export const dynamic = 'force-dynamic';
 export default async function PropertiesPage({ searchParams }: { searchParams: Promise<CatalogSearchParams & { vista?: string | string[] }> }) {
   const [params, { catalogos }] = await Promise.all([searchParams, readSite()]);
   const { values: filters, errors, query, invalid } = readCatalogFilters(params);
+  const fullView = new URLSearchParams(query);
+  fullView.set('vista', 'completa');
   let results;
   if (invalid) {
     results = <p className="results" role="alert">Revisa los filtros indicados para consultar los inmuebles.</p>;
   } else if (params.vista === 'completa' || userAgentFromString((await headers()).get('user-agent') ?? '').isBot) {
-    results = <CatalogResults initial={await loadPublicCatalog(query)} />;
+    results = <CatalogResults retryHref={`/inmuebles?${fullView}`} initial={await loadPublicCatalog(query)} />;
   } else {
-    const fullView = new URLSearchParams(query);
-    fullView.set('vista', 'completa');
     results = (
       <>
-        <CatalogResults key={query} query={query} />
+        <CatalogResults retryHref={`/inmuebles?${query}`} key={query} query={query} />
         <noscript><a className="textLink" href={`?${fullView}`}>Ver resultados de la búsqueda</a></noscript>
       </>
     );

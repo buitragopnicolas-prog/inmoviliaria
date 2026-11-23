@@ -24,6 +24,15 @@ export default async function PayInvoicePage({ params, searchParams }: { params:
   const lastPayment = activeManual ?? invoice.payments?.[0];
   const mockPayment = config.mode === 'mock' && invoice.payments?.find(payment => payment.reference === reference && payment.provider === 'MOCK' && payment.status === 'PENDING');
 
+  function paymentControls() {
+    if (invoice.status === 'VOID') return <p className="alert error">Esta factura fue anulada.</p>;
+    if (invoice.status === 'PAID' || invoice.balance <= 0) return <p className="alert success">Esta factura no tiene saldo pendiente.</p>;
+    if (activeManual) return <div className="reportedPaymentState"><span className="status pending">{activeManual.status === 'UNDER_REVIEW' ? 'EN REVISIÓN' : 'PENDIENTE DE VERIFICACIÓN'}</span><h2>Recibimos tu reporte de pago</h2><p>Referencia interna: <strong>{activeManual.reference}</strong></p><p>La factura conserva su saldo mientras se verifica el pago. Puedes consultar el estado en Mi cuenta.</p></div>;
+    if (config.mode === 'manual') return <ManualPaymentForm invoiceId={invoice.id} amount={invoice.balance} idempotencyKey={randomUUID()} config={config} />;
+    if (mockPayment) return <><p className="muted">Modo de desarrollo activo: confirma la aprobación para completar el ciclo sin realizar un cobro real.</p><form action={approveMockAction}><input type="hidden" name="reference" value={mockPayment.reference} /><button type="submit" className="button wide">Simular pago aprobado</button></form></>;
+    return <form action={beginPaymentAction}><input type="hidden" name="invoiceId" value={invoice.id} /><button type="submit" className="button wide">Continuar al pago</button></form>;
+  }
+
   return <section className="section pageTop">
     <div className="container paymentWrap paymentPage">
       <div className="card paymentSummaryCard">
@@ -34,12 +43,7 @@ export default async function PayInvoicePage({ params, searchParams }: { params:
       </div>
 
       <div className="card paymentMainCard">
-        {invoice.status === 'VOID' ? <p className="alert error">Esta factura fue anulada.</p>
-          : invoice.status === 'PAID' || invoice.balance <= 0 ? <p className="alert success">Esta factura no tiene saldo pendiente.</p>
-          : activeManual ? <div className="reportedPaymentState"><span className="status pending">{activeManual.status === 'UNDER_REVIEW' ? 'EN REVISIÓN' : 'PENDIENTE DE VERIFICACIÓN'}</span><h2>Recibimos tu reporte de pago</h2><p>Referencia interna: <strong>{activeManual.reference}</strong></p><p>La factura conserva su saldo mientras se verifica el pago. Puedes consultar el estado en Mi cuenta.</p></div>
-          : config.mode === 'manual' ? <ManualPaymentForm invoiceId={invoice.id} amount={invoice.balance} idempotencyKey={randomUUID()} config={config} />
-          : mockPayment ? <><p className="muted">Modo de desarrollo activo: confirma la aprobación para completar el ciclo sin realizar un cobro real.</p><form action={approveMockAction}><input type="hidden" name="reference" value={mockPayment.reference} /><button type="submit" className="button wide">Simular pago aprobado</button></form></>
-          : <form action={beginPaymentAction}><input type="hidden" name="invoiceId" value={invoice.id} /><button type="submit" className="button wide">Continuar al pago</button></form>}
+        {paymentControls()}
         <Link className="textLink paymentReturn" href={lastPayment ? paymentAccountHref(lastPayment.reference) : '/mi-cuenta'}>{lastPayment ? 'Ver estado en Mi cuenta' : 'Volver a Mi cuenta'}</Link>
       </div>
     </div>

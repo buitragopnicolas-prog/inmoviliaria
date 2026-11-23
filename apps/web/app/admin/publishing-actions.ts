@@ -1,4 +1,5 @@
 'use server';
+import { textField } from '@/lib/form-text';
 import { revalidatePath, updateTag } from 'next/cache';
 import { apiFetch } from '@/lib/api';
 import { requireUser } from '@/lib/auth';
@@ -19,7 +20,7 @@ export async function saveSection(id: SectionId, previous: PublicationState, for
     if (!Object.hasOwn(sections,id)) throw new Error('Sección desconocida.');
     const values: Record<string,string> = {};
     for (const [key,field] of Object.entries(sections[id].fields)) {
-      values[key] = String(form.get(key) ?? '').trim();
+      values[key] = textField(form,key).trim();
       const file = form.get('photo-'+key);
       if (field.kind==='image' && file instanceof File && file.size) {
         const [url] = await upload([file]);
@@ -40,8 +41,8 @@ export async function saveOffer(previous: PublicationState, form: FormData): Pro
     const images=form.getAll('keep').map(String);
     if(images.length+files.length>10)throw new Error('La oferta admite hasta diez fotos.');
     if(files.length) images.push(...await upload(files));
-    const id=String(form.get('id')||'');
-    const data={...Object.fromEntries(['title','description','price','category','city','catalog'].map(key=>[key,String(form.get(key)??'').trim()])),
+    const id=textField(form,'id');
+    const data={...Object.fromEntries(['title','description','price','category','city','catalog'].map(key=>[key,textField(form,key).trim()])),
       images,published:form.get('published')==='on',...(id && {revision:Number(form.get('revision'))})};
     const saved=await apiFetch<Pick<SaleOffer,'id'|'revision'>>('/admin/sales'+(id?'/'+encodeURIComponent(id):''),{method:id?'PUT':'POST',body:JSON.stringify(data)},true);
     revalidatePath('/admin/ofertas');revalidatePath('/comprar');revalidatePath('/vehiculos-y-bienes');

@@ -14,7 +14,7 @@ export default async function NewsPage() {
     <section className="section pageTop">
       <div className="container">
         <div className="pageHeading"><h1>{catalogos.articleTitle}</h1><p>{catalogos.articleIntro}</p></div>
-        {news === null ? <DataUnavailable label="las noticias" /> : news.length > 0 ? (
+        {news === null ? <DataUnavailable label="las noticias" retryHref="/noticias" /> : news.length > 0 ? (
           <>{[false,true].map(external=>{const posts=news.filter(post=>Boolean(post.externalUrl)===external); return posts.length>0 && <section key={String(external)}><h2>{external?catalogos.pressTitle:identidad.name}</h2><div className="cardsGrid newsGrid">{posts.map(newsPost=><NewsCard key={newsPost.id} brand={identidad.name} newsPost={newsPost}/>)}</div></section>;})}</>
         ) : (
           <div className="card empty">{catalogos.emptyArticles}</div>

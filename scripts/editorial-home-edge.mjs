@@ -1,15 +1,18 @@
+import { browserCoverage } from './e2e-browser-coverage.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 
 const dev = process.argv.includes('--dev');
-const origin = dev ? 'https://dev.asesoriainmobiliariajb.com' : 'http://localhost:3000';
+const localOrigin = process.argv.includes('--ci') ? 'http://localhost:13613' : 'http://localhost:3000';
+const origin = dev ? 'https://dev.asesoriainmobiliariajb.com' : localOrigin;
 const out = '.local/portada-editorial/' + (dev ? 'dev' : 'local');
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ channel: 'msedge' });
+const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chrome' });
+const coverage = browserCoverage();
 
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+  const page = await coverage.watch(await browser.newPage({ viewport: { width: 1440, height: 960 } }));
   page.setDefaultTimeout(12000);
   const response = await page.goto(origin);
   assert.equal(response.status(), 200);
@@ -55,7 +58,7 @@ try {
   assert.equal(filters.get('city'), 'Bogotá');
   assert.equal(filters.get('maxRent'), '1800000');
 
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, reducedMotion: 'reduce' });
+  const mobile = await coverage.watch(await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, reducedMotion: 'reduce' }));
   await mobile.goto(origin);
   await mobile.locator('[data-portada="editorial-jb"]').waitFor();
   assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth), 390);
@@ -65,7 +68,7 @@ try {
   await mobile.locator('#recorridos summary').nth(1).tap();
   await mobile.locator('#recorridos details[open] a').first().waitFor();
 
-  const plain = await browser.newPage({ javaScriptEnabled: false });
+  const plain = await coverage.watch(await browser.newPage({ javaScriptEnabled: false }));
   await plain.goto(origin);
   const nav = plain.getByRole('navigation', { name: '¿Qué quieres hacer?' });
   const destinations = await nav.locator('a').evaluateAll(links => links.map(a => a.pathname));
@@ -79,5 +82,5 @@ try {
   assert.ok(await nav.locator('details').last().getAttribute('open') !== null);
   console.log('Edge ' + browser.version() + ' · portada, inventario, filtros, ' + destinations.length + ' enlaces, teclado, móvil, movimiento reducido y HTML sin JavaScript correctos en ' + origin);
 } finally {
-  await browser.close();
+  try { await coverage.save(); } finally { await browser.close(); }
 }

@@ -53,7 +53,7 @@ export function EditorialHome({ copy }: Readonly<{ copy: Cover }>) {
               <Link href="/comprar">{copy.buy} <span aria-hidden="true">↗</span></Link>
             </div>
           </div>
-          <Suspense fallback={<p role="status">Cargando galería…</p>}>
+          <Suspense fallback={<output>Cargando galería…</output>}>
             <InventoryWheel copy={copy} portfolio />
           </Suspense>
         </section>

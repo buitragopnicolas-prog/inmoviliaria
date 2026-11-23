@@ -1,4 +1,5 @@
 'use server';
+import { textField } from '@/lib/form-text';
 import { revalidatePath } from 'next/cache';
 import { apiFetch } from '@/lib/api';
 import { requireUser } from '@/lib/auth';
@@ -14,7 +15,8 @@ export async function uploadDocument(kind: 'account'|'template', id:string, _pre
   try {
     const upload = new FormData();
     upload.set('file', file);
-    if(!template && data.get('serviceType')) upload.set('serviceType',String(data.get('serviceType')));
+    const serviceType = textField(data, 'serviceType');
+    if(!template && serviceType) upload.set('serviceType',serviceType);
     await apiFetch('/admin/documents/'+(template?'templates/':'accounts/')+encodeURIComponent(id),{method:'POST',body:upload},true);
     revalidatePath(template?'/admin/formatos':'/admin/documentos');
     revalidatePath(template?'/solicitud-de-arrendamiento':'/mi-cuenta/documentos');
@@ -25,7 +27,7 @@ export async function uploadDocument(kind: 'account'|'template', id:string, _pre
 }
 
 export async function sendSuggestion(_previous:ActionState & {message?:string}, data: FormData) {
-  const message = String(data.get('message')??'').trim();
+  const message = textField(data,'message').trim();
   try {
     await apiFetch('/suggestions',{method:'POST',body:JSON.stringify({message,authorized:data.get('authorized')==='true',policyVersion:data.get('policyVersion')})});
     revalidatePath('/admin/sugerencias');

@@ -7,7 +7,7 @@ export function sectionValues(id,rows) {
 export function consentFor(values) {
   const text=values.policyText?.trim() || '';
   const href=values.policyHref?.trim() || (text?'/politica-de-datos':'');
-  if(!href) throw Error('Publica la política en el entorno de prueba antes de continuar.');
+  if(!href) throw new Error('Publica la política en el entorno de prueba antes de continuar.');
   return {authorized:true,policyVersion:createHash('sha256').update(JSON.stringify([href,text])).digest('hex')};
 }
 // Only the disposable stack can receive the synthetic policy via this helper.
@@ -18,6 +18,6 @@ export async function fixturePolicy(token) {
   values.policyText='Documento sintético para verificar exclusivamente el entorno desechable JB.';
   values.policyHref='';
   const response=await fetch(base+'/admin/publishing/sections/contacto',{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({revision:rows.find(row=>row.id==='contacto')?.revision??0,values})});
-  if(!response.ok) throw Error('Política de ensayo HTTP '+response.status);
+  if(!response.ok) throw new Error('Política de ensayo HTTP '+response.status);
   return consentFor(values);
 }

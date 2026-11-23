@@ -1,5 +1,6 @@
 'use server';
 
+import { textField } from '@/lib/form-text';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -12,10 +13,6 @@ export type ActionState = { error?: string; success?: string };
 export type AuthState = ActionState & { values?: { email: string; name?: string; phone?: string; portal?: string } };
 export type ContactState = ActionState & { values?: { name: string; email: string; phone: string; subject: string; message: string } };
 
-function textField(data: FormData, name: string) {
-  const value = data.get(name);
-  return typeof value === 'string' ? value : '';
-}
 
 const authCookieMaxAge = Math.min(Math.max(Number(process.env.AUTH_COOKIE_MAX_AGE_SECONDS ?? 3600) || 3600, 300), 3600);
 
@@ -189,8 +186,8 @@ export async function assignPropertyToUserAction(_previous: ActionState, formDat
 
 export async function createNewsAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const sourceLabel = String(formData.get('sourceLabel') ?? '').trim();
-    const externalUrl = String(formData.get('externalUrl') ?? '').trim();
+    const sourceLabel = textField(formData,'sourceLabel').trim();
+    const externalUrl = textField(formData,'externalUrl').trim();
     const id = textField(formData,'id');
     const body = new FormData();
     for (const key of ['title','summary','content','category']) {
@@ -200,11 +197,10 @@ export async function createNewsAction(_previous: ActionState, formData: FormDat
     if (externalUrl) body.set('externalUrl',externalUrl);
     if (formData.has('additionalLinks')) {
       const links=textField(formData,'additionalLinks').split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
-      if (links.length) for (const link of links) body.append('additionalLinks',link);
-      else body.set('additionalLinks','');
+      for (const link of links.length ? links : ['']) body.append('additionalLinks',link);
     }
     body.set('published',String(formData.get('visibility')!=='draft'));
-    for (const value of formData.getAll('removePdfIds')) body.append('removePdfIds',String(value));
+    for (const value of formData.getAll('removePdfIds').filter((entry): entry is string => typeof entry === 'string')) body.append('removePdfIds',value);
     const pdfs=formData.getAll('pdfs').filter((file):file is File=>file instanceof File && file.size>0);
     if(pdfs.length>3 || pdfs.some(file=>file.size>8_000_000)) return {error:'Selecciona hasta tres PDF de 8 MB cada uno.'};
     for (const file of pdfs) body.append('pdfs',file);
@@ -231,10 +227,11 @@ export async function createInvoiceAction(_previous: ActionState, formData: Form
   try {
     const services = parseInvoiceItems(formData.get('services'));
     const products = parseInvoiceItems(formData.get('products'));
+    const recipient = textField(formData, 'leaseId');
     await apiFetch('/admin/invoices', {
       method: 'POST',
       body: JSON.stringify({
-        ...(String(formData.get('leaseId')).startsWith('account:') ? {accountId:String(formData.get('leaseId')).slice(8)} : {leaseId:formData.get('leaseId')}),
+        ...(recipient.startsWith('account:') ? {accountId:recipient.slice(8)} : {leaseId:recipient}),
         period: formData.get('period'),
         dueDate: formData.get('dueDate'),
         services,

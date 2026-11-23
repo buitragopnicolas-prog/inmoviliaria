@@ -19,8 +19,30 @@ class SectionInput {
   @IsObject() values!: Record<string, string>;
 }
 
+function sectionValues(id: string, fields: Record<string, Field>, submitted: Record<string,string>) {
+  const values: Record<string, string> = {};
+  for (const [key, field] of Object.entries(fields)) {
+    if (!validateField(field, submitted[key])) throw new BadRequestException('Revisa el campo «' + field.label + '».');
+    values[key] = submitted[key].trim();
+  }
+  validatePolicy(id, values);
+  if (id === 'servicios') validateServices(values);
+  return values;
+}
+
+function validatePolicy(id: string, values: Record<string,string>) {
+  if (id==='contacto' && values.policyHref && !/^https?:\/\//i.test(values.policyHref) && !(values.policyHref==='/politica-de-datos' && values.policyText)) throw new BadRequestException('Usa la URL completa de la política o publica su texto en este sitio.');
+}
+
+function validateServices(values: Record<string,string>) {
+  for (const key of ['legal','accounting','property','service4','service5','service6','service7','service8']) {
+    if (values[key] && !values[key+'Text']) throw new BadRequestException('Añade la descripción de '+values[key]+'.');
+    if (values[key]?.length>140) throw new BadRequestException('El nombre del servicio debe tener hasta 140 caracteres.');
+  }
+}
+
 function validLink(link: string) {
-  if (!link || /[\\\s\u0000-\u001f]/u.test(link) || link.startsWith('//')) return false;
+  if (!link || /[\\\s]/u.test(link) || Array.from(link).some(char => char.codePointAt(0)! < 32) || link.startsWith('//')) return false;
   if (link.startsWith('/')) return true;
   try { const url = new URL(link); return ['https:', 'http:', 'mailto:', 'tel:'].includes(url.protocol) && !url.username && !url.password; }
   catch { return false; }
@@ -35,7 +57,11 @@ function validateField(field: Field, value: unknown) {
       const [label, href, ...rest] = line.split('|'); return !!label?.trim() && !rest.length && validLink(href?.trim() || '');
     });
     case 'image': return /^\/(?:images\/[\w.-]+\.(?:webp|png|jpe?g)|fotos\/api\/files\/[\w-]+\/content)$/i.test(value);
-    case 'email': return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    case 'email': {
+      const [local, domain, ...extra] = value.split('@');
+      const dot = domain?.lastIndexOf('.') ?? -1;
+      return !!local && !!domain && !extra.length && !/\s/u.test(value) && dot > 0 && dot < domain.length - 1;
+    }
     case 'phone': return /^[\d+() .-]{5,40}$/.test(value);
     default: return true;
   }
@@ -55,18 +81,7 @@ export class EditorialAdminController {
   async save(@Param('id') id: string, @Body() body: SectionInput) {
     if (!Object.hasOwn(schema, id)) throw new NotFoundException('Sección desconocida.');
     const fields = schema[id].fields;
-    const values: Record<string, string> = {};
-    for (const [key, field] of Object.entries(fields)) {
-      if (!validateField(field, body.values[key])) throw new BadRequestException('Revisa el campo «' + field.label + '».');
-      values[key] = body.values[key].trim();
-    }
-    if (id==='contacto' && values.policyHref && !/^https?:\/\//i.test(values.policyHref) && !(values.policyHref==='/politica-de-datos' && values.policyText)) throw new BadRequestException('Usa la URL completa de la política o publica su texto en este sitio.');
-    if (id==='servicios') {
-      for (const key of ['legal','accounting','property','service4','service5','service6','service7','service8']) {
-        if (values[key] && !values[key+'Text']) throw new BadRequestException('Añade la descripción de '+values[key]+'.');
-        if (values[key]?.length>140) throw new BadRequestException('El nombre del servicio debe tener hasta 140 caracteres.');
-      }
-    }
+    const values = sectionValues(id, fields, body.values);
     if (body.revision === 0) {
       const { count } = await this.prisma.siteSection.createMany({ data: [{ id, values }], skipDuplicates: true });
       if (count) return { revision: 1 };

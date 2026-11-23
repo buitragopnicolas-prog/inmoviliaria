@@ -8,9 +8,9 @@ import { PropertyCard } from './PropertyCard';
 
 type CatalogSource = { query: string; initial?: never } | { initial: CatalogProperty[] | null; query?: never };
 
-export function CatalogResults({ query, initial }: CatalogSource) {
+export function CatalogResults({ query, initial, retryHref }: CatalogSource & {retryHref:string}) {
   const [inventory, setInventory] = useState<CatalogProperty[] | null>();
-  const status = useRef<HTMLParagraphElement>(null);
+  const status = useRef<HTMLOutputElement>(null);
   const properties = query === undefined ? initial : inventory;
 
   useEffect(() => {
@@ -30,11 +30,12 @@ export function CatalogResults({ query, initial }: CatalogSource) {
   }, [query]);
 
   useEffect(() => fadeIn(status.current), [properties]);
-  if (properties === null) return <DataUnavailable label="los inmuebles" />;
+  if (properties === null) return <DataUnavailable label="los inmuebles" retryHref={retryHref} />;
+  const resultLabel = properties?.length === 1 ? 'inmueble encontrado' : 'inmuebles encontrados';
   return <>
-    <p ref={status} className="results" role="status">{properties === undefined
+    <output ref={status} className="results">{properties === undefined
       ? 'Buscando inmuebles…'
-      : `${properties.length} ${properties.length === 1 ? 'inmueble encontrado' : 'inmuebles encontrados'}`}</p>
+      : `${properties.length} ${resultLabel}`}</output>
     {properties?.length === 0 && <div className="empty">No hay inmuebles que coincidan con los filtros seleccionados.</div>}
     {!!properties?.length && <div className="cardsGrid">{properties.map((property) =>
       <PropertyCard property={property} key={property.id} />)}</div>}

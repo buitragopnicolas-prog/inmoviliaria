@@ -11,6 +11,7 @@ export function AuthForm({ mode, showRegistrationLink = false, portal = 'TENANT'
   const [state, action, pending] = useActionState(mode === 'login' ? loginAction : registerAction, {});
   const policy=usePublishedPolicy();
   const draft = state.values;
+  const submitLabel = mode === 'login' ? 'Ingresar' : 'Crear cuenta';
   return (
     <form className="form card authForm" action={action} onSubmit={event => { if (pending) event.preventDefault(); }}>
       <h1>{mode === 'login' ? 'Ingresa a tu cuenta' : 'Crea tu cuenta'}</h1>
@@ -22,7 +23,7 @@ export function AuthForm({ mode, showRegistrationLink = false, portal = 'TENANT'
       <label>Contraseña<input type="password" name="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} readOnly={pending} required minLength={8} /></label>
       {mode === 'register' && <ConsentField purpose="crear y administrar mi cuenta"/>}
       {!pending && state.error && <StatusNotice message={state.error} tone="error" />}
-      <button type="submit" className="button wide" disabled={mode === 'register' && !policy.version} aria-busy={pending} aria-disabled={pending}>{pending ? 'Procesando…' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
+      <button type="submit" className="button wide" disabled={mode === 'register' && !policy.version} aria-busy={pending} aria-disabled={pending}>{pending ? 'Procesando…' : submitLabel}</button>
       {(mode === 'register' || showRegistrationLink) && (
         <p className="center muted">{mode === 'login' ? <>¿No tienes cuenta? <Link href="/registro">Regístrate</Link></> : <>¿Ya tienes cuenta? <Link href="/login">Ingresa</Link></>}</p>
       )}

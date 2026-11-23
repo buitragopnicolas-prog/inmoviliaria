@@ -63,9 +63,10 @@ export class OwnerController {
     const rental=dto.operation==='rent';
     if (rental && Number(dto.price)>2147483647) throw new BadRequestException('El canon supera el máximo permitido.');
     if (id && !dto.revision) throw new BadRequestException('Falta la versión de la publicación.');
-    const existing=id ? (rental
-      ? await this.prisma.property.findFirst({where:{id,createdById:userId},select:{images:true}})
-      : await this.prisma.saleOffer.findFirst({where:{id,ownerAccountId:userId},select:{images:true}})) : null;
+    let existing;
+    if (id) {
+      existing = rental ? await this.prisma.property.findFirst({where:{id,createdById:userId},select:{images:true}}) : await this.prisma.saleOffer.findFirst({where:{id,ownerAccountId:userId},select:{images:true}});
+    }
     if (id && !existing) throw new NotFoundException('Publicación no encontrada.');
     if (dto.published==='true' && !photos.length && !existing?.images.length) throw new BadRequestException('Añade al menos una fotografía para publicar.');
     for (const photo of photos) validateUploadedFile(photo,['jpeg','png','webp'],5_000_000,'La fotografía');

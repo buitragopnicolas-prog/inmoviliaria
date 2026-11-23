@@ -18,6 +18,6 @@ export function AdminReturnFocus({ target, listHref }: { target?: string; listHr
     return () => { cancelAnimationFrame(frame); stop?.(); };
   }, [target, listHref]);
   return target === 'resultados-edicion'
-    ? <p role="status">El registro ya no aparece con los filtros actuales.</p>
+    ? <output>El registro ya no aparece con los filtros actuales.</output>
     : null;
 }

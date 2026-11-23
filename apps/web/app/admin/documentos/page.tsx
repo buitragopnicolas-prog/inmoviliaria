@@ -14,7 +14,7 @@ export default async function AccountDocuments({searchParams}:{searchParams:Prom
   return <><div className="pageHeading compact"><h1>Documentos por cliente</h1><p>Asigna PDF privados a una cuenta registrada.</p></div>
     <form method="get" className="form card formPanel"><label>Cuenta del cliente<select name="cliente" defaultValue={account?.id??''} required>
       <option value="">Selecciona una cuenta</option>{accounts.map(item=><option key={item.id} value={item.id}>{portalNames[item.portal]} · {item.name} · {item.email}</option>)}
-    </select></label><button className="button">Ver documentos</button></form>
+    </select></label><button type="submit" className="button">Ver documentos</button></form>
     {requested&&!account&&<p role="alert">La cuenta seleccionada no está disponible.</p>}
     {account && <section className="card formPanel" key={account.id}><h2>{account.name}</h2><p>{account.email}</p>
       <PdfUploadForm kind="account" id={account.id} service={account.portal==='SERVICES'} label={account.portal==='SERVICES'?'Contrato de prestación de servicios (PDF)':'Documento para esta cuenta'}/>

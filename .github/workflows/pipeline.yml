@@ -90,6 +90,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          JB_TEST_COVERAGE: '1'
       - run: npm run check
       - run: npm run test:coverage
       - name: Test deployment smoke checks with Python coverage
@@ -205,6 +207,10 @@ jobs:
           cleanup_run="$(node -p "JSON.parse(require('node:fs').readFileSync('coverage/production-payment-cleanup-e2e.json')).run")"
           npm run test:e2e:production:ci -- --cleanup "$cleanup_run"
           bash -n scripts/e2e-production-vps.sh scripts/vps-ssh-entry.sh
+          JB_TEST_COVERAGE=1 node scripts/e2e-portals-ci.mjs
+          NODE_V8_COVERAGE="$GITHUB_WORKSPACE/coverage/tmp" npm run test:catalog-edge
+          npx --no-install c8 report
+          node scripts/normalize-lcov.mjs
       - name: Save manual payment E2E evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

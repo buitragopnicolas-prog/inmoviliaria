@@ -26,14 +26,18 @@ export function SiteSectionForm({id,values,revision}:{id:SectionId;values:Record
     <input type="hidden" name="revision" value={version}/>
     {Object.entries(sections[id].fields).map(([key,field])=>{
       const input={name:key,value:draft[key]??'',onChange:(e:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>setDraft({...draft,[key]:e.target.value})};
-      return <div key={key}><label>{field.label}
-        {['long','links'].includes(field.kind)?<textarea {...input} rows={field.kind==='links'?7:3} />:
-         field.kind==='image'?<><img className="editorPreview" src={draft[key]} alt="Imagen publicada"/><input type="hidden" name={key} value={draft[key]}/><input type="file" name={'photo-'+key} accept="image/jpeg,image/png,image/webp"/></>:
-         <input {...input} type={field.kind==='email'?'email':'text'} required={!['optionalLink','optionalText'].includes(field.kind)} />}
-      </label></div>;
+      let control;
+      if (['long','links'].includes(field.kind)) {
+        control = <textarea {...input} rows={field.kind==='links'?7:3}/>;
+      } else if (field.kind === 'image') {
+        control = <><img className="editorPreview" src={draft[key]} alt="Imagen publicada"/><input type="hidden" name={key} value={draft[key]}/><input type="file" name={'photo-'+key} accept="image/jpeg,image/png,image/webp"/></>;
+      } else {
+        control = <input {...input} type={field.kind==='email'?'email':'text'} required={!['optionalLink','optionalText'].includes(field.kind)}/>;
+      }
+      return <div key={key}><label>{field.label}{control}</label></div>;
     })}
     {state.error && <StatusNotice tone="error" message={state.error}/>}
     {state.success && <StatusNotice tone="success" message={state.success}/>}
-    <button className="button" disabled={pending||busy} aria-busy={pending||busy}>{pending||busy?'Guardando…':'Publicar cambios'}</button>
+    <button type="submit" className="button" disabled={pending||busy} aria-busy={pending||busy}>{pending||busy?'Guardando…':'Publicar cambios'}</button>
   </form>;
 }

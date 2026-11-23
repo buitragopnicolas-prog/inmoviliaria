@@ -32,6 +32,6 @@ export function OwnerListingForm({item}:{item?:OwnerListing}) {
     <small>Hasta 8 fotos de 5 MB cada una. Para publicar se requiere al menos una.</small>
     <label>Visibilidad<select name="published" defaultValue={String(item?.published??false)}><option value="false">Guardar como borrador</option><option value="true">Publicar en el catálogo</option></select></label>
     <ConsentField purpose="administrar mi anuncio y mostrar la ficha y las fotografías cuando elija publicar"/>{state.error && <StatusNotice message={state.error} tone="error"/>}
-    <button className="button" disabled={pending || !policy.version}>{pending?'Guardando…':'Guardar publicación'}</button>
+    <button type="submit" className="button" disabled={pending || !policy.version}>{pending?'Guardando…':'Guardar publicación'}</button>
   </form>;
 }

@@ -11,11 +11,12 @@ const clamp=(value:number,min:number,max:number)=>Math.min(max,Math.max(min,valu
 // Ring to vertical drum, adapted from crafterui's Works Wheel on 21st.
 // Turn 0 is the ring. Every whole turn thereafter puts another photo in front.
 export function WorksWheel({items, portfolio = false}:{items:WheelItem[]; portfolio?:boolean}) {
-  const stage=useRef<HTMLDivElement>(null);
-  const wheel=useRef<HTMLDivElement>(null);
-  const cards=useRef<(HTMLDivElement|null)[]>([]);
+  const stage=useRef<HTMLButtonElement>(null);
+  const wheel=useRef<HTMLSpanElement>(null);
+  const cards=useRef<(HTMLSpanElement|null)[]>([]);
   const turn=useRef(0);
   const target=useRef(0);
+  const swiped=useRef(false);
   const tween=useRef<ReturnType<typeof animate>|null>(null);
   const drag=useRef<{x:number;y:number}|null>(null);
   const [position,setPosition]=useState(0);
@@ -89,28 +90,28 @@ export function WorksWheel({items, portfolio = false}:{items:WheelItem[]; portfo
   const shown=flat?Math.max(1,position):position;
   const overview=shown===0;
   return <div className={styles.gallery} data-portfolio={portfolio}>
-    {portfolio && !flat && <div className={styles.modes} role="group" aria-label="Forma de la galería">
+    {portfolio && !flat && <fieldset className={styles.modes} aria-label="Forma de la galería">
       <button type="button" aria-pressed={overview} onClick={()=>go(0)}>Anillo</button>
       <button type="button" aria-pressed={!overview} onClick={()=>go(Math.max(1,position))}>Tambor</button>
-    </div>}
-    <div ref={stage} tabIndex={0} role="group" aria-label="Galería de inmuebles. Usa las flechas para cambiar de foto." className={styles.stage} data-ready={measured} data-flat={flat} data-overview={overview}
+    </fieldset>}
+    <button type="button" ref={stage} aria-label={(overview ? "Explorar fotos. " : "") + "Galería de inmuebles. Usa las flechas para cambiar de foto."} onClick={()=>{if(!swiped.current)go(shown+1);swiped.current=false;}} className={styles.stage} data-ready={measured} data-flat={flat} data-overview={overview}
       onKeyDown={event=>{
         const next=({ArrowRight:shown+1,ArrowLeft:shown-1,ArrowDown:shown+1,ArrowUp:shown-1,Home:0,End:count,Escape:0} as Record<string,number>)[event.key];
         if(next===undefined || event.target!==event.currentTarget)return;
         event.preventDefault();go(flat?Math.max(1,next):next);
       }}
-      onPointerDown={e=>{if(e.button===0){drag.current={x:e.clientX,y:e.clientY};}}}
+      onPointerDown={e=>{if(e.button===0){swiped.current=false;drag.current={x:e.clientX,y:e.clientY};}}}
       onPointerCancel={()=>{drag.current=null;}}
       onPointerUp={e=>{const start=drag.current;drag.current=null;if(!start)return;
         const dx=e.clientX-start.x,dy=e.clientY-start.y;
-        if(Math.abs(dx)>32 && Math.abs(dx)>Math.abs(dy))go(clamp(shown+(dx<0?1:-1),flat?1:0,count));
+        if(Math.abs(dx)>32 && Math.abs(dx)>Math.abs(dy)){swiped.current=true;go(clamp(shown+(dx<0?1:-1),flat?1:0,count));}
       }}>
-      <div className={styles.guides} aria-hidden="true"/>
-      <div ref={wheel} className={styles.wheel} aria-hidden="true">{items.map((item,i)=><div ref={node=>{cards.current[i]=node;}} className={styles.card} key={item.id}>
-        <img src={item.image} alt="" draggable={false}/></div>)}</div>
+      <span className={styles.guides} aria-hidden="true"/>
+      <span ref={wheel} className={styles.wheel} aria-hidden="true">{items.map((item,i)=><span ref={node=>{cards.current[i]=node;}} className={styles.card} key={item.id}>
+        <img src={item.image} alt="" draggable={false}/></span>)}</span>
       <img className={styles.flat} src={active.image} alt={active.alt} draggable={false}/>
-      {overview && <button className={styles.open} onClick={()=>{stage.current?.focus({preventScroll:true});go(1);}}>Explorar fotos <span aria-hidden="true">↗</span></button>}
-    </div>
+      {overview && <span className={styles.open}>Explorar fotos <span aria-hidden="true">↗</span></span>}
+    </button>
     <div className={styles.legend}><div aria-live="polite" aria-atomic="true">
       <small>{overview?'Galería de arriendos':('Foto '+Math.max(1,position)+' de '+count)}</small>
       {overview?<strong>{count} vistas del inventario</strong>:<><Link href={active.href}>{active.title} ↗</Link><small>{active.detail}</small></>}
@@ -118,9 +119,9 @@ export function WorksWheel({items, portfolio = false}:{items:WheelItem[]; portfo
       <button type="button" aria-label="Foto anterior" disabled={shown<=(flat?1:0)} onClick={()=>go(position-1)}>←</button>
       <button type="button" aria-label="Foto siguiente" disabled={shown>=count} onClick={()=>go(shown+1)}>→</button>
     </div></div>
-    {portfolio && count > 1 && <div className={styles.pager} role="group" aria-label="Elegir fotografía">
+    {portfolio && count > 1 && <fieldset className={styles.pager} aria-label="Elegir fotografía">
       {items.map((item,i)=><button key={item.id} type="button" aria-label={'Ver foto '+(i+1)} aria-pressed={!overview && shown===i+1} onClick={()=>go(i+1)}>{i+1}</button>)}
-    </div>}
+    </fieldset>}
     <noscript><ul>{items.filter((item,i)=>items.findIndex(other=>other.href===item.href)===i).map(item=><li key={item.id}><a href={item.href}>{item.title}</a></li>)}</ul></noscript>
   </div>;
 }

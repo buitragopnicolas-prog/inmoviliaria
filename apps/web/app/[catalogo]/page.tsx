@@ -11,9 +11,9 @@ import { isSaleCatalog, type SaleCatalog, type SaleOffer } from '@/lib/sale-offe
 type Filters = Record<string, string | string[] | undefined>;
 async function Results({ catalog, query }: { catalog: SaleCatalog; query: string }) {
   const offers = await loadPublicData<SaleOffer[]>('/sales/'+(catalog==='comprar'?'market':catalog)+'?'+query);
-  if (offers === null) return <DataUnavailable label="las ofertas de venta" />;
+  if (offers === null) return <DataUnavailable label="las ofertas de venta" retryHref={`/${catalog}?${query}`} />;
   const { catalogos } = await readSite();
-  if (!offers.length) return <p className="card empty" role="status">{query ? 'No hay ofertas que coincidan con tu búsqueda.' : catalogos.emptyOffers}</p>;
+  if (!offers.length) return <output className="card empty">{query ? 'No hay ofertas que coincidan con tu búsqueda.' : catalogos.emptyOffers}</output>;
   return <div className="cardsGrid">{offers.map(offer=><Reveal key={offer.id}><Link className="card saleCard" href={'/'+offer.catalog+'/'+offer.id}>
     <img src={propertyPhotoUrl(offer.images[0])} alt={offer.title} loading="lazy" />
     <div><span className="eyebrow">{[offer.category,offer.city].filter(Boolean).join(' · ')}</span><h2>{offer.title}</h2><strong>{pesos(Number(offer.price))}</strong></div>
@@ -38,6 +38,6 @@ export default async function SaleCatalogPage({params,searchParams}:{params:Prom
       {property && <label>Ciudad<input name="city" defaultValue={query.get('city')??''} maxLength={150}/></label>}
       <button className="button" type="submit">Buscar</button>
     </form>
-    <Suspense key={query.toString()} fallback={<p role="status">Cargando ofertas…</p>}><Results catalog={catalogo} query={query.toString()}/></Suspense>
+    <Suspense key={query.toString()} fallback={<output>Cargando ofertas…</output>}><Results catalog={catalogo} query={query.toString()}/></Suspense>
   </div></section>;
 }

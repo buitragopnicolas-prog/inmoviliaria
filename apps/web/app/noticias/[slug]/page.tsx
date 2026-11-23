@@ -1,3 +1,4 @@
+import { keyedParagraphs } from '@/lib/paragraphs';
 import { DocumentLinks } from '@/components/DocumentLinks';
 import { readSite } from '@/lib/read-site';
 import type { Metadata } from 'next';
@@ -38,8 +39,8 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
           <div className="newsMeta"><strong>{sourceLabel}</strong><span>{fecha(newsPost.createdAt)}</span></div>
           <h1>{newsPost.title}</h1>
           <p className="newsSummary">{newsPost.summary}</p>
-          <NewsReadingPosition key={newsPost.id} articleId={newsPost.id}>{paragraphs.map((paragraph, index) =>
-            <p key={index} id={`parrafo-${index + 1}`}>{paragraph}</p>
+          <NewsReadingPosition key={newsPost.id} articleId={newsPost.id}>{keyedParagraphs(paragraphs).map(({text: paragraph, key}, index) =>
+            <p key={key} id={`parrafo-${index + 1}`}>{paragraph}</p>
           )}</NewsReadingPosition>
           {!!newsPost.additionalLinks?.length && <section><h2>Fuentes y enlaces</h2><ul>{newsPost.additionalLinks.map(href=><li key={href}><a className="textLink formattedCopy" href={href} rel="noopener noreferrer" target="_blank">{href}</a></li>)}</ul></section>}
           {!!newsPost.attachments?.length && <section><h2>Documentos de la publicación</h2><DocumentLinks files={newsPost.attachments} scope="publicos"/></section>}
