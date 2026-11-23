@@ -13,7 +13,7 @@ import type { Invoice, UserLease } from '@/lib/types';
 export const metadata: Metadata = { title: 'Mi cuenta' };
 export const dynamic = 'force-dynamic';
 
-export default async function MyAccountPage({ searchParams }: { searchParams: Promise<{ referencia?: string | string[] }> }) {
+export default async function MyAccountPage({ searchParams }: Readonly<{ searchParams: Promise<{ referencia?: string | string[] }> }>) {
   const user = await requireUser('USER');
   const tenant=user.portal==='TENANT';
   const [invoices, leases, documents] = await Promise.all([
@@ -71,7 +71,7 @@ export default async function MyAccountPage({ searchParams }: { searchParams: Pr
   );
 }
 
-function AccountPaymentNotice({ invoices, reference }: { invoices: Invoice[]; reference: string }) {
+function AccountPaymentNotice({ invoices, reference }: Readonly<{ invoices: Invoice[]; reference: string }>) {
   for (const invoice of invoices) {
     const payment = invoice.payments?.find(item => item.reference === reference);
     if (payment) {

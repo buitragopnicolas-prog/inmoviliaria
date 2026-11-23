@@ -35,7 +35,7 @@ async function FeaturedNews() {
   return <div className="cardsGrid newsGrid">{news.map((post) => <NewsCard brand={identidad.name} newsPost={post} key={post.id} />)}</div>;
 }
 
-export default async function HomePage({searchParams}:{searchParams:Promise<{estilo?:string|string[]}>}) {
+export default async function HomePage({searchParams}:Readonly<{searchParams:Promise<{estilo?:string|string[]}>}>) {
   const [copy,params] = await Promise.all([readSite(),searchParams]);
   const preview=process.env.APP_ENV==='local';
   const choice=params.estilo;

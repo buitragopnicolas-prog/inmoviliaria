@@ -5,7 +5,7 @@ import { defaultCopy } from '@/lib/site-content';
 import { ActiveLink } from './ActiveLink';
 import { UiIcon } from './UiIcon';
 
-export function PublicNavigation({ role, copy = defaultCopy.identidad }: { role?: 'ADMIN' | 'USER'; copy?: typeof defaultCopy.identidad }) {
+export function PublicNavigation({ role, copy = defaultCopy.identidad }: Readonly<{ role?: 'ADMIN' | 'USER'; copy?: typeof defaultCopy.identidad }>) {
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   function closeMenu() { setOpen(false); toggle.current?.focus(); }

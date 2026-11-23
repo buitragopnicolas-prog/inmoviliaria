@@ -3,7 +3,7 @@ import { requireUser } from '@/lib/auth';
 import { editSite } from '@/lib/read-site';
 import { sections, resolveCopy, type SectionId } from '@/lib/site-content';
 import { SiteSectionForm } from '@/components/SiteSectionForm';
-export default async function ContentPage({searchParams}:{searchParams:Promise<{seccion?:string}>}){
+export default async function ContentPage({searchParams}:Readonly<{searchParams:Promise<{seccion?:string}>}>){
   await requireUser('ADMIN');
   const rows=await editSite();
   const copy=resolveCopy(rows);

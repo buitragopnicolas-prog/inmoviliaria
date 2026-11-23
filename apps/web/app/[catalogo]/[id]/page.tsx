@@ -9,7 +9,7 @@ import { PropertyGallery } from '@/components/PropertyGallery';
 import { ContactForm } from '@/components/ContactForm';
 import { DataUnavailable } from '@/components/DataUnavailable';
 
-export default async function SaleDetail({params}:{params:Promise<{catalogo:string;id:string}>}) {
+export default async function SaleDetail({params}:Readonly<{params:Promise<{catalogo:string;id:string}>}>) {
   const {catalogo,id}=await params;
   if(!isSaleCatalog(catalogo)) notFound();
   const offer=await loadPublicData<SaleOffer>('/sales/'+catalogo+'/'+encodeURIComponent(id)).catch(error=>{

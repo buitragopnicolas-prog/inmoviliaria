@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { fecha } from '@/lib/format';
 import type { NewsPost } from '@/lib/types';
 
-export function NewsCard({ newsPost, brand = 'Asesoría Inmobiliaria JB' }: { newsPost: NewsPost; brand?: string }) {
+export function NewsCard({ newsPost, brand = 'Asesoría Inmobiliaria JB' }: Readonly<{ newsPost: NewsPost; brand?: string }>) {
   const externalUrl = newsPost.externalUrl?.trim();
   const href = `/noticias/${newsPost.slug}`;
   const sourceLabel = newsPost.sourceLabel?.trim() || (externalUrl ? 'Prensa digital' : brand);

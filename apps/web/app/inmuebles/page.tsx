@@ -11,7 +11,7 @@ import { readCatalogFilters, type CatalogSearchParams } from '@/lib/catalog-filt
 export const metadata: Metadata = { title: 'Inmuebles en arriendo' };
 export const dynamic = 'force-dynamic';
 
-export default async function PropertiesPage({ searchParams }: { searchParams: Promise<CatalogSearchParams & { vista?: string | string[] }> }) {
+export default async function PropertiesPage({ searchParams }: Readonly<{ searchParams: Promise<CatalogSearchParams & { vista?: string | string[] }> }>) {
   const [params, { catalogos }] = await Promise.all([searchParams, readSite()]);
   const { values: filters, errors, query, invalid } = readCatalogFilters(params);
   const fullView = new URLSearchParams(query);

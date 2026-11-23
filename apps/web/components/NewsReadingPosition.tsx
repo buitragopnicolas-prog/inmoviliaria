@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { fadeIn } from '@/lib/motion';
 
-export function NewsReadingPosition({ articleId, children }: { articleId: string; children: ReactNode }) {
+export function NewsReadingPosition({ articleId, children }: Readonly<{ articleId: string; children: ReactNode }>) {
   const content = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const paragraphs = Array.from(content.current!.querySelectorAll('p'));

@@ -6,7 +6,7 @@ import type { NewsPost } from '@/lib/types';
 import categories from '../../../shared/bulletin-categories.json';
 import { StatusNotice } from './StatusNotice';
 
-export function AdminNewsForm({post}:{post?: NewsPost}) {
+export function AdminNewsForm({post}:Readonly<{post?: NewsPost}>) {
   const form = useRef<HTMLFormElement>(null);
   const [state, action, pending] = useActionState<ActionState, FormData>(async (previous,data)=>{
     const result=await createNewsAction(previous,data);

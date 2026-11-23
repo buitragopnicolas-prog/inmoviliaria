@@ -9,7 +9,7 @@ import type { AdminQuery } from '@/lib/admin-lists';
 import { StatusNotice } from './StatusNotice';
 import { PropertyAssignmentFields, type PropertyAssignmentMode } from './PropertyAssignmentFields';
 
-export function AdminPropertyEditForm({ property, tenants, query }: { property: Property; tenants: TenantOption[]; query?: AdminQuery }) {
+export function AdminPropertyEditForm({ property, tenants, query }: Readonly<{ property: Property; tenants: TenantOption[]; query?: AdminQuery }>) {
   const [state, action, pending] = useActionState<ActionState, FormData>(updatePropertyAction, {});
   const [assignmentMode, setAssignmentMode] = useState<PropertyAssignmentMode>('UNCHANGED');
   const [imageMode, setImageMode] = useState<'KEEP' | 'APPEND' | 'REPLACE' | 'DEFAULT'>('KEEP');

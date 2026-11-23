@@ -12,7 +12,7 @@ type BrandLogoProps = {
 };
 
 /** Shared original geometry for the UI and exported brand assets. */
-export function BrandLogo({ className = '', stacked = false, showTagline = true, compact = false, tone = 'light', name = mark.name, tagline = 'Espacios para vivir' }: BrandLogoProps) {
+export function BrandLogo({ className = '', stacked = false, showTagline = true, compact = false, tone = 'light', name = mark.name, tagline = 'Espacios para vivir' }: Readonly<BrandLogoProps>) {
   const classes = [styles.logo, styles[tone], stacked && styles.stacked, compact && styles.compact, className].filter(Boolean).join(' ');
   return (
     <span className={classes} role="img" aria-label={name}>

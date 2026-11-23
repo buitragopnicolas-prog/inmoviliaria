@@ -6,7 +6,7 @@ import { enterClientLogin } from '@/app/actions';
 import { readSite } from '@/lib/read-site';
 import { Reveal } from './Reveal';
 
-export async function PortalEntry({portal}:{portal:Portal}) {
+export async function PortalEntry({portal}:Readonly<{portal:Portal}>) {
   const [user,{catalogos:c}]=await Promise.all([getCurrentUser(),readSite()]);
   const details={TENANT:[c.tenantTitle,c.tenantIntro],OWNER:[c.ownerTitle,c.ownerIntro],SERVICES:[c.clientTitle,c.clientIntro]}[portal];
   const current=user?.role==='USER' && user.portal===portal;

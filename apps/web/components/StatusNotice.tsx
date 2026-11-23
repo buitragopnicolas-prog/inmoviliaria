@@ -3,11 +3,11 @@
 import { useEffect, useRef } from 'react';
 import { fadeIn } from '@/lib/motion';
 
-export function StatusNotice({ message, tone = 'info', focusOnRemoval = false }: {
+export function StatusNotice({ message, tone = 'info', focusOnRemoval = false }: Readonly<{
   message: string;
   tone?: 'info' | 'success' | 'error';
   focusOnRemoval?: boolean;
-}) {
+}>) {
   const notice = useRef<HTMLOutputElement>(null);
   useEffect(() => {
     const element = notice.current;

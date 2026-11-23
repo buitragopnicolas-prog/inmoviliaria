@@ -4,7 +4,7 @@ import { uploadDocument } from '@/app/document-actions';
 import type { ActionState } from '@/app/actions';
 import { StatusNotice } from './StatusNotice';
 
-export function PdfUploadForm({kind,id,label,service=false}: {kind:'account'|'template'; id:string; label:string; service?:boolean}) {
+export function PdfUploadForm({kind,id,label,service=false}: Readonly<{kind:'account'|'template'; id:string; label:string; service?:boolean}>) {
   const [state,setState] = useState<ActionState>({});
   const [pending,start] = useTransition();
   const submitLabel = kind === 'template' ? 'Publicar formato' : 'Asignar PDF';

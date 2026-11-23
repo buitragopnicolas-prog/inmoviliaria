@@ -117,7 +117,7 @@ export function ContactSection({ copy = defaultCopy.cuenta } = {}) {
   );
 }
 
-export function HomeSearch({copy}:{copy:typeof defaultCopy.portada}) {
+export function HomeSearch({copy}:Readonly<{copy:typeof defaultCopy.portada}>) {
   return (
     <div className={styles.searchPanel} id="buscar-inmueble">
           <div className={styles.searchHeading}><UiIcon name="search" /><h2>{copy.searchTitle}</h2></div>
