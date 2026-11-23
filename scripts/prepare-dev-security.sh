@@ -56,6 +56,7 @@ if [[ "$mode" == --secrets-only ]]; then
   exit 0
 fi
 
+bash "$repo/scripts/dev-release-status.sh" || true
 role_job="postgres-app-role-$(date +%s)"
 cat > "$job_file" <<EOF
 apiVersion: batch/v1
@@ -72,6 +73,8 @@ spec:
       containers:
         - name: configure-role
           image: postgres:17-alpine
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
           command: ["/bin/sh", "-ec"]
           args:
             - |
@@ -92,7 +95,10 @@ spec:
           configMap: { name: postgres-app-role-sql }
 EOF
 kubectl apply -f "$job_file"
-kubectl -n "$namespace" wait --for=condition=complete "job/$role_job" --timeout=180s
+if ! kubectl -n "$namespace" wait --for=condition=complete "job/$role_job" --timeout=180s; then
+  bash "$repo/scripts/dev-release-status.sh" "$role_job" || true
+  exit 1
+fi
 kubectl -n "$namespace" logs "job/$role_job" --tail=20
 
 bash "$repo/scripts/dev-storage-ready.sh"
@@ -112,6 +118,8 @@ spec:
       containers:
         - name: configure-policy
           image: quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+          resources:
+            requests: { cpu: 10m, memory: 48Mi }
           command: ["/bin/sh", "-ec"]
           args:
             - |
@@ -151,7 +159,7 @@ EOF
 kubectl apply -f "$job_file"
 if ! kubectl -n "$namespace" wait --for=condition=complete "job/$policy_job" --timeout=180s; then
   bash "$repo/scripts/dev-storage-ready.sh" --status
-  kubectl -n "$namespace" get pods -l "job-name=$policy_job" -o 'custom-columns=NAME:.metadata.name,PHASE:.status.phase,WAITING:.status.containerStatuses[*].state.waiting.reason,EXIT:.status.containerStatuses[*].state.terminated.exitCode' || true
+  bash "$repo/scripts/dev-release-status.sh" "$policy_job" || true
   for pod in $(kubectl -n "$namespace" get pods -l "job-name=$policy_job" -o name); do
     kubectl -n "$namespace" logs "$pod" 2>/dev/null | grep '^JB_MINIO ' || true
   done
