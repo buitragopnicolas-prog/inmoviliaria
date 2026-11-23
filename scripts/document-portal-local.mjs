@@ -92,7 +92,7 @@ try {
     // Linux headless Chrome can hand the document to its PDF extension.
     // Check the PDF returned by the same authenticated URL with a native reader.
     const response=await client.request.get(pdfResponse.url());
-    const text=execFileSync('pdftotext',['-','-'],{input:await response.body(),encoding:'utf8'});
+    const text=execFileSync('/usr/bin/pdftotext',['-','-'],{input:await response.body(),encoding:'utf8'});
     assert.ok(text.includes('DOCUMENTO SINTETICO DE PRUEBA'));
   }
   await pdfViewer.close();
