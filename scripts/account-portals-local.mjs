@@ -7,7 +7,7 @@ import { fixturePolicy } from './portal-privacy-test-data.mjs';
 import { syntheticPdf } from './synthetic-pdf.mjs';
 const web='http://localhost:13613', api='http://localhost:14613/api';
 const stamp='Ensayo '+randomUUID().slice(0,7);
-async function request(path,token,method='GET',data) {
+async function request(path,token,method,data) {
   const form=data instanceof FormData;
   return fetch(api+path,{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),...(form?{}:{'Content-Type':'application/json'})},body:form?data:JSON.stringify(data)});
 }
@@ -45,7 +45,18 @@ try {
   await page.getByText('Recibimos tu solicitud.',{exact:false}).waitFor();
   assert.ok((await json('/admin/contacts',admin)).some(row=>row.subject==='Servicio ocho '+stamp));
   const bytes=await readFile(new URL('../apps/web/public/images/jb-interior-1200.webp',import.meta.url));
-  const form=(operation,created=true,published=true,revision)=>{const f=new FormData();for(const [k,v] of Object.entries({operation,title:stamp+' '+operation,category:'Casa',city:'Bogotá',address:'Dirección sintética',neighborhood:'Sector de prueba',description:'Inmueble sintético de verificación.',features:'Balcón, ascensor',bedrooms:'3',price:'1000000',published,authorized:true,policyVersion:consent.policyVersion,...(revision&&{revision})}))f.set(k,String(v));if(created)f.set('photos',new Blob([bytes],{type:'image/webp'}),'foto.webp');return f;};
+  function form(operation, {created=true, published=true, revision} = {}) {
+    const data = new FormData();
+    const fields = {
+      operation, title:stamp+' '+operation, category:'Casa', city:'Bogotá', address:'Dirección sintética',
+      neighborhood:'Sector de prueba', description:'Inmueble sintético de verificación.', features:'Balcón, ascensor',
+      bedrooms:'3', price:'1000000', published, authorized:true, policyVersion:consent.policyVersion,
+    };
+    for (const [key,value] of Object.entries(fields)) data.set(key,String(value));
+    if (revision !== undefined) data.set('revision',String(revision));
+    if (created) data.set('photos',new Blob([bytes],{type:'image/webp'}),'foto.webp');
+    return data;
+  }
   assert.equal((await request('/owner/listings',client.accessToken)).status,403);
   const rental=await json('/owner/listings',owner.accessToken,'POST',form('rent'));
   const sale=await json('/owner/listings',owner.accessToken,'POST',form('sale'));
@@ -53,7 +64,7 @@ try {
   const lease=own.find(r=>r.id===rental.id);assert.ok(lease.images.length);
   assert.equal((await json('/properties/'+lease.slug)).bedrooms,3);
   assert.deepEqual(await json('/owner/listings',second.accessToken),[]);
-  assert.equal((await request('/owner/listings/'+sale.id,second.accessToken,'PUT',form('sale',false,false,1))).status,404);
+  assert.equal((await request('/owner/listings/'+sale.id,second.accessToken,'PUT',form('sale',{created:false,published:false,revision:1}))).status,404);
   await json('/admin/sales',admin,'POST',{catalog:'vehiculos-y-bienes',title:stamp+' vehículo',category:'Carro',city:'',description:'Vehículo de ensayo',price:'2000000',published:true,images:lease.images});
   await visit('/comprar?q='+encodeURIComponent(stamp));await page.locator('a.saleCard').first().waitFor();assert.equal(await page.locator('a.saleCard').count(),2);
   assert.ok((await page.locator('a.saleCard').evaluateAll(rows=>rows.map(a=>a.pathname))).some(p=>p.startsWith('/vehiculos-y-bienes/')));
@@ -65,7 +76,7 @@ try {
   const photoId=salePhoto.split('/')[3];
   assert.equal((await request('/owner/listings/photos/'+photoId,owner.accessToken)).status,200);
   assert.equal((await request('/owner/listings/photos/'+photoId,second.accessToken)).status,404);
-  assert.equal((await request('/owner/listings/'+sale.id,owner.accessToken,'PUT',form('sale',false,true,1))).status,409);
+  assert.equal((await request('/owner/listings/'+sale.id,owner.accessToken,'PUT',form('sale',{created:false,revision:1}))).status,409);
   const pdf=new FormData();pdf.set('serviceType','Tributario');pdf.set('file',new Blob([syntheticPdf('Contrato sintetico')],{type:'application/pdf'}),'contrato.pdf');
   const doc=await json('/admin/documents/accounts/'+client.user.sub,admin,'POST',pdf);assert.equal(doc.serviceType,'Tributario');
   assert.equal((await request('/documents/private/'+doc.id,owner.accessToken)).status,404);

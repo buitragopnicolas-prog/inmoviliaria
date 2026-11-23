@@ -44,6 +44,17 @@ try {
   const light = home.getByRole('button', { name: 'Orientar luz' });
   await light.focus();
   await page.keyboard.press('ArrowRight');
+  await home.getByRole('button', {name:'Mapa de calor'}).click();
+  const trace = home.locator('canvas[aria-label="Huella temporal sobre la fotografía"]');
+  await trace.scrollIntoViewIfNeeded();
+  const bounds = await trace.boundingBox();
+  assert.ok(bounds?.width && bounds.height);
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  const hasInk = canvas => canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data.some(value => value > 0);
+  assert.ok(await trace.evaluate(hasInk));
+  await home.getByRole('button', {name:'Borrar huella'}).click();
+  assert.equal(await trace.evaluate(hasInk), false);
+  await home.getByRole('button', {name:'Mapa de calor'}).click();
   await home.locator('#home-search').fill('Centro');
   await home.locator('#home-city').fill('Bogotá');
   await home.locator('#home-max-rent').fill('1800000');
@@ -68,7 +79,7 @@ try {
   await mobile.locator('#recorridos summary').nth(1).tap();
   await mobile.locator('#recorridos details[open] a').first().waitFor();
 
-  const plain = await coverage.watch(await browser.newPage({ javaScriptEnabled: false }));
+  const plain = await browser.newPage({ javaScriptEnabled: false });
   await plain.goto(origin);
   const nav = plain.getByRole('navigation', { name: '¿Qué quieres hacer?' });
   const destinations = await nav.locator('a').evaluateAll(links => links.map(a => a.pathname));

@@ -69,7 +69,7 @@ export function LightSurface({image,alt,caption,children}:{image:string;alt:stri
     <div className={styles.lightArt} ref={surface} onPointerMove={e=>sample(e.clientX,e.clientY)} onPointerDown={e=>sample(e.clientX,e.clientY)}>
       <img className={styles.lightImage} src={image} alt={alt} width={1920} height={1081} fetchPriority="high"/>
       <motion.div aria-hidden="true" style={{backgroundImage:glow}} className={styles.glow}/>
-      {heat && <canvas className={styles.heat} ref={canvas} width="400" height="200" role="img" aria-label="Huella temporal sobre la fotografía"/>}
+      {heat && <canvas className={styles.heat} ref={canvas} width="400" height="200" aria-label="Huella temporal sobre la fotografía">Huella temporal sobre la fotografía</canvas>}
       {children}
     </div>
     <div className={styles.photoBar}><div className="container"><small>{caption}</small><div>

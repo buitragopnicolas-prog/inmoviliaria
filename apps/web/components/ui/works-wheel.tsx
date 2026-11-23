@@ -94,7 +94,10 @@ export function WorksWheel({items, portfolio = false}:{items:WheelItem[]; portfo
       <button type="button" aria-pressed={overview} onClick={()=>go(0)}>Anillo</button>
       <button type="button" aria-pressed={!overview} onClick={()=>go(Math.max(1,position))}>Tambor</button>
     </fieldset>}
-    <button type="button" ref={stage} aria-label={(overview ? "Explorar fotos. " : "") + "Galería de inmuebles. Usa las flechas para cambiar de foto."} onClick={()=>{if(!swiped.current)go(shown+1);swiped.current=false;}} className={styles.stage} data-ready={measured} data-flat={flat} data-overview={overview}
+    <button type="button" ref={stage} aria-label={(overview ? "Explorar fotos. " : "") + "Galería de inmuebles. Usa las flechas para cambiar de foto."} onClick={()=>{
+      if (!swiped.current) go(shown+1);
+      swiped.current=false;
+    }} className={styles.stage} data-ready={measured} data-flat={flat} data-overview={overview}
       onKeyDown={event=>{
         const next=({ArrowRight:shown+1,ArrowLeft:shown-1,ArrowDown:shown+1,ArrowUp:shown-1,Home:0,End:count,Escape:0} as Record<string,number>)[event.key];
         if(next===undefined || event.target!==event.currentTarget)return;

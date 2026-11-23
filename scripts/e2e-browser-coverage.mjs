@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -20,7 +21,7 @@ export async function prepareCoverageMaps() {
       let changed = false;
       map.sources = map.sources.map(source => {
         const relative = /\/\.\/((?:components|app|lib)\/[^?#]+\.[cm]?[jt]sx?)$/.exec(source)?.[1];
-        if (!relative || relative.split('/').includes('..')) return source;
+        if (!relative || relative.split('/').includes('..') || !existsSync(join(web, relative))) return source;
         changed = true;
         return pathToFileURL(join(web, relative)).href;
       });

@@ -184,6 +184,13 @@ export async function assignPropertyToUserAction(_previous: ActionState, formDat
   }
 }
 
+function appendNewsLinks(formData: FormData, body: FormData) {
+  if (!formData.has('additionalLinks')) return;
+  const links = textField(formData, 'additionalLinks').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  // An explicitly empty field clears the links when an article is edited.
+  for (const link of links.length ? links : ['']) body.append('additionalLinks', link);
+}
+
 export async function createNewsAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const sourceLabel = textField(formData,'sourceLabel').trim();
@@ -195,10 +202,7 @@ export async function createNewsAction(_previous: ActionState, formData: FormDat
     }
     if (sourceLabel) body.set('sourceLabel',sourceLabel);
     if (externalUrl) body.set('externalUrl',externalUrl);
-    if (formData.has('additionalLinks')) {
-      const links=textField(formData,'additionalLinks').split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
-      for (const link of links.length ? links : ['']) body.append('additionalLinks',link);
-    }
+    appendNewsLinks(formData, body);
     body.set('published',String(formData.get('visibility')!=='draft'));
     for (const value of formData.getAll('removePdfIds').filter((entry): entry is string => typeof entry === 'string')) body.append('removePdfIds',value);
     const pdfs=formData.getAll('pdfs').filter((file):file is File=>file instanceof File && file.size>0);

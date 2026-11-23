@@ -209,7 +209,7 @@ jobs:
           bash -n scripts/e2e-production-vps.sh scripts/vps-ssh-entry.sh
           JB_TEST_COVERAGE=1 node scripts/e2e-portals-ci.mjs
           NODE_V8_COVERAGE="$GITHUB_WORKSPACE/coverage/tmp" npm run test:catalog-edge
-          npx --no-install c8 report
+          npx --no-install c8 report --merge-async
           node scripts/normalize-lcov.mjs
       - name: Save manual payment E2E evidence
         if: always()
