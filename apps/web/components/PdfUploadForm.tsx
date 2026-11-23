@@ -7,6 +7,7 @@ import { StatusNotice } from './StatusNotice';
 export function PdfUploadForm({kind,id,label,service=false}: {kind:'account'|'template'; id:string; label:string; service?:boolean}) {
   const [state,setState] = useState<ActionState>({});
   const [pending,start] = useTransition();
+  const submitLabel = kind === 'template' ? 'Publicar formato' : 'Asignar PDF';
   return <form className="form" onSubmit={event=>{
     event.preventDefault();
     if (pending) return;
@@ -21,7 +22,7 @@ export function PdfUploadForm({kind,id,label,service=false}: {kind:'account'|'te
     {service && <label>Tipo de servicio contratado<input name="serviceType" required maxLength={150} placeholder="Ej. Asesoría tributaria"/></label>}
     <label>{label}<input type="file" name="file" accept="application/pdf,.pdf" required disabled={pending}/></label>
     <small className="hint">PDF de hasta 8 MB</small>
-    <button className="button small" disabled={pending} aria-busy={pending}>{pending?'Comprobando PDF…':kind==='template'?'Publicar formato':'Asignar PDF'}</button>
+    <button type="submit" className="button small" disabled={pending} aria-busy={pending}>{pending?'Comprobando PDF…':submitLabel}</button>
     {state.error && <StatusNotice tone="error" message={state.error}/>}
     {state.success && <StatusNotice tone="success" message={state.success}/>}
   </form>;

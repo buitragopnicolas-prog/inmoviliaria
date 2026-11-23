@@ -29,7 +29,8 @@ export function adminEditResults<T extends { id: string }>(items: T[], query: Ad
   const id = typeof row === 'string' ? row : '';
   const index = id ? items.findIndex(item => item.id === id) : -1;
   const page = index < 0 ? query.pagina : Math.floor(index / defaultPageSize) + 1;
-  return { ...paginateAdmin(items, page), focusId: id ? (index < 0 ? 'resultados-edicion' : `editar-${id}`) : undefined };
+  const target = index < 0 ? 'resultados-edicion' : `editar-${id}`;
+  return { ...paginateAdmin(items, page), focusId: id ? target : undefined };
 }
 
 export function adminReturnHref(path: '/admin/inmuebles' | '/admin/facturas', query: AdminQuery, id: string) {

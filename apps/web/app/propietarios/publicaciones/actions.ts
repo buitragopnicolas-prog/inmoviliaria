@@ -1,9 +1,10 @@
 'use server';
+import { textField } from '@/lib/form-text';
 import { apiFetch } from '@/lib/api';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 export async function saveListing(_previous:{error:string},form:FormData) {
-  const id=String(form.get('id')??'');
+  const id=textField(form,'id');
   const body=new FormData();
   for (const [key,value] of form) {
     if (key==='id' || key.startsWith('$') || (value instanceof File && !value.size)) continue;

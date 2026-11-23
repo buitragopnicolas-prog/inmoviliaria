@@ -1,5 +1,5 @@
 .gallery {min-width:0; color:var(--surface);}
-.stage {width:100%; height:clamp(310px,34vw,450px); position:relative; overflow:hidden; isolation:isolate; touch-action:pan-y; border:1px solid color-mix(in srgb,var(--surface) 20%,transparent); background:radial-gradient(ellipse at 50% 45%,var(--secondary),var(--primary) 75%);}
+.stage {display:block;padding:0;font:inherit;width:100%; height:clamp(310px,34vw,450px); position:relative; overflow:hidden; isolation:isolate; touch-action:pan-y; border:1px solid color-mix(in srgb,var(--surface) 20%,transparent); background:radial-gradient(ellipse at 50% 45%,var(--secondary),var(--primary) 75%);}
 .stage:focus-visible {outline:3px solid var(--gold-soft);outline-offset:4px;}
 .wheel {position:absolute;inset:0;transform-style:preserve-3d;}
 .card {position:absolute;top:50%;left:50%;aspect-ratio:1.45;backface-visibility:hidden;pointer-events:none;box-shadow:0 6px 20px color-mix(in srgb,var(--primary) 64%,transparent);}
@@ -21,7 +21,7 @@
 .gallery[data-portfolio=true] .legend {border-color:var(--border);}
 .gallery[data-portfolio=true] .legend :is(a,small,strong) {color:var(--primary);}
 .gallery[data-portfolio=true] .controls button {border-color:var(--gold-deep);color:var(--primary);}
-.modes,.pager {display:flex;flex-wrap:wrap;align-items:center;gap:4px;}
+.modes,.pager {padding:0;border:0;margin-inline:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px;}
 .modes {justify-content:flex-end;margin-bottom:8px;}
 .modes button,.pager button {font:inherit;min-height:44px;min-width:44px;border:1px solid var(--border);background:var(--surface);color:var(--primary);cursor:pointer;}
 .modes button {padding-inline:18px;}

@@ -2,8 +2,11 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // Include source locations only in the disposable coverage build.
+  productionBrowserSourceMaps: process.env.JB_TEST_COVERAGE === '1',
   transpilePackages: ['runonweb'],
   experimental: {
+    serverSourceMaps: process.env.JB_TEST_COVERAGE === '1',
     serverActions: {
       // El formulario de inmuebles puede enviar hasta ~65 MB entre fotos y tour 360.
       bodySizeLimit: '75mb',

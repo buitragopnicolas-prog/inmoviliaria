@@ -22,9 +22,9 @@ function withinTimeout(promise, description) {
 }
 
 export async function verifyCatalogInEdge(origin, holdSearch) {
-  const browser = await chromium.launch({ channel: 'msedge' });
+  const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chrome' });
   try {
-    console.log('Microsoft Edge ' + browser.version());
+    console.log('Chromium ' + browser.version());
     for (const reducedMotion of ['no-preference', 'reduce']) {
       const context = await browser.newContext({ reducedMotion });
       const page = await context.newPage();
@@ -33,7 +33,7 @@ export async function verifyCatalogInEdge(origin, holdSearch) {
       await page.addInitScript(() => {
         window.catalogFades = [];
         const frame = () => {
-          const status = document.querySelector('.results[role="status"]');
+          const status = document.querySelector('output.results, .results[role="status"]');
           if (status?.getAnimations().some(({ effect }) => effect.getKeyframes().some((key) => 'opacity' in key))) {
             if (!window.catalogFades.includes(status.textContent)) window.catalogFades.push(status.textContent);
           }

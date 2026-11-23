@@ -13,7 +13,10 @@ export class CreateNewsPostDto {
   removePdfIds?: string[];
 
   @IsOptional()
-  @Transform(({value}) => value === '' ? [] : typeof value === 'string' ? [value] : value)
+  @Transform(({value}) => {
+    if (typeof value !== 'string') return value;
+    return value === '' ? [] : [value];
+  })
   @IsArray() @ArrayMaxSize(20)
   @IsUrl({ protocols:['http','https'], require_protocol:true }, {each:true, message:'Cada enlace debe empezar por http:// o https://.'})
   @MaxLength(2048,{each:true})

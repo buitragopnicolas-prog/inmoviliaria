@@ -35,37 +35,38 @@ export class AuthService {
       });
 
       await recordConsent(tx, dto, 'registration', created.id);
-      if (created.portal !== 'TENANT') return created;
-      const existingTenant = await tx.tenant.findFirst({
-        where: { email: { equals: email, mode: 'insensitive' }, userId: null },
-        orderBy: { createdAt: 'asc' },
-      });
-      if (existingTenant) {
-        await tx.tenant.update({
-          where: { id: existingTenant.id },
-          data: {
-            userId: created.id,
-            name,
-            normalizedName: this.normalize(name),
-            email,
-            phone: phone ?? existingTenant.phone,
-          },
+      if (created.portal === 'TENANT') {
+        const existingTenant = await tx.tenant.findFirst({
+          where: { email: { equals: email, mode: 'insensitive' }, userId: null },
+          orderBy: { createdAt: 'asc' },
         });
-        await Promise.all([
-          tx.lease.updateMany({ where: { tenantId: existingTenant.id }, data: { userId: created.id } }),
-          tx.invoice.updateMany({ where: { tenantId: existingTenant.id }, data: { userId: created.id } }),
-          tx.payment.updateMany({ where: { tenantId: existingTenant.id }, data: { userId: created.id } }),
-        ]);
-      } else {
-        await tx.tenant.create({
-          data: {
-            userId: created.id,
-            name,
-            normalizedName: this.normalize(name),
-            email,
-            phone,
-          },
-        });
+        if (existingTenant) {
+          await tx.tenant.update({
+            where: { id: existingTenant.id },
+            data: {
+              userId: created.id,
+              name,
+              normalizedName: this.normalize(name),
+              email,
+              phone: phone ?? existingTenant.phone,
+            },
+          });
+          await Promise.all([
+            tx.lease.updateMany({ where: { tenantId: existingTenant.id }, data: { userId: created.id } }),
+            tx.invoice.updateMany({ where: { tenantId: existingTenant.id }, data: { userId: created.id } }),
+            tx.payment.updateMany({ where: { tenantId: existingTenant.id }, data: { userId: created.id } }),
+          ]);
+        } else {
+          await tx.tenant.create({
+            data: {
+              userId: created.id,
+              name,
+              normalizedName: this.normalize(name),
+              email,
+              phone,
+            },
+          });
+        }
       }
       return created;
     });

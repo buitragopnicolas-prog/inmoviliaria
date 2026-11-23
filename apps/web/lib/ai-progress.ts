@@ -14,11 +14,20 @@ export type AiProgress = {
   aggregate?: boolean;
 };
 
-export function aiProgress(tool: AiToolId, event: ProgressInfo, previous: AiProgress | null): AiProgress {
-  const { status, file } = event;
+function percentage(event: ProgressInfo) {
   const measured = event.progress ?? (event.total !== undefined && event.total > 0 && event.loaded !== undefined ? 100 * event.loaded / event.total : undefined);
-  const percent = typeof measured === 'number' && Number.isFinite(measured)
+  return typeof measured === 'number' && Number.isFinite(measured)
     ? Math.round(Math.min(100, Math.max(0, measured))) : undefined;
+}
+
+function operationLabel(tool: AiToolId, status: string) {
+  if (tool === 'emoji' && status === 'translating') return 'Generando emojis';
+  return status === 'done' ? 'Finalizando el resultado' : operations[status] ?? 'Preparando el modelo';
+}
+
+export function aiProgress(tool: AiToolId, event: ProgressInfo, previous: AiProgress | null): AiProgress {
+  const {status, file} = event;
+  const percent = percentage(event);
   if (status === 'progress_total' || (tool === 'ocr' && status === 'progress')) {
     return { label: 'Descargando el modelo', aggregate: true, bars: percent === undefined ? {} : { 'Descarga total': percent } };
   }
@@ -30,8 +39,7 @@ export function aiProgress(tool: AiToolId, event: ProgressInfo, previous: AiProg
     else bars[name] = percent;
     return { label: 'Descargando el modelo', bars };
   }
-  const label = tool === 'emoji' && status === 'translating' ? 'Generando emojis'
-    : status === 'done' ? 'Finalizando el resultado' : operations[status] ?? 'Preparando el modelo';
+  const label = operationLabel(tool, status);
   const measurable = status.startsWith('loading') || status === 'generating';
   return { label, bars: measurable && percent !== undefined ? { [label]: percent } : {} };
 }

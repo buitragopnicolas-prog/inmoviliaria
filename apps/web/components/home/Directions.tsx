@@ -33,20 +33,19 @@ function Destinations({copy}:{copy:Cover}) {
 
 export async function InventoryWheel({copy, portfolio = false}:{copy:Cover; portfolio?:boolean}) {
   const published = await loadPublicData<Property[]>('/properties');
-  if (published===null) return <DataUnavailable label="la galería de inmuebles"/>;
+  if (published===null) return <DataUnavailable label="la galería de inmuebles" retryHref={portfolio ? '/' : '/?estilo=orbita'}/>;
   const items:WheelItem[]=[];
   // Interleave homes so the first turn does not just show one property's album.
   const homes=published.filter(p=>p.images.some(image=>image.url && image.url!=='/property-placeholder.svg'))
     .slice(0,9).map(property=>({property,photos:property.images.filter(photo=>photo.url && photo.url!=='/property-placeholder.svg')}));
-  for(let photoIndex=0; items.length<9; photoIndex++) {
-    const before=items.length;
+  const maxPhotos = Math.max(0,...homes.map(home => home.photos.length));
+  for(let photoIndex=0; photoIndex<maxPhotos && items.length<9; photoIndex++) {
     for(const {property,photos} of homes) {
       const photo=photos[photoIndex];
       if(!photo || items.length>=9) continue;
       items.push({id:property.id+'/'+photo.id, title:property.title, image:propertyPhotoUrl(photo.url), alt:photo.alt || property.title,
         href:'/inmuebles/'+encodeURIComponent(property.slug), detail:[property.city,pesos(property.monthlyRent)+'/mes'].filter(Boolean).join(' · ')});
     }
-    if(before===items.length) break;
   }
   if(!items.length) return <p className={styles.empty}>{copy.emptyFeatured} <Link href="/inmuebles">{copy.emptyFeaturedLink} →</Link></p>;
   return <WorksWheel items={items} portfolio={portfolio}/>;
@@ -66,14 +65,22 @@ function RouteMap({copy}:{copy:Cover}) {
 }
 
 export function DesignHero({direction,copy}:{direction:Exclude<Direction,'original'>;copy:Cover}) {
-  return <section aria-labelledby="home-title" className={styles[direction]}>
-    {direction==='luz' ? <LightSurface image={copy.photo} alt={copy.photoAlt} caption={copy.caption}>
+  let content;
+  if (direction === 'luz') {
+    content = <LightSurface image={copy.photo} alt={copy.photoAlt} caption={copy.caption}>
       <div className={'container '+styles.lightCopy}><Title copy={copy}/><a className={styles.mainAction} href="#buscar-inmueble">{copy.searchButton} <span aria-hidden="true">↓</span></a></div>
-    </LightSurface> : direction==='orbita' ? <div className={'container '+styles.orbitGrid}>
+    </LightSurface>;
+  } else if (direction === 'orbita') {
+    content = <div className={'container '+styles.orbitGrid}>
       <div className={styles.orbitCopy}><Title copy={copy}/><a className={styles.mainAction} href="/inmuebles">{copy.featuredLink} <span aria-hidden="true">↗</span></a></div>
-      <Suspense fallback={<p role="status" className={styles.empty}>Cargando galería…</p>}><InventoryWheel copy={copy}/></Suspense>
-    </div> : <div className={'container '+styles.flowGrid}><div className={styles.flowCopy}><Title copy={copy}/>
-      <img className={styles.flowPhoto} src={copy.photo} alt={copy.photoAlt} width="680" height="220"/></div><RouteMap copy={copy}/></div>}
+      <Suspense fallback={<output className={styles.empty}>Cargando galería…</output>}><InventoryWheel copy={copy}/></Suspense>
+    </div>;
+  } else {
+    content = <div className={'container '+styles.flowGrid}><div className={styles.flowCopy}><Title copy={copy}/>
+      <img className={styles.flowPhoto} src={copy.photo} alt={copy.photoAlt} width="680" height="220"/></div><RouteMap copy={copy}/></div>;
+  }
+  return <section aria-labelledby="home-title" className={styles[direction]}>
+    {content}
     <div className={'container '+styles.tools}>{direction!=='recorridos' && <Destinations copy={copy}/>}<HomeSearch copy={copy}/></div>
   </section>;
 }

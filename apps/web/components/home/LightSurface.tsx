@@ -53,7 +53,7 @@ export function LightSurface({image,alt,caption,children}:{image:string;alt:stri
   }
   function sample(clientX:number,clientY:number) {
     const bounds=surface.current?.getBoundingClientRect();
-    if(!bounds || !bounds.width || !bounds.height)return;
+    if(!bounds?.width || !bounds.height)return;
     const u=limit((clientX-bounds.left)/bounds.width),v=limit((clientY-bounds.top)/bounds.height);
     if(!tilt){x.set(u*100);y.set(v*100);}
     if(!heat || !canvas.current || performance.now()-lastSample.current<35)return;
@@ -69,7 +69,7 @@ export function LightSurface({image,alt,caption,children}:{image:string;alt:stri
     <div className={styles.lightArt} ref={surface} onPointerMove={e=>sample(e.clientX,e.clientY)} onPointerDown={e=>sample(e.clientX,e.clientY)}>
       <img className={styles.lightImage} src={image} alt={alt} width={1920} height={1081} fetchPriority="high"/>
       <motion.div aria-hidden="true" style={{backgroundImage:glow}} className={styles.glow}/>
-      {heat && <canvas className={styles.heat} ref={canvas} width="400" height="200" aria-hidden="true"/>}
+      {heat && <canvas className={styles.heat} ref={canvas} width="400" height="200" aria-label="Huella temporal sobre la fotografía">Huella temporal sobre la fotografía</canvas>}
       {children}
     </div>
     <div className={styles.photoBar}><div className="container"><small>{caption}</small><div>
@@ -85,6 +85,6 @@ export function LightSurface({image,alt,caption,children}:{image:string;alt:stri
       <button type="button" aria-pressed={heat} onClick={()=>setHeat(!heat)}>Mapa de calor</button>
       {heat && <button type="button" onClick={()=>{const el=canvas.current;el?.getContext('2d')?.clearRect(0,0,el.width,el.height);}}>Borrar huella</button>}
       {available && <button type="button" aria-pressed={tilt} onClick={toggleTilt}>Inclinación del móvil</button>}
-    </div></div>{(heat||notice) && <p role="status" className="container">{heat?'La huella muestra por dónde pasas el puntero o tocas esta foto durante la prueba. ':''}{notice}</p>}</div>
+    </div></div>{(heat||notice) && <output className="container">{heat?'La huella muestra por dónde pasas el puntero o tocas esta foto durante la prueba. ':''}{notice}</output>}</div>
   </div>;
 }

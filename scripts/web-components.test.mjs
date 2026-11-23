@@ -4,6 +4,7 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
+import { prerender } from 'react-dom/static';
 import { JSDOM } from 'jsdom';
 import React from 'react';
 
@@ -24,20 +25,20 @@ const { render, fireEvent, cleanup, waitFor, within, act } = await import('@test
 const actionSource = await readFile('apps/web/app/actions.ts', 'utf8');
 const actionNames = [...actionSource.matchAll(/export async function (\w+)/g)].map((match) => match[1]);
 const stubs = {
-  'read-site': 'import {defaultCopy} from "./apps/web/lib/site-content.ts"; export async function readSite(){return defaultCopy;}',
+  'read-site': 'import {defaultCopy} from "./apps/web/lib/site-content.ts"; export async function readSite(){return defaultCopy;} export async function editSite(){return globalThis.__ui.sections ?? [];}',
   ai: 'export async function runAiTool(...args) { globalThis.__ui.aiCalls.push(args); return globalThis.__ui.aiRun(...args); }',
   actions: actionNames.map((name) => `export async function ${name}(...args) { globalThis.__ui.calls.push({ name: '${name}', data: args.at(-1) }); return globalThis.__ui.result; }`).join('\n'),
-  api: 'export async function apiFetch(path, ...args) { globalThis.__ui.requests.push([path, ...args]); const responses = globalThis.__ui.apiResponses; if (responses && Object.hasOwn(responses, path)) { if (responses[path] instanceof Error) throw responses[path]; return responses[path]; } return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
-  auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); return { name: "Admin JB", portal:"TENANT" }; }',
-  cache: 'export function revalidatePath(path) { globalThis.__ui.revalidated.push(path); }',
-  headers: 'export function cookies() { throw new Error("Cookies are unavailable in this test"); }',
+  api: 'export class ApiError extends Error {} export async function getCurrentUser(){ return globalThis.__ui.user; } export async function apiFetch(path, ...args) { globalThis.__ui.requests.push([path, ...args]); const responses = globalThis.__ui.apiResponses; if (responses && Object.hasOwn(responses, path)) { if (responses[path] instanceof Error) throw responses[path]; return responses[path]; } return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
+  auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); return globalThis.__ui.user ?? { name: "Admin JB", portal:"TENANT" }; }',
+  cache: 'export function updateTag(tag) {globalThis.__ui.revalidated.push(tag);} export function revalidatePath(path) { globalThis.__ui.revalidated.push(path); }',
+  headers: 'export async function headers(){return new Headers();} export function cookies() { throw new Error("Cookies are unavailable in this test"); }',
   navigation: 'export function notFound(){ throw new Error("Not found"); } export function usePathname() { return globalThis.__ui.pathname; } export function redirect() { throw new Error("Unexpected redirect"); }',
-  link: 'import React from "react"; export default function Link({ children, onClick, ...props }) { return React.createElement("a", { ...props, onClick: event => { onClick?.(event); event.preventDefault(); } }, children); }',
+  link: 'import React from "react"; export default function Link({ children, onClick, prefetch, ...props }) { return React.createElement("a", { ...props, onClick: event => { onClick?.(event); event.preventDefault(); } }, children); }',
   image: 'import React from "react"; export default function Image({ fill, priority, ...props }) { return React.createElement("img", props); }',
 };
 const names = ['AiTools', 'PropertyCard', 'PublicNavigation', 'ActiveLink', 'AuthForm', 'ContactForm', 'AdminNewsForm', 'AdminUserForm', 'AdminFileUploadForm', 'AdminPropertyForm', 'AdminPropertyEditForm', 'AdminAssignPropertyForm', 'AdminDeletePropertyButton', 'AdminInvoiceForm', 'AdminInvoiceManager', 'AdminLeaseContractForm', 'ManualPaymentForm', 'ManualPaymentReviewForm'];
 names.push('AdminWorkspace', 'AdminCreatePanel', 'AdminListControls', 'AdminContactStatusForm', 'AdminTableRegion', 'PublicSiteChrome');
-names.push('PropertyGallery');
+names.push('PropertyGallery', 'CatalogResults', 'PortalEntry');
 const entry = "export { PolicyProvider } from './apps/web/components/ConsentField.tsx';\n"+names.map((name) => `export { ${name} } from './apps/web/components/${name}.tsx';`).join('\n') +
   "\nexport { ManualPaymentReviewQueue } from './apps/web/components/ManualPaymentReviewForm.tsx';" +
   "\nexport { default as ContactPage } from './apps/web/app/contacto/page.tsx';" +
@@ -47,13 +48,23 @@ const entry = "export { PolicyProvider } from './apps/web/components/ConsentFiel
   ['inmuebles', 'usuarios', 'facturas', 'contactos', 'archivos', 'conciliacion'].map((route) => `\nexport { default as Admin_${route} } from './apps/web/app/admin/${route}/page.tsx';`).join('') +
   "\nexport { default as AdminDashboardPage } from './apps/web/app/admin/page.tsx';\nexport * from './apps/web/lib/admin-lists.ts';\nexport { SkipToContentLink } from './apps/web/components/PublicSiteChrome.tsx';" +
   "\nexport { default as AdminLayout } from './apps/web/app/admin/layout.tsx';\nexport { default as AdminLoading } from './apps/web/app/admin/loading.tsx';\nexport { default as AdminError } from './apps/web/app/admin/error.tsx';\nexport { default as AdminUserDetail } from './apps/web/app/admin/usuarios/[id]/page.tsx';\nexport { updateContactStatusAction } from './apps/web/app/actions.ts';";
+const coverageRoutes = {
+  Home: '', Sales: '[catalogo]/', SaleDetail: '[catalogo]/[id]/', Content: 'admin/contenido/',
+  Offers: 'admin/ofertas/', OwnerPublications: 'propietarios/publicaciones/', Templates: 'admin/formatos/',
+  AccountDocuments: 'admin/documentos/', Documents: 'mi-cuenta/documentos/', RentalRequest: 'solicitud-de-arrendamiento/',
+  CustomerServices: 'servicios/', Suggestions: 'admin/sugerencias/', SuggestionFormPage: 'sugerencias/',
+};
+const publishingEntry = Object.entries(coverageRoutes).map(([name, route]) =>
+  "export { default as " + name + " } from './apps/web/app/" + route + "page.tsx';").join('\n') +
+  "\nexport * from './apps/web/app/admin/publishing-actions.ts';\nexport * from './apps/web/app/document-actions.ts';\nexport * from './apps/web/app/propietarios/publicaciones/actions.ts';";
 await mkdir('.local', { recursive: true });
 const bundle = resolve('.local/ui-test-bundle.mjs');
 await build({
-  stdin: { contents: entry, resolveDir: process.cwd(), sourcefile: 'ui-test-entry.mjs' },
+  stdin: { contents: entry + '\n' + publishingEntry, resolveDir: process.cwd(), sourcefile: 'ui-test-entry.mjs' },
   outfile: bundle, bundle: true, platform: 'node', format: 'esm', packages: 'external',
   tsconfig: 'apps/web/tsconfig.json', sourcemap: 'inline', sourcesContent: true,
   plugins: [{ name: 'server-boundary', setup(builder) {
+    builder.onResolve({ filter: /^\.\/api$/ }, ({ importer }) => importer.endsWith('public-data.ts') ? {path:'api',namespace:'ui-stub'} : undefined);
     builder.onResolve({ filter: /^@\/lib\/run-ai-tool$/ }, () => ({ path: 'ai', namespace: 'ui-stub' }));
     builder.onResolve({ filter: /^(@\/app\/actions|@\/lib\/api|@\/lib\/auth|@\/lib\/read-site|next\/(link|navigation|image|cache|headers))$/ }, ({ path }) => {
       const key = path === '@/app/actions' ? 'actions' : path.split('/').at(-1);
@@ -699,4 +710,78 @@ test('la acción de contacto rechaza archivos y conserva el seguimiento si falla
   assert.match((await ui.updateContactStatusAction({}, data)).success, /actualizado/);
   assert.deepEqual(globalThis.__ui.requests.at(-1), [path, { method: 'PATCH', body: '{"status":"REVIEWED"}' }, true]);
   assert.deepEqual(globalThis.__ui.revalidated, ['/admin/contactos', '/admin']);
+});
+
+async function serverPage(name, params = {}, searchParams = {}) {
+  const tree = React.createElement(ui[name], {params: Promise.resolve(params), searchParams: Promise.resolve(searchParams)});
+  const { prelude } = await prerender(tree);
+  return new JSDOM(await new Response(prelude).text()).window.document;
+}
+
+test('la portada de DEV publica los tres recorridos, las siete salidas y las fotos reales en HTML', async (t) => {
+  const before = process.env.APP_ENV;
+  process.env.APP_ENV = 'development';
+  t.after(() => { if (before === undefined) delete process.env.APP_ENV; else process.env.APP_ENV = before; });
+  const home = {...property, slug:'casa-centro', images:[{id:'sala', url:'/uploads/sala.webp', alt:'Sala con ventana'}]};
+  globalThis.__ui.apiResponses = {'/properties':[home], '/properties/featured':[], '/news/featured':[]};
+  const doc = await serverPage('Home', {}, {estilo:'original'});
+  assert.deepEqual([...doc.querySelectorAll('[data-portada] section[id]')].map(el => el.id), ['portafolio','busqueda','recorridos']);
+  assert.deepEqual([...doc.querySelectorAll('#recorridos a')].map(el => el.getAttribute('href')), ['/inmuebles','/comprar','/vehiculos-y-bienes','/propietarios','/arrendatarios','/clientes','/servicios']);
+  assert.ok(doc.querySelector('a[href="/inmuebles/casa-centro"]'));
+  assert.equal(doc.querySelector('#busqueda form').getAttribute('action'), '/inmuebles');
+  assert.equal(doc.querySelectorAll('h1').length, 1);
+});
+
+test('los catálogos filtran por tipo y enlazan la foto y la consulta del bien publicado', async () => {
+  const offer = {id:'bien',catalog:'vehiculos-y-bienes', category:'Estufa',title:'Estufa sintética',price:'200000',city:'Bogotá',description:'Descripción de prueba.',images:['/uploads/foto.webp']};
+  globalThis.__ui.apiResponses = {'/sales/market?q=Estufa&city=Cali':[offer], '/sales/vehiculos-y-bienes?category=Estufa':[], '/sales/vehiculos-y-bienes/bien':offer};
+  const sales = await serverPage('Sales',{catalogo:'comprar'},{q:' Estufa ',city:'Cali'});
+  assert.ok(sales.querySelector('a[href="/vehiculos-y-bienes/bien"] img'));
+  assert.ok(sales.querySelector('a[href="/propietarios"]'));
+  const goods = await serverPage('Sales',{catalogo:'vehiculos-y-bienes'},{category:'Estufa',city:'Bogotá'});
+  assert.equal(goods.querySelector('[name=city]'), null);
+  assert.match(goods.body.textContent, /No hay ofertas/);
+  const detail = await serverPage('SaleDetail',{catalogo:'vehiculos-y-bienes',id:'bien'});
+  assert.equal(detail.querySelector('h1').textContent, offer.title);
+  assert.equal(detail.querySelector('[name=subject]').value, 'Consulta: '+offer.title);
+});
+
+test('administración y cada portal muestran los documentos y las herramientas de su cuenta', async () => {
+  const account={id:'client',name:'Cliente de prueba',email:'cliente@example.test',portal:'SERVICES',role:'USER'};
+  const file={id:'pdf',originalName:'Contrato.pdf',size:750,createdAt:'2026-10-15T12:00:00Z'};
+  globalThis.__ui.apiResponses={'/admin/documents/accounts':[account],'/admin/documents/accounts/client':[file],'/documents/mine':[file],'/documents/templates':[{key:'solicitud', file}],'/admin/suggestions':[], '/owner/listings':[], '/admin/sales':[]};
+  const assigned = await serverPage('AccountDocuments',{}, {cliente:'client'});
+  assert.ok(assigned.querySelector('[name=serviceType]'));
+  assert.ok(assigned.querySelector('a[href*="/documentos/privados/pdf"]'));
+  assert.ok((await serverPage('Documents')).querySelector('a[href*="/documentos/privados/pdf"]'));
+  const request = await serverPage('RentalRequest');
+  assert.ok(request.querySelector('a[href*="/documentos/publicos/pdf"]'));
+  assert.match(request.body.textContent,/pendiente de publicación/);
+  assert.equal((await serverPage('Templates')).querySelectorAll('input[type=file]').length,2);
+  assert.match((await serverPage('Suggestions')).body.textContent,/Todavía no hay sugerencias/);
+  const content=await serverPage('Content',{}, {seccion:'portada'});
+  assert.ok(content.querySelector('[name=portfolioTitle]'));
+  assert.ok((await serverPage('Offers',{}, {nueva:'1'})).querySelector('[name=photos]'));
+  const services=await serverPage('CustomerServices');
+  assert.ok(services.querySelector('article a[href*="contacto"]'));
+  globalThis.__ui.user={...account,portal:'OWNER'};
+  assert.ok((await serverPage('OwnerPublications',{}, {nuevo:'1'})).querySelector('[name=bedrooms]'));
+  assert.ok(globalThis.__ui.roles.includes('ADMIN') && globalThis.__ui.roles.includes('USER'));
+});
+
+test('publicar una oferta y una sección conserva las revisiones y exige administración', async () => {
+  globalThis.__ui.apiResponses={'/admin/sales/item':{id:'item',revision:3}, '/admin/publishing/sections/portada':{revision:4}, '/admin/publishing/images':['/uploads/foto.webp']};
+  const data = new FormData();
+  for (const [key,value] of Object.entries({title:' Una casa ',id:'item',catalog:'comprar',revision:'2',published:'on',keep:'/uploads/original.jpg'})) data.set(key,value);
+  data.set('photos',new File(['foto'],'fotografia.webp'));
+  assert.equal((await ui.saveOffer({},data)).success,'Oferta publicada.');
+  const sent=JSON.parse(globalThis.__ui.requests.at(-1)[1].body);
+  assert.deepEqual(sent.images,['/uploads/original.jpg','/uploads/foto.webp']);
+  assert.equal(sent.title,'Una casa');
+  assert.equal(sent.revision,2);
+  data.set('portfolioTitle','Inventario');
+  assert.equal((await ui.saveSection('portada',{},data)).values.portfolioTitle,'Inventario');
+  assert.ok(globalThis.__ui.revalidated.includes('site-content'));
+  assert.match((await ui.saveSection('desconocida',{},data)).error,/desconocida/);
+  assert.ok(globalThis.__ui.roles.every(role => role==='ADMIN'));
 });

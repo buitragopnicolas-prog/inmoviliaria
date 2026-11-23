@@ -32,9 +32,9 @@ export function AdminNewsForm({post}:{post?: NewsPost}) {
     <label>Cargar texto desde un archivo (.txt o .md)<input type="file" accept=".txt,.md,text/plain,text/markdown" onChange={async e=>{
       const file=e.currentTarget.files?.[0]; if(!file)return;
       try {
-        if(file.size>200000 || !/\.(txt|md)$/i.test(file.name)) throw new Error();
+        if(file.size>200000 || !/\.(txt|md)$/i.test(file.name)) throw new Error('Selecciona un archivo de texto válido de hasta 200 KB.');
         const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
-        if(text.length>50000 || text.includes('\u0000')) throw new Error();
+        if(text.length>50000 || text.includes('\u0000')) throw new Error('El texto no se puede importar.');
         setContent(text); setError('');
       } catch { setError('Selecciona un archivo de texto UTF-8 de hasta 50.000 caracteres.'); }
     }}/></label>
@@ -47,6 +47,6 @@ export function AdminNewsForm({post}:{post?: NewsPost}) {
     <label>Visibilidad<select name="visibility" defaultValue={post?.published===false?'draft':'public'}><option value="public">Publicado</option><option value="draft">Borrador</option></select></label>
     {(error||state.error)&&<StatusNotice tone="error" message={error||state.error!}/>}
     {state.success&&<StatusNotice tone="success" message={state.success}/>}
-    <button className="button" disabled={pending||busy}>{pending||busy?'Guardando…':'Guardar artículo'}</button>
+    <button type="submit" className="button" disabled={pending||busy}>{pending||busy?'Guardando…':'Guardar artículo'}</button>
   </form>;
 }

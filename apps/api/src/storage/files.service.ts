@@ -103,7 +103,7 @@ export class FilesService {
   async sendContent(id: string, response: Response, download = false, allowSensitive = false): Promise<void> {
     const file = await this.prisma.storedFile.findUnique({ where: { id }, include:{createdBy:{select:{portal:true}}} });
     const restricted = file && !['GENERIC', 'PROPERTY_IMAGE'].includes(file.purpose);
-    if (!file || file.scanStatus !== 'CLEAN' || (restricted && !allowSensitive)) {
+    if (file?.scanStatus !== 'CLEAN' || (restricted && !allowSensitive)) {
       throw new NotFoundException('Archivo no encontrado.');
     }
     const ownerPhoto=file.purpose==='PROPERTY_IMAGE' && file.createdBy?.portal==='OWNER';

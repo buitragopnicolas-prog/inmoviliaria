@@ -505,3 +505,4 @@ td { line-height: 1.5; }
 .policyArticle {max-width:78ch; overflow-wrap:anywhere;}
 .policyArticle h2 {margin:1.5em 0 .5em;}
 .policyArticle p {line-height:1.65; margin-bottom:1em;}
+output.statusNotice, output.results, .dataUnavailable > output {display:block;}

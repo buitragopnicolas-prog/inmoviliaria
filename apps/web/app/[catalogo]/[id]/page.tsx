@@ -16,7 +16,7 @@ export default async function SaleDetail({params}:{params:Promise<{catalogo:stri
     if(error instanceof ApiError && error.status===404) notFound();
     throw error;
   });
-  if(!offer) return <section className="container section"><DataUnavailable label="la oferta"/></section>;
+  if(!offer) return <section className="container section"><DataUnavailable label="la oferta" retryHref={`/${catalogo}/${encodeURIComponent(id)}`}/></section>;
   const {catalogos}=await readSite();
   return <section className="section pageTop"><div className="container">
     <Link className="textLink" href={'/'+catalogo}>← {catalogo==='comprar'?catalogos.buyTitle:catalogos.goodsTitle}</Link>

@@ -22,6 +22,6 @@ export function SaleOfferForm({offer}:{offer?:SaleOffer}){
     <label>Añadir fotografías<input name="photos" type="file" multiple accept="image/jpeg,image/png,image/webp"/><span className="hint">Hasta 10 fotos JPG, PNG o WebP de 5 MB. La primera será la portada.</span></label>
     <label><input type="checkbox" name="published" defaultChecked={offer?.published}/>Publicar en el catálogo</label>
     {state.error&&<StatusNotice tone="error" message={state.error}/>}
-    <button className="button" disabled={pending||busy} aria-busy={pending||busy}>{pending||busy?'Guardando…':'Guardar oferta'}</button>
+    <button type="submit" className="button" disabled={pending||busy} aria-busy={pending||busy}>{pending||busy?'Guardando…':'Guardar oferta'}</button>
   </form>;
 }

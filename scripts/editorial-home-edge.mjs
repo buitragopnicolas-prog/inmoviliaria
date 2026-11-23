@@ -1,15 +1,18 @@
+import { browserCoverage } from './e2e-browser-coverage.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 
 const dev = process.argv.includes('--dev');
-const origin = dev ? 'https://dev.asesoriainmobiliariajb.com' : 'http://localhost:3000';
+const localOrigin = process.argv.includes('--ci') ? 'http://localhost:13613' : 'http://localhost:3000';
+const origin = dev ? 'https://dev.asesoriainmobiliariajb.com' : localOrigin;
 const out = '.local/portada-editorial/' + (dev ? 'dev' : 'local');
 await mkdir(out, { recursive: true });
-const browser = await chromium.launch({ channel: 'msedge' });
+const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chrome' });
+const coverage = browserCoverage();
 
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+  const page = await coverage.watch(await browser.newPage({ viewport: { width: 1440, height: 960 } }));
   page.setDefaultTimeout(12000);
   const response = await page.goto(origin);
   assert.equal(response.status(), 200);
@@ -41,6 +44,17 @@ try {
   const light = home.getByRole('button', { name: 'Orientar luz' });
   await light.focus();
   await page.keyboard.press('ArrowRight');
+  await home.getByRole('button', {name:'Mapa de calor'}).click();
+  const trace = home.locator('canvas[aria-label="Huella temporal sobre la fotografía"]');
+  await trace.scrollIntoViewIfNeeded();
+  const bounds = await trace.boundingBox();
+  assert.ok(bounds?.width && bounds.height);
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  const hasInk = canvas => canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data.some(value => value > 0);
+  assert.ok(await trace.evaluate(hasInk));
+  await home.getByRole('button', {name:'Borrar huella'}).click();
+  assert.equal(await trace.evaluate(hasInk), false);
+  await home.getByRole('button', {name:'Mapa de calor'}).click();
   await home.locator('#home-search').fill('Centro');
   await home.locator('#home-city').fill('Bogotá');
   await home.locator('#home-max-rent').fill('1800000');
@@ -55,7 +69,7 @@ try {
   assert.equal(filters.get('city'), 'Bogotá');
   assert.equal(filters.get('maxRent'), '1800000');
 
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, reducedMotion: 'reduce' });
+  const mobile = await coverage.watch(await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, reducedMotion: 'reduce' }));
   await mobile.goto(origin);
   await mobile.locator('[data-portada="editorial-jb"]').waitFor();
   assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth), 390);
@@ -79,5 +93,5 @@ try {
   assert.ok(await nav.locator('details').last().getAttribute('open') !== null);
   console.log('Edge ' + browser.version() + ' · portada, inventario, filtros, ' + destinations.length + ' enlaces, teclado, móvil, movimiento reducido y HTML sin JavaScript correctos en ' + origin);
 } finally {
-  await browser.close();
+  try { await coverage.save(); } finally { await browser.close(); }
 }

@@ -1,8 +1,8 @@
-export function DataUnavailable({ label }: { label: string }) {
+export function DataUnavailable({ label, retryHref = '/' }: { label: string; retryHref?: string }) {
   return (
     <div className="card dataUnavailable">
-      <p role="status">No pudimos cargar {label}. Intenta de nuevo en unos momentos.</p>
-      <a className="button outline" href="">Volver a intentar</a>
+      <output>No pudimos cargar {label}. Intenta de nuevo en unos momentos.</output>
+      <a className="button outline" href={retryHref}>Volver a intentar</a>
     </div>
   );
 }
