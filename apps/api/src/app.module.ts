@@ -10,6 +10,7 @@ import { LeasesModule } from './leases/leases.module.js';
 import { NewsModule } from './news/news.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { PublishingModule } from './publishing/publishing.module.js';
 import { PropertiesModule } from './properties/properties.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
@@ -26,6 +27,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
       limit: Number(process.env.RATE_LIMIT_DEFAULT ?? 120),
     }]),
     PrismaModule,
+    PublishingModule,
     UsersModule,
     AuthModule,
     PropertiesModule,

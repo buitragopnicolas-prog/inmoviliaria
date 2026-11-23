@@ -4,13 +4,22 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { apiFetch } from '@/lib/api';
+import { paymentAccountHref, paymentStatusLabel } from '@/lib/payment-status';
 import { isLocalRegistrationEnabled } from '@/lib/registration-policy';
+import { adminReturnHref, readAdminQuery } from '@/lib/admin-lists';
 
 export type ActionState = { error?: string; success?: string };
+export type AuthState = ActionState & { values?: { email: string; name?: string; phone?: string; portal?: string } };
+export type ContactState = ActionState & { values?: { name: string; email: string; phone: string; subject: string; message: string } };
+
+function textField(data: FormData, name: string) {
+  const value = data.get(name);
+  return typeof value === 'string' ? value : '';
+}
 
 const authCookieMaxAge = Math.min(Math.max(Number(process.env.AUTH_COOKIE_MAX_AGE_SECONDS ?? 3600) || 3600, 300), 3600);
 
-export async function loginAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+export async function loginAction(_previous: AuthState, formData: FormData): Promise<AuthState> {
   try {
     const response = await apiFetch<{ accessToken: string; user: { role: string } }>('/auth/login', {
       method: 'POST',
@@ -26,16 +35,17 @@ export async function loginAction(_previous: ActionState, formData: FormData): P
     redirect(response.user.role === 'ADMIN' ? '/admin' : '/mi-cuenta');
   } catch (error) {
     if (isRedirectError(error)) throw error;
-    return { error: messageOf(error) };
+    return { error: messageOf(error), values: { email: textField(formData, 'email') } };
   }
 }
 
-export async function registerAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+export async function registerAction(_previous: AuthState, formData: FormData): Promise<AuthState> {
   if (!isLocalRegistrationEnabled()) return { error: 'El registro público no está habilitado. Solicita la activación de tu cuenta a un asesor.' };
   try {
     const response = await apiFetch<{ accessToken: string }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({
+        authorized: formData.get('authorized')==='true', policyVersion:formData.get('policyVersion'), portal:formData.get('portal'),
         name: formData.get('name'), email: formData.get('email'), phone: formData.get('phone'), password: formData.get('password'),
       }),
     });
@@ -43,8 +53,13 @@ export async function registerAction(_previous: ActionState, formData: FormData)
     redirect('/mi-cuenta');
   } catch (error) {
     if (isRedirectError(error)) throw error;
-    return { error: messageOf(error) };
+    return { error: messageOf(error), values: { email: textField(formData, 'email'), name: textField(formData, 'name'), phone: textField(formData, 'phone'), portal:textField(formData,'portal') } };
   }
+}
+
+export async function enterClientLogin(): Promise<void> {
+  (await cookies()).delete('inmo_token');
+  redirect('/login');
 }
 
 export async function logoutAction(): Promise<void> {
@@ -52,17 +67,19 @@ export async function logoutAction(): Promise<void> {
   redirect('/');
 }
 
-export async function contactAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+export async function contactAction(_previous: ContactState, formData: FormData): Promise<ContactState> {
+  const values = {
+    name: textField(formData, 'name'), email: textField(formData, 'email'), phone: textField(formData, 'phone'),
+    subject: textField(formData, 'subject'), message: textField(formData, 'message'),
+  };
   try {
     await apiFetch('/contacts', {
       method: 'POST',
-      body: JSON.stringify({
-        name: formData.get('name'), email: formData.get('email'), phone: formData.get('phone'), subject: formData.get('subject'), message: formData.get('message'),
-      }),
+      body: JSON.stringify({...values, authorized:formData.get('authorized')==='true', policyVersion:formData.get('policyVersion')}),
     });
     return { success: 'Recibimos tu solicitud. Un asesor se comunicará contigo.' };
   } catch (error) {
-    return { error: messageOf(error) };
+    return { error: messageOf(error), values };
   }
 }
 
@@ -94,18 +111,23 @@ export async function createPropertyAction(_previous: ActionState, formData: For
 }
 
 export async function updatePropertyAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+  const id = textField(formData, 'id');
+  const list = formData.get('lista');
+  const payload = new FormData();
+  for (const [key, value] of formData) {
+    if (key !== 'id' && key !== 'lista' && !key.startsWith('$ACTION_')) payload.append(key, value);
+  }
   try {
-    const id = String(formData.get('id'));
-    formData.delete('id');
-    await apiFetch(`/admin/properties/${id}`, { method: 'PATCH', body: formData }, true);
+    await apiFetch(`/admin/properties/${encodeURIComponent(id)}`, { method: 'PATCH', body: payload }, true);
     revalidatePath('/admin/inmuebles');
     revalidatePath(`/admin/inmuebles/${id}/editar`);
     revalidatePath('/inmuebles');
     revalidatePath('/');
-    return { success: 'El inmueble fue actualizado correctamente.' };
   } catch (error) {
     return { error: messageOf(error) };
   }
+  if (typeof list === 'string') redirect(adminReturnHref('/admin/inmuebles', readAdminQuery(Object.fromEntries(new URLSearchParams(list))), id));
+  return { success: 'El inmueble fue actualizado correctamente.' };
 }
 
 export async function deletePropertyAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
@@ -169,21 +191,30 @@ export async function createNewsAction(_previous: ActionState, formData: FormDat
   try {
     const sourceLabel = String(formData.get('sourceLabel') ?? '').trim();
     const externalUrl = String(formData.get('externalUrl') ?? '').trim();
-    await apiFetch('/admin/news', {
-      method: 'POST',
-      body: JSON.stringify({
-        title: formData.get('title'),
-        summary: formData.get('summary'),
-        content: formData.get('content'),
-        sourceLabel: sourceLabel || undefined,
-        externalUrl: externalUrl || undefined,
-        published: true,
-      }),
+    const id = textField(formData,'id');
+    const body = new FormData();
+    for (const key of ['title','summary','content','category']) {
+      if (formData.has(key)) body.set(key, textField(formData,key));
+    }
+    if (sourceLabel) body.set('sourceLabel',sourceLabel);
+    if (externalUrl) body.set('externalUrl',externalUrl);
+    if (formData.has('additionalLinks')) {
+      const links=textField(formData,'additionalLinks').split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
+      if (links.length) for (const link of links) body.append('additionalLinks',link);
+      else body.set('additionalLinks','');
+    }
+    body.set('published',String(formData.get('visibility')!=='draft'));
+    for (const value of formData.getAll('removePdfIds')) body.append('removePdfIds',String(value));
+    const pdfs=formData.getAll('pdfs').filter((file):file is File=>file instanceof File && file.size>0);
+    if(pdfs.length>3 || pdfs.some(file=>file.size>8_000_000)) return {error:'Selecciona hasta tres PDF de 8 MB cada uno.'};
+    for (const file of pdfs) body.append('pdfs',file);
+    await apiFetch(id ? '/admin/news/'+encodeURIComponent(id) : '/admin/news', {
+      method: id ? 'PUT' : 'POST', body,
     }, true);
     revalidatePath('/admin/noticias');
     revalidatePath('/noticias');
     revalidatePath('/');
-    return { success: 'La noticia fue publicada correctamente.' };
+    return { success: formData.get('visibility') === 'draft' ? 'Borrador guardado.' : 'Artículo publicado.' };
   } catch (error) {
     return { error: messageOf(error) };
   }
@@ -203,7 +234,7 @@ export async function createInvoiceAction(_previous: ActionState, formData: Form
     await apiFetch('/admin/invoices', {
       method: 'POST',
       body: JSON.stringify({
-        leaseId: formData.get('leaseId'),
+        ...(String(formData.get('leaseId')).startsWith('account:') ? {accountId:String(formData.get('leaseId')).slice(8)} : {leaseId:formData.get('leaseId')}),
         period: formData.get('period'),
         dueDate: formData.get('dueDate'),
         services,
@@ -309,37 +340,42 @@ export async function beginPaymentAction(formData: FormData): Promise<void> {
 
 export async function approveMockAction(formData: FormData): Promise<void> {
   const reference = String(formData.get('reference'));
-  await apiFetch(`/payments/mock/${encodeURIComponent(reference)}/approve`, { method: 'POST' }, true);
+  const payment = await apiFetch<{ reference: string }>(`/payments/mock/${encodeURIComponent(reference)}/approve`, { method: 'POST' }, true);
   revalidatePath('/mi-cuenta');
-  redirect('/mi-cuenta?pago=aprobado');
+  redirect(paymentAccountHref(payment.reference));
 }
 
 export async function reportManualPaymentAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const invoiceId = String(formData.get('invoiceId'));
-    formData.delete('invoiceId');
-    await apiFetch(`/payments/invoices/${invoiceId}/manual-report`, { method: 'POST', body: formData }, true);
+    const report = new FormData();
+    for (const key of ['method', 'amount', 'bankReference', 'paidAt', 'idempotencyKey', 'receipt', 'authorized', 'policyVersion']) {
+      const value = formData.get(key);
+      if (value !== null) report.set(key, value);
+    }
+    const payment = await apiFetch<{ status: string; reference: string }>(`/payments/invoices/${encodeURIComponent(invoiceId)}/manual-report`, { method: 'POST', body: report }, true);
     revalidatePath(`/mi-cuenta/facturas/${invoiceId}/pagar`);
     revalidatePath('/mi-cuenta');
-    return { success: 'Recibimos tu reporte de pago. Quedó pendiente de verificación.' };
+    return { success: `${paymentStatusLabel(payment.status)}. Referencia ${payment.reference}.` };
   } catch (error) {
     return { error: messageOf(error) };
   }
 }
 
-export async function reviewManualPaymentAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
+export async function reviewManualPaymentAction(_previous: ActionState, formData: FormData): Promise<ActionState & { paymentId?: string }> {
+  const paymentId = String(formData.get('paymentId'));
   try {
-    const paymentId = String(formData.get('paymentId'));
-    await apiFetch(`/payments/manual/${paymentId}/review`, {
+    const payment = await apiFetch<{ invoiceId: string; reference: string; status: string }>(`/payments/manual/${encodeURIComponent(paymentId)}/review`, {
       method: 'PATCH',
       body: JSON.stringify({ decision: formData.get('decision'), note: formData.get('note') || undefined }),
     }, true);
     revalidatePath('/admin/conciliacion');
     revalidatePath('/admin/facturas');
     revalidatePath('/mi-cuenta');
-    return { success: 'La decisión quedó registrada en la trazabilidad del pago.' };
+    revalidatePath(`/mi-cuenta/facturas/${payment.invoiceId}/pagar`);
+    return { success: `${paymentStatusLabel(payment.status)}. Referencia ${payment.reference}.`, paymentId };
   } catch (error) {
-    return { error: messageOf(error) };
+    return { error: messageOf(error), paymentId };
   }
 }
 

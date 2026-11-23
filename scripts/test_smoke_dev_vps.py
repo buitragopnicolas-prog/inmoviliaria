@@ -32,6 +32,8 @@ class ManualPaymentSmokeTests(unittest.TestCase):
         self.payment_error = False
         self.failures = {}
         self.delays = []
+        self.destinations = ["/comprar", "/inmuebles", "/vehiculos-y-bienes", "/servicios", "/propietarios", "/arrendatarios", "/clientes"]
+        self.empty_page = None
         for method in self.config["methods"]:
             method["details"] = [{"label": "Entidad", "value": "Banco autorizado"}, {"label": "Titular", "value": "Titular autorizado"}]
             if method["code"] == "BREB":
@@ -68,7 +70,10 @@ class ManualPaymentSmokeTests(unittest.TestCase):
                 if self.payment_error:
                     raise HTTPError(url, 503, "Unavailable", {}, None)
             if path == "/":
-                return Response(b"<html>dev</html>")
+                links = "".join(f'<a href="{href}">Abrir</a>' for href in self.destinations)
+                return Response(f'<html><div data-portada="editorial-jb"><section id="portafolio"></section><section id="busqueda"></section><section id="recorridos"><nav aria-label="¿Qué quieres hacer?">{links}</nav></section></div></html>'.encode())
+            if path in self.destinations:
+                return Response(b"<html></html>" if path == self.empty_page else b"<html><h1>Contenido</h1></html>")
             if path.startswith("/payments/"):
                 self.assertEqual(urlsplit(url).scheme, "https")
                 return Response(self.served_qr)
@@ -81,8 +86,18 @@ class ManualPaymentSmokeTests(unittest.TestCase):
 
     def test_accepts_complete_manual_methods_and_original_qr(self):
         self.run_smoke()
+        self.assertTrue(all(path in self.paths for path in self.destinations))
         self.assertIn("/api/payments/manual/config", self.paths)
         self.assertIn("/payments/bancolombia-breb.jpeg", self.paths)
+
+    def test_rejects_old_home_or_missing_catalog(self):
+        self.destinations.pop()
+        with self.assertRaisesRegex(AssertionError, "Portada DEV"):
+            self.run_smoke()
+        self.destinations.append("/clientes")
+        self.empty_page = "/comprar"
+        with self.assertRaisesRegex(AssertionError, "Destino DEV"):
+            self.run_smoke()
 
     def test_rejects_non_manual_or_disabled_configuration(self):
         original = copy.deepcopy(self.config)

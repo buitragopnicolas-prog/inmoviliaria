@@ -1,6 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export interface JwtUser {
+  portal?: 'TENANT' | 'OWNER' | 'SERVICES';
   sub: string;
   email: string;
   name: string;

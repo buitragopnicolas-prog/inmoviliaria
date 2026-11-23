@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import type { User } from './types';
 
@@ -35,11 +36,11 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, authenti
   return response.json() as Promise<T>;
 }
 
-export async function getCurrentUser(): Promise<User | null> {
+export const getCurrentUser = cache(async (): Promise<User | null> => {
   try {
     if (!(await cookies()).get('inmo_token')?.value) return null;
     return await apiFetch<User>('/auth/me', {}, true);
   } catch {
     return null;
   }
-}
+});

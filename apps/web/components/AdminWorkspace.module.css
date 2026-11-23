@@ -59,6 +59,17 @@
 .createSymbol { background: var(--mint); color: var(--primary); border-radius: var(--radius-control); display: grid; place-items: center; flex: 0 0 34px; height: 34px; font-size: 23px; }
 .createChevron { margin-left: auto; color: var(--muted); font-size: 22px; }
 .createPanel[open] .createChevron { transform: rotate(180deg); }
+@media screen and (prefers-reduced-motion: no-preference) {
+  .createChevron, .quickActions a > span, .taskList a > span:last-child {
+    transition: transform var(--motion-fast) var(--motion-ease);
+  }
+  .createPanel[open] .createBody, .errorState, .loading > div { animation: var(--motion-arrival); }
+  .quickActions a:is(:focus-visible, :hover) > span,
+  .taskList a:is(:focus-visible, :hover) > span:last-child { transform: translateX(var(--motion-distance)); }
+}
+@media screen and (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+  .sidebarOpen { animation: var(--motion-arrival); animation-duration: var(--motion-fast); }
+}
 .createBody { border-top: 1px solid var(--border); }
 .createBody :global(.adminForm) { border: 0; margin: 0; background: transparent; }
 .listControls { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; padding: 0 0 20px; }

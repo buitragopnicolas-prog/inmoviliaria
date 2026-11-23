@@ -2,6 +2,23 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { aiTools, validateAiInput } from './ai-tools';
 import nextConfig from '../next.config';
+import { aiProgress } from './ai-progress';
+
+test('IA conserva el avance por archivo y distingue descarga total, generación y resultado', () => {
+  const first = aiProgress('emoji', { status: 'progress', file: 'encoder', loaded: 25, total: 100 }, null);
+  const both = aiProgress('emoji', { status: 'progress', file: 'decoder', progress: 8 }, first);
+  assert.deepEqual(both.bars, { encoder: 25, decoder: 8 });
+  assert.deepEqual(aiProgress('emoji', { status: 'done', file: 'encoder' }, both).bars, { decoder: 8 });
+  const total = aiProgress('classify', { status: 'progress_total', progress: 40 }, null);
+  assert.deepEqual(total.bars, { 'Descarga total': 40 });
+  assert.equal(aiProgress('classify', { status: 'done', file: 'encoder' }, total), total);
+  assert.deepEqual(aiProgress('image', { status: 'generating', progress: 60 }, total).bars, { 'Generando la imagen': 60 });
+  assert.deepEqual(aiProgress('emoji', { status: 'translating' }, both), { label: 'Generando emojis', bars: {} });
+  assert.deepEqual(aiProgress('emoji', { status: 'done' }, null), { label: 'Finalizando el resultado', bars: {} });
+  for (const event of [{ total: 0, loaded: 150 }, { progress: Number.NaN }, {}]) {
+    assert.deepEqual(aiProgress('ocr', { status: 'progress', ...event }, null).bars, {});
+  }
+});
 
 test('IA valida entradas antes de descargar modelos', () => {
   assert.match(validateAiInput('ocr', '', '', null)!, /Selecciona/);

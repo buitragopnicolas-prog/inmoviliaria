@@ -1,3 +1,4 @@
+import { DocumentsController } from './documents.controller.js';
 import { Module } from '@nestjs/common';
 import { AdminFilesController } from './admin-files.controller.js';
 import { FilesController } from './files.controller.js';
@@ -6,7 +7,7 @@ import { StorageService } from './storage.service.js';
 import { AntimalwareService } from './antimalware.service.js';
 
 @Module({
-  controllers: [FilesController, AdminFilesController],
+  controllers: [DocumentsController, FilesController, AdminFilesController],
   providers: [StorageService, AntimalwareService, FilesService],
   exports: [FilesService, StorageService],
 })

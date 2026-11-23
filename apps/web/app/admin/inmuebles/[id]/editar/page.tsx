@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { adminReturnHref, readAdminQuery, type AdminSearchParams } from '@/lib/admin-lists';
 import { AdminPropertyEditForm } from '@/components/AdminPropertyEditForm';
 import { apiFetch } from '@/lib/api';
 import { requireUser } from '@/lib/auth';
@@ -8,9 +8,10 @@ import type { Property, TenantOption } from '@/lib/types';
 export const metadata: Metadata = { title: 'Editar inmueble' };
 export const dynamic = 'force-dynamic';
 
-export default async function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditPropertyPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<AdminSearchParams> }) {
   await requireUser('ADMIN');
   const { id } = await params;
+  const query = readAdminQuery(await searchParams);
   const [property, tenants] = await Promise.all([
     apiFetch<Property>(`/admin/properties/${id}`, {}, true),
     apiFetch<TenantOption[]>('/admin/tenants', {}, true),
@@ -22,9 +23,9 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
             <span className="eyebrow">Administración</span>
             <h1>Editar inmueble</h1>
             <p>Actualiza los datos, imágenes y arrendatario asignado.</p>
-            <Link className="textLink" href="/admin/inmuebles">← Volver a inmuebles</Link>
+            <a className="textLink" href={adminReturnHref('/admin/inmuebles', query, id)}>← Volver a inmuebles</a>
           </div>
-          <AdminPropertyEditForm property={property} tenants={tenants} />
+          <AdminPropertyEditForm property={property} tenants={tenants} query={query} />
         </>
   );
 }

@@ -30,6 +30,10 @@
 .cta { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; border-top: 1px solid var(--border); color: var(--primary); font-size: 13px; font-weight: 600; }
 .cta > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--mint); font-size: 20px; transition: background var(--transition), color var(--transition); }
 .link:hover .cta > span, .link:focus-visible .cta > span { background: var(--primary); color: white; }
+@media screen and (prefers-reduced-motion: no-preference) {
+  .cta > span { transition: translate var(--motion-fast) var(--motion-ease), background var(--transition), color var(--transition); }
+  .link:is(:hover, :focus-visible) .cta > span { translate: var(--motion-distance) 0; }
+}
 @media (max-width: 680px) {
   .body { padding: 20px; }
   .body h3 { font-size: 20px; }

@@ -15,6 +15,7 @@ export interface ChargeCatalogItem {
 }
 
 export interface User {
+  portal: import('./portals').Portal;
   sub: string;
   email: string;
   name: string;
@@ -77,6 +78,9 @@ export interface Property {
 }
 
 export interface NewsPost {
+  category?: string;
+  additionalLinks?: string[];
+  attachments?: import('./documents').DocumentFile[];
   id: string;
   title: string;
   slug: string;
@@ -101,7 +105,7 @@ export interface Invoice {
   paidAt?: string | null;
   user?: { name: string; email: string } | null;
   tenant?: { id?: string; name: string; email?: string | null } | null;
-  lease: { id?: string; property: { title: string; address?: string }; user?: { name: string } };
+  lease: { id?: string; property: { title: string; address?: string }; user?: { name: string } } | null;
   lineItems?: Array<{
     id: string;
     quantity: number;

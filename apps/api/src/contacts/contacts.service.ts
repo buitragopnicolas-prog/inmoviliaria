@@ -1,3 +1,4 @@
+import { recordConsent } from '../common/privacy.js';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { ContactStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -8,7 +9,12 @@ export class ContactsService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(dto: CreateContactDto) {
-    return this.prisma.contactMessage.create({ data: dto });
+    const { authorized, policyVersion, ...data } = dto;
+    return this.prisma.$transaction(async tx => {
+      const contact = await tx.contactMessage.create({data});
+      await recordConsent(tx, {authorized, policyVersion}, 'contact', contact.id);
+      return contact;
+    });
   }
 
   list() {

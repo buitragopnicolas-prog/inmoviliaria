@@ -2,11 +2,12 @@ import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableE
 import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import type { Response } from 'express';
+import { validateUploadedFile } from './file-validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { StorageService } from './storage.service.js';
 import { AntimalwareService } from './antimalware.service.js';
 
-type UploadPurpose = 'PROPERTY_IMAGE' | 'GENERIC' | 'LEASE_CONTRACT' | 'PAYMENT_RECEIPT';
+type UploadPurpose = 'PROPERTY_IMAGE' | 'GENERIC' | 'LEASE_CONTRACT' | 'PAYMENT_RECEIPT' | 'MANAGED_PDF';
 
 @Injectable()
 export class FilesService {
@@ -18,10 +19,18 @@ export class FilesService {
 
   listAdmin() {
     return this.prisma.storedFile.findMany({
-      where: { purpose: { not: 'LEASE_CONTRACT' }, scanStatus: 'CLEAN' },
+      where: { purpose: { notIn: ['LEASE_CONTRACT','MANAGED_PDF'] }, scanStatus: 'CLEAN' },
       include: { createdBy: { select: { id: true, name: true, email: true } } },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  private async assertPhotoPublished(path:string) {
+    const [rental,sale]=await Promise.all([
+      this.prisma.propertyImage.findFirst({where:{url:path,property:{published:true}},select:{id:true}}),
+      this.prisma.saleOffer.findFirst({where:{published:true,images:{has:path}},select:{id:true}}),
+    ]);
+    if (!rental && !sale) throw new NotFoundException('Fotografía no publicada.');
   }
 
   async getPublicMetadata(id: string) {
@@ -30,6 +39,7 @@ export class FilesService {
       select: {
         id: true,
         originalName: true,
+        createdBy:{select:{portal:true}},
         mimeType: true,
         size: true,
         purpose: true,
@@ -38,7 +48,9 @@ export class FilesService {
       },
     });
     if (!file) throw new NotFoundException('Archivo no encontrado.');
-    return { ...file, downloadPath: `${file.publicPath}?download=1` };
+    const {createdBy,...metadata}=file;
+    if (createdBy?.portal==='OWNER' && file.purpose==='PROPERTY_IMAGE') await this.assertPhotoPublished(file.publicPath);
+    return { ...metadata, downloadPath: `${file.publicPath}?download=1` };
   }
 
   async uploadGeneric(files: Express.Multer.File[], createdById?: string, folder?: string) {
@@ -52,6 +64,11 @@ export class FilesService {
   async uploadProperty360(file: Express.Multer.File, createdById?: string) {
     const [uploaded] = await this.uploadMany([file], { createdById, purpose: 'GENERIC', folder: 'property-360' });
     return uploaded ?? null;
+  }
+
+  async uploadManagedPdfs(files: Express.Multer.File[], createdById: string) {
+    for (const file of files) validateUploadedFile(file, ['pdf'], 8_000_000, 'El PDF');
+    return this.uploadMany(files, { createdById, purpose: 'MANAGED_PDF', folder: 'documents' });
   }
 
   async uploadLeaseContract(file: Express.Multer.File, createdById?: string) {
@@ -84,14 +101,17 @@ export class FilesService {
   }
 
   async sendContent(id: string, response: Response, download = false, allowSensitive = false): Promise<void> {
-    const file = await this.prisma.storedFile.findUnique({ where: { id } });
-    if (!file || file.scanStatus !== 'CLEAN' || (['LEASE_CONTRACT', 'PAYMENT_RECEIPT'].includes(file.purpose) && !allowSensitive)) {
+    const file = await this.prisma.storedFile.findUnique({ where: { id }, include:{createdBy:{select:{portal:true}}} });
+    const restricted = file && !['GENERIC', 'PROPERTY_IMAGE'].includes(file.purpose);
+    if (!file || file.scanStatus !== 'CLEAN' || (restricted && !allowSensitive)) {
       throw new NotFoundException('Archivo no encontrado.');
     }
+    const ownerPhoto=file.purpose==='PROPERTY_IMAGE' && file.createdBy?.portal==='OWNER';
+    if(ownerPhoto && !allowSensitive) await this.assertPhotoPublished(file.publicPath);
     const stream = await this.storage.getObjectStream(file.objectKey);
     response.setHeader('Content-Type', file.mimeType);
     response.setHeader('Content-Length', String(file.size));
-    response.setHeader('Cache-Control', ['LEASE_CONTRACT', 'PAYMENT_RECEIPT'].includes(file.purpose) ? 'private, no-store' : 'public, max-age=31536000, immutable');
+    response.setHeader('Cache-Control', (restricted || ownerPhoto) ? 'private, no-store' : 'public, max-age=31536000, immutable');
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Content-Disposition', contentDisposition(file.originalName, download || file.purpose === 'GENERIC'));
     await pipeline(stream, response);

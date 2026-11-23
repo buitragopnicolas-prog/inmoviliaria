@@ -18,6 +18,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload?.sub) throw new UnauthorizedException('Sesión inválida.');
     const user = await this.users.findById(payload.sub);
     if (!user?.passwordHash) throw new UnauthorizedException('La cuenta ya no está disponible.');
-    return { sub: user.id, email: user.email, name: user.name, role: user.role };
+    return { sub: user.id, email: user.email, name: user.name, role: user.role, portal: user.portal };
   }
 }

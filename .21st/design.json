@@ -70,7 +70,9 @@
       "Fictitious listings or financial data"
     ]
   },
-  "decisions": [],
+  "decisions": [
+    "Portada editorial aprobada para pruebas en DEV con galería en anillo o tambor, búsqueda con foco cálido y directorio de tres gestiones."
+  ],
   "evidence": [
     {
       "fact": "project.instructions",

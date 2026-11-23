@@ -90,8 +90,11 @@ export class InvoicesService {
   }
 
   async create(dto: CreateInvoiceDto) {
-    const lease = await this.prisma.lease.findUnique({ where: { id: dto.leaseId } });
-    if (!lease) throw new NotFoundException('Contrato no encontrado.');
+    if (Boolean(dto.accountId) === Boolean(dto.leaseId)) throw new BadRequestException('Selecciona un contrato o una cuenta.');
+    const lease = dto.leaseId ? await this.prisma.lease.findUnique({where:{id:dto.leaseId}}) : null;
+    if (dto.leaseId && !lease) throw new NotFoundException('Contrato no encontrado.');
+    const account = dto.accountId ? await this.prisma.user.findFirst({where:{id:dto.accountId,role:'USER',portal:{in:['OWNER','SERVICES']},passwordHash:{not:null}},select:{id:true}}) : null;
+    if (dto.accountId && !account) throw new NotFoundException('Cuenta de facturación no encontrada.');
 
     const serviceItems = await this.prepareLineItems(dto.services, 'SERVICE');
     const productItems = await this.prepareLineItems(dto.products ?? [], 'PRODUCT');
@@ -106,9 +109,9 @@ export class InvoicesService {
     const invoice = await this.prisma.invoice.create({
       data: {
         code: `FAC-${new Date().getFullYear()}-${randomUUID().slice(0, 8).toUpperCase()}`,
-        leaseId: lease.id,
-        userId: lease.userId,
-        tenantId: lease.tenantId,
+        leaseId: lease?.id,
+        userId: account?.id ?? lease?.userId,
+        tenantId: lease?.tenantId,
         period: new Date(dto.period),
         dueDate: new Date(dto.dueDate),
         amount,

@@ -1,14 +1,22 @@
+import { serviceMenu } from '@/lib/service-menu';
+import { readSite } from '@/lib/read-site';
 import type { Metadata } from 'next';
 import { ContactForm } from '@/components/ContactForm';
+import { contactSubject } from '@/lib/contact-interests';
 
 export const metadata: Metadata = { title: 'Contacto' };
 
-export default function ContactPage() {
+export default async function ContactPage({ searchParams }: Readonly<{
+  searchParams: Promise<{ interes?: string | string[]; servicio?: string }>;
+}>) {
+  const [params, { contacto, servicios }] = await Promise.all([searchParams, readSite()]);
+  const subjects = Object.fromEntries(serviceMenu(servicios).map(item=>[item.key,item.name]));
+  const subject = params.servicio && Object.hasOwn(subjects, params.servicio) ? subjects[params.servicio] : contactSubject(params.interes);
   return (
     <section className="section pageTop">
       <div className="container contactGrid">
-        <div className="pageHeading"><span className="eyebrow">Contacto</span><h1>Hablemos de tu próximo arriendo</h1><p>Un asesor responderá tu solicitud y te ayudará a coordinar visitas.</p><div className="contactInfo"><p><strong>Teléfono</strong><br />+57 601 555 0185</p><p><strong>Correo</strong><br />contacto@asesoriainmobiliariajb.com</p><p><strong>Horario</strong><br />Lunes a viernes · 8:00 a. m. – 6:00 p. m.</p></div></div>
-        <div className="card formPanel"><ContactForm /></div>
+        <div className="pageHeading"><span className="eyebrow">{contacto.contact}</span><h1>{contacto.heading}</h1><p>{contacto.intro}</p><div className="contactInfo"><p><a className="textLink" href="/sugerencias">Buzón de sugerencias →</a></p><p><strong>Teléfono</strong><br />{contacto.phone}</p><p><strong>Correo</strong><br />{contacto.email}</p><p><strong>Horario</strong><br />{contacto.hours}</p></div></div>
+        <div className="card formPanel"><ContactForm key={subject} initialSubject={subject} /></div>
       </div>
     </section>
   );

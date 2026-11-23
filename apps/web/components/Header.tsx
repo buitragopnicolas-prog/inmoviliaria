@@ -1,3 +1,4 @@
+import { readSite } from '@/lib/read-site';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/api';
 import { logoutAction } from '@/app/actions';
@@ -5,14 +6,14 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { PublicNavigation } from '@/components/PublicNavigation';
 
 export async function Header() {
-  const user = await getCurrentUser();
+  const [user, { identidad }] = await Promise.all([getCurrentUser(), readSite()]);
   return (
     <header className="header">
       <div className="container nav">
         <Link className="brand" href="/">
-          <BrandLogo />
+          <BrandLogo name={identidad.name} tagline={identidad.tagline} />
         </Link>
-        <PublicNavigation role={user?.role} />
+        <PublicNavigation copy={identidad} role={user?.role} />
         <div className="navAuth">
           {user ? (
             <form action={logoutAction}>

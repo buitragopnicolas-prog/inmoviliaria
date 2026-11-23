@@ -1,3 +1,4 @@
+import { consentFor, sectionValues } from './portal-privacy-test-data.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
@@ -12,6 +13,7 @@ const adminEmail = required('E2E_ADMIN_EMAIL');
 const adminPassword = required('E2E_ADMIN_PASSWORD');
 
 const customer = await login(customerEmail, customerPassword);
+const policy=consentFor(sectionValues('contacto',await api('/site-content')));
 const admin = await login(adminEmail, adminPassword);
 const [catalog, adminInvoices] = await Promise.all([
   api('/admin/invoices/catalog', { token: admin.accessToken }),
@@ -81,7 +83,7 @@ assert.ok(payment.receiptFileId, 'El comprobante no quedó asociado.');
 await api(`/payments/receipts/${payment.receiptFileId}`, { token: customer.accessToken, parse: 'response' });
 const outsider = await api('/auth/register', {
   method: 'POST',
-  json: { name: 'Usuario IDOR E2E', email: `idor-${randomUUID()}@example.test`, phone: '+57 300 000 0000', password: `E2e-${randomUUID()}-Aa1!` },
+  json: { ...policy, name: 'Usuario IDOR E2E', email: `idor-${randomUUID()}@example.test`, phone: '+57 300 000 0000', password: `E2e-${randomUUID()}-Aa1!` },
 });
 await expectStatus(`/invoices/me/${invoice.id}`, { token: outsider.accessToken }, 404);
 await expectStatus(`/payments/receipts/${payment.receiptFileId}`, { token: outsider.accessToken }, 404);
@@ -120,6 +122,7 @@ async function reportPayment({ invoiceId, amount, method, bankReference, idempot
 
 function rawManualReport({ invoiceId, amount, method, bankReference, idempotencyKey, token, file }) {
   const form = new FormData();
+  form.set('authorized','true'); form.set('policyVersion',policy.policyVersion);
   form.set('method', method);
   form.set('amount', String(amount));
   form.set('paidAt', new Date(Date.now() - 60_000).toISOString());

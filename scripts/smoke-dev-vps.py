@@ -6,6 +6,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from html.parser import HTMLParser
 from uuid import uuid4
 
 BASE = "http://127.0.0.1:30080"
@@ -47,12 +48,47 @@ def payment_details(method):
     return details
 
 
+class PublicPage(HTMLParser):
+    def __init__(self, body):
+        super().__init__()
+        self.in_actions = False
+        self.destinations = []
+        self.subjects = []
+        self.feed(body.decode("utf-8"))
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        fields = dict(attrs)
+        if tag == "nav":
+            self.in_actions = fields.get("aria-label") == "¿Qué quieres hacer?"
+        elif tag == "a" and self.in_actions:
+            self.destinations.append(fields.get("href"))
+        elif tag == "input" and fields.get("name") == "subject":
+            self.subjects.append(fields.get("value", ""))
+
+    def handle_endtag(self, tag):
+        if tag == "nav":
+            self.in_actions = False
+
+
+def verify_public_routes(home):
+    assert b'data-portada="editorial-jb"' in home and all(f'id="{name}"'.encode() in home for name in ("portafolio", "busqueda", "recorridos")), "Portada DEV: falta el modelo editorial"
+    destinations = PublicPage(home).destinations
+    expected = {"/inmuebles", "/comprar", "/vehiculos-y-bienes", "/servicios", "/clientes", "/propietarios", "/arrendatarios"}
+    assert len(destinations) == len(expected) and set(destinations) == expected, "Portada DEV: destinos distintos de la especificación"
+    for path in destinations:
+        status, body = request(path)
+        assert status == 200 and b"<h1" in body, f"Destino DEV: página no disponible en {path}"
+
+
 status, ready = request("/api/health/ready")
 assert status == 200 and json.loads(ready)["status"] == "ok"
 status, catalog = request("/api/properties")
 assert status == 200 and json.loads(catalog)
 status, home = request("/")
 assert status == 200 and b"<html" in home
+verify_public_routes(home)
+print("Dev portada y destinos públicos: OK")
 
 credentials = json.dumps(
     {

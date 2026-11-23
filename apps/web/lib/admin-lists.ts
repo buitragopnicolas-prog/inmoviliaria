@@ -17,10 +17,24 @@ export function adminMatches(query: string, ...values: Array<string | null | und
   return normalize(query).split(/\s+/).every((word) => text.includes(word));
 }
 
-export function paginateAdmin<T>(items: T[], requestedPage: number, pageSize = 15) {
+const defaultPageSize = 15;
+
+export function paginateAdmin<T>(items: T[], requestedPage: number, pageSize = defaultPageSize) {
   const pages = Math.max(1, Math.ceil(items.length / pageSize));
   const page = Math.min(Math.max(1, requestedPage), pages);
   return { items: items.slice((page - 1) * pageSize, page * pageSize), total: items.length, page, pages, pageSize };
+}
+
+export function adminEditResults<T extends { id: string }>(items: T[], query: AdminQuery, row: AdminSearchParams[string]) {
+  const id = typeof row === 'string' ? row : '';
+  const index = id ? items.findIndex(item => item.id === id) : -1;
+  const page = index < 0 ? query.pagina : Math.floor(index / defaultPageSize) + 1;
+  return { ...paginateAdmin(items, page), focusId: id ? (index < 0 ? 'resultados-edicion' : `editar-${id}`) : undefined };
+}
+
+export function adminReturnHref(path: '/admin/inmuebles' | '/admin/facturas', query: AdminQuery, id: string) {
+  const href = adminListHref(path, query, query.pagina);
+  return `${href}${href.includes('?') ? '&' : '?'}fila=${encodeURIComponent(id)}#editar-${encodeURIComponent(id)}`;
 }
 
 export function adminListHref(path: string, query: AdminQuery, page = 1): string {

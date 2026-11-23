@@ -1,6 +1,10 @@
+import { createHash } from 'node:crypto';
+import { PolicyProvider } from '@/components/ConsentField';
+import { readSite } from '@/lib/read-site';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import './motion.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { PublicSiteChrome, SkipToContentLink } from '@/components/PublicSiteChrome';
@@ -19,19 +23,23 @@ const bodyFont = localFont({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: { default: 'Asesoría Inmobiliaria JB | Arriendos con confianza', template: '%s | Asesoría Inmobiliaria JB' },
-  description: 'Encuentra inmuebles en arriendo y administra tus pagos de forma sencilla.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { identidad } = await readSite();
+  return {title: {default: identidad.name, template: '%s | '+identidad.name}, description: identidad.description};
+}
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { contacto } = await readSite();
+  const text=contacto.policyText.trim();
+  const href=contacto.policyHref.trim() || (text ? '/politica-de-datos' : '');
+  const version=href ? createHash('sha256').update(JSON.stringify([href,text])).digest('hex') : '';
   return (
     <html lang="es" data-scroll-behavior="smooth">
       <body className={`${bodyFont.variable} ${displayFont.variable}`}>
-        <SkipToContentLink />
+        <PolicyProvider value={{href,version}}><SkipToContentLink />
         <PublicSiteChrome><Header /></PublicSiteChrome>
         <main id="contenido" tabIndex={-1}>{children}</main>
-        <PublicSiteChrome><Footer /></PublicSiteChrome>
+        <PublicSiteChrome><Footer /></PublicSiteChrome></PolicyProvider>
       </body>
     </html>
   );

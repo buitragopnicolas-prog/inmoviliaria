@@ -1,0 +1,100 @@
+:root {
+  --motion-ease: cubic-bezier(.2, .75, .25, 1);
+  --motion-panel: 320ms;
+  --motion-editorial: 720ms;
+  --motion-arrival: jb-arrive var(--motion-panel) var(--motion-ease) backwards;
+}
+
+@keyframes jb-arrive {
+  from { opacity: .82; translate: 0 10px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes jb-drop {
+  from { opacity: .85; translate: 0 -6px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes jb-read {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes jb-spin { to { rotate: 1turn; } }
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  :is(.pageHeading, .detailHeading, .newsArticle) h1,
+  .authForm h1, .paymentSummaryCard h1 { animation: var(--motion-arrival); }
+
+  .pageHeading > p, .filters, .formPanel, .values article,
+  .gallery > *, .metricGrid > *, .contractUserCard,
+  .cardsGrid > :not([data-reveal-state]) {
+    animation: var(--motion-arrival);
+  }
+  .pageHeading > p, .filters, .formPanel { animation-delay: 55ms; }
+  :is(.metricGrid, .gallery, .values, .cardsGrid) > :nth-child(2) { animation-delay: 45ms; }
+  :is(.metricGrid, .gallery, .values, .cardsGrid) > :nth-child(3) { animation-delay: 90ms; }
+
+  .mobileLinks:not([hidden]) { animation: jb-drop var(--motion-fast) var(--motion-ease); }
+  .invoiceEditorGrid { animation: var(--motion-arrival); }
+  .navLinks a:focus-visible::after { transform: scaleX(1); }
+  .button:not(:disabled):active { transform: translateY(1px); }
+  .button[aria-busy='true']::before {
+    content: '';
+    width: .85em;
+    height: .85em;
+    flex: none;
+    margin-inline-end: .6em;
+    border: 2px solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    animation: jb-spin 800ms linear infinite;
+  }
+  .paymentInstructions, .reportedPaymentState, .alert:not(:empty, .statusNotice), .dataUnavailable {
+    animation: var(--motion-arrival);
+    animation-duration: var(--motion-fast);
+  }
+  .paymentMethodMark { transition: scale var(--motion-fast) var(--motion-ease); }
+  .paymentMethod.selected .paymentMethodMark { scale: 1.06; }
+  .reviewActions .button[aria-busy='true'] { position: relative; }
+  .reviewActions .button[aria-busy='true']::before {
+    position: absolute;
+    inset: auto 12% 2px;
+    width: auto;
+    height: 2px;
+    margin: 0;
+    border: 0;
+    border-radius: 1px;
+    background: currentColor;
+    transform-origin: left;
+    animation: jb-read var(--motion-panel) var(--motion-ease) backwards;
+  }
+
+  /* Read progress and cards follow the viewport in supporting browsers. */
+  @supports (animation-timeline: scroll()) {
+    .header::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 -1px;
+      height: 2px;
+      pointer-events: none;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: jb-read linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+  @supports (animation-timeline: view()) and (animation-range: entry 0% entry 90%) {
+    .cardsGrid > :not([data-reveal-state]), .purpose > * {
+      animation: jb-arrive linear backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+  }
+  :is(.formPanel, .cardsGrid > *, .mobileLinks, .filters):focus-within { animation: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button:hover, .newsCard:hover { transform: none; }
+}

@@ -30,7 +30,9 @@ export default async function AdminPage() {
     ['/admin/inmuebles?crear=1', 'Publicar inmueble', 'home'],
     ['/admin/usuarios?crear=1', 'Crear usuario', 'users'],
     ['/admin/facturas?crear=1', 'Crear factura', 'document'],
-    ['/admin/noticias?crear=1', 'Publicar noticia', 'document'],
+    ['/admin/ofertas?nueva=1', 'Publicar oferta de venta', 'home'],
+    ['/admin/contenido', 'Editar contenido del sitio', 'grid'],
+    ['/admin/noticias?crear=1', 'Escribir artículo', 'document'],
     ['/admin/archivos?crear=1', 'Subir archivos', 'folder'],
   ];
   return (

@@ -3,16 +3,21 @@
 .home h2 em { font-weight: 500; }
 .kicker { display: block; color: var(--text-secondary); font-size: 11px; line-height: 1.6; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 22px; }
 .hero { background: var(--sand); color: var(--primary); padding-top: 48px; }
-.heroContent { display: flex; flex-direction: column; }
-.heroMain { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
-.heroCopy { padding-block: 24px 40px; }
-.heroVisual { position: relative; min-width: 0; height: 480px; overflow: hidden; border-radius: 4px 64px 4px 4px; background: var(--primary); }
+.heroContent {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  grid-template-areas: "copy photo" "search search" "foot foot";
+  column-gap: clamp(28px, 4vw, 64px);
+}
+.heroCopy { grid-area: copy; align-self: center; padding-block: 24px 40px; }
+.heroVisual { grid-area: photo; align-self: center; position: relative; min-width: 0; height: clamp(420px, 39vw, 540px); overflow: hidden; border-radius: 4px clamp(48px, 7vw, 104px) 4px 4px; background: var(--primary); }
 .heroImage { position: absolute; inset: 0; }
 .heroImage img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 65% 50%; }
 .heroImageCaption { position: absolute; inset: auto 0 0; padding: 60px 30px 26px; color: white; background: linear-gradient(transparent, rgb(6 22 40 / 88%)); }
-.heroImageCaption > span { font-size: 10px; letter-spacing: .15em; }
-.heroImageCaption p { font: 500 38px/1.08 var(--font-display), serif; margin-block: 12px; }
 .heroImageCaption small { font-size: 10px; color: #e0e5eb; }
+.heroImageCaption { display: flex; align-items: center; gap: 12px; }
+.heroImageCaption::before { content: ''; width: 32px; height: 1px; background: var(--gold-soft); transform-origin: left; }
+.titleLine { display: block; }
 .heroKicker { display: flex; align-items: center; gap: 14px; color: #f1f3f5; font-size: 11px; letter-spacing: .17em; text-transform: uppercase; line-height: 1.6; }
 .heroKicker::before { content: ''; flex: 0 0 34px; height: 1px; background: var(--gold-soft); }
 .hero .heroKicker { color: var(--text-secondary); font-size: 10px; letter-spacing: .1em; }
@@ -20,16 +25,53 @@
 .hero h1 { font-size: clamp(58px, 6.1vw, 86px); line-height: 1; font-weight: 500; letter-spacing: -.04em; margin: 28px 0 24px; }
 .hero h1 em { color: var(--gold-deep); font-weight: 500; }
 .heroCopy > p { max-width: 430px; font-size: 18px; line-height: 1.65; color: var(--text-secondary); }
-.heroActions { display: flex; align-items: center; gap: 12px 26px; flex-wrap: wrap; margin-top: 28px; }
-.heroBrowse { display: inline-flex; gap: 16px; align-items: center; font-size: 15px; font-weight: 600; min-height: 48px; border-bottom: 1px solid var(--gold-deep); }
-.heroBrowse:hover { color: var(--primary-hover); }
-.hero .heroSecondary { color: var(--text-secondary); border-color: var(--border); font-size: 14px; }
-.hero .heroSecondary:hover { color: var(--primary); border-color: var(--primary); }
-.searchPanel { position: relative; margin-top: -12px; z-index: 1; padding: 26px 30px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); scroll-margin-top: 110px; }
+.heroActions { display: flex; flex-wrap: wrap; gap: 8px; max-width: 440px; margin-top: 28px; }
+.heroActions a {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 44px; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-control);
+  color: var(--primary); background: var(--surface); font-weight: 600;
+}
+.heroActions a:is(:first-child, :nth-child(2)) { color: white; background: var(--primary); border-color: var(--primary); }
+.heroActions a:is(:hover, :focus-visible) { border-color: var(--gold-deep); }
+@media (prefers-reduced-motion: no-preference) {
+  .heroActions span { transition: transform var(--motion-fast) ease-out; }
+  .heroActions a:is(:focus-visible, :active) span { transform: translateX(var(--motion-distance)); }
+}
+@keyframes titleArrive {
+  from { translate: 0 .24em; }
+  to { translate: 0 0; }
+}
+@keyframes settlePhoto {
+  from { transform: scale(1.055) translateX(1%); }
+  to { transform: scale(1) translateX(0); }
+}
+@keyframes drawRule {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media screen and (prefers-reduced-motion: no-preference) {
+  .titleLine { animation: titleArrive 540ms var(--motion-ease) backwards; }
+  .titleLine + .titleLine { animation-delay: 70ms; }
+  .heroImage img { animation: settlePhoto var(--motion-editorial) var(--motion-ease) backwards; }
+  .hero .heroKicker::before, .heroImageCaption::before {
+    transform-origin: left;
+    animation: drawRule 480ms var(--motion-ease) backwards;
+  }
+  .heroCopy > p, .heroActions, .searchPanel { animation: var(--motion-arrival); }
+  .heroCopy > p { animation-delay: 90ms; }
+  .heroActions { animation-delay: 135ms; }
+  .searchPanel { animation-delay: 160ms; }
+  .heroActions:focus-within, .searchPanel:focus-within { animation: none; }
+  .heroActions a { transition: translate var(--motion-fast) var(--motion-ease), border-color var(--transition); }
+  .heroActions a:active { translate: 0 1px; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .heroActions a:hover span { transform: translateX(var(--motion-distance)); }
+}
+.searchPanel { grid-area: search; position: relative; margin-top: -12px; z-index: 1; padding: 26px 30px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); scroll-margin-top: 110px; }
 .searchHeading { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
 .searchHeading > svg { width: 18px; height: 18px; color: var(--gold-deep); }
 .home .searchHeading h2 { font: 600 17px/1.4 var(--font-sans), sans-serif; letter-spacing: -.01em; }
-.searchHeading > span { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
 .heroSearch { display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 20px; align-items: end; }
 .heroSearch label { display: grid; min-width: 0; gap: 8px; font-size: 12px; font-weight: 600; }
 .heroSearch input { width: 100%; min-width: 0; min-height: 48px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--background); padding: 12px; color: var(--text-primary); font: 400 16px/1.4 var(--font-sans), sans-serif; }
@@ -40,22 +82,15 @@
 .heroPrimary { min-height: 52px; padding-inline: 26px; background: white; color: var(--primary); border-color: white; border-radius: 4px; gap: 26px; }
 .heroPrimary:hover { color: var(--primary); background: #f3ead9; border-color: #f3ead9; }
 .heroPrimary span { font-size: 21px; font-weight: 400; }
-.heroSecondary { min-height: 48px; display: inline-flex; align-items: center; gap: 18px; font-size: 15px; border-bottom: 1px solid rgb(255 255 255 / 50%); }
-.heroSecondary:hover { border-color: var(--gold-soft); color: #f1ddb3; }
-.heroFoot { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 80px; color: var(--text-secondary); }
+.heroFoot { grid-area: foot; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 80px; color: var(--text-secondary); }
 .discoverLink { display: flex; align-items: center; gap: 16px; min-height: 48px; font-size: 12px; }
 .discoverLink span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 50%; font-size: 16px; }
 .catalogLink { display: inline-flex; align-items: center; gap: 14px; min-height: 44px; font-size: 13px; font-weight: 600; color: var(--primary); }
 .catalogLink:hover { text-decoration: underline; text-underline-offset: 4px; }
 .introduction { padding: 110px 0 90px; scroll-margin-top: 100px; }
-.introHeading { display: grid; grid-template-columns: 1fr 2.3fr; gap: 50px; }
-.introHeading > .kicker { margin-top: 8px; }
-.introHeading h2 { max-width: 800px; }
-.introHeading p { max-width: 650px; color: var(--text-secondary); font-size: 18px; margin-top: 26px; }
-.serviceRows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 42px; margin-top: 70px; }
-.serviceLink { display: grid; grid-template-columns: 24px 1fr 24px; gap: 12px; padding-block: 24px 12px; border-top: 1px solid var(--border); min-height: 148px; transition: border-color 200ms ease; }
+.serviceRows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 42px; margin-top: 36px; }
+.serviceLink { display: grid; grid-template-columns: 1fr 24px; gap: 12px; padding-block: 24px 12px; border-top: 1px solid var(--border); min-height: 148px; transition: border-color var(--transition); }
 .serviceLink:hover { border-color: var(--gold-deep); }
-.serviceNumber { color: var(--gold-deep); font-size: 12px; padding-top: 5px; font-variant-numeric: tabular-nums; }
 .serviceLink h3 { font-family: var(--font-sans), sans-serif; font-size: 19px; color: var(--primary); font-weight: 600; line-height: 1.35; letter-spacing: -.02em; }
 .serviceLink p { font-size: 15px; color: var(--text-secondary); margin-top: 12px; }
 .serviceArrow { color: var(--primary); font-size: 24px; line-height: 1; transition: transform 200ms ease; }
@@ -117,17 +152,14 @@
 }
 @media (max-width: 1000px) {
   .hero { padding-top: 32px; }
-  .heroMain { gap: 28px; }
+  .heroContent { column-gap: 28px; }
   .hero h1 { font-size: clamp(52px, 7.2vw, 70px); }
   .heroVisual { height: 440px; }
   .heroCopy > p { font-size: 16px; }
   .heroSearch { grid-template-columns: 1fr 1fr; gap: 16px; }
   .searchPanel { margin-top: 12px; padding: 24px; }
-  .introHeading { grid-template-columns: 1fr; gap: 6px; }
-  .introHeading p { max-width: 640px; }
   .serviceRows { gap: 24px; }
   .serviceLink { grid-template-columns: 1fr 22px; gap: 10px; }
-  .serviceNumber { grid-column: 1 / -1; }
   .sectionHeading { align-items: start; }
   .headingAside { max-width: 260px; padding-top: 38px; }
   .documentsGrid { gap: 40px; }
@@ -139,34 +171,28 @@
 }
 @media (max-width: 680px) {
   .hero { padding-top: 24px; }
-  .heroMain { grid-template-columns: 1fr; gap: 24px; }
+  .heroContent { grid-template-columns: minmax(0, 1fr); grid-template-areas: "copy" "search" "photo" "foot"; }
   .heroCopy { padding-block: 12px 0; }
-  .heroVisual { height: 260px; border-top-right-radius: 48px; }
+  .heroVisual { margin-top: 24px; height: 260px; border-top-right-radius: 48px; }
   .heroImage img { object-position: 65% 45%; }
   .heroImageCaption { padding: 45px 22px 20px; }
-  .heroImageCaption p { font-size: 30px; }
   .heroKicker { font-size: 9px; letter-spacing: .12em; gap: 10px; }
   .heroKicker::before { flex-basis: 22px; }
   .hero h1 { font-size: clamp(49px, 12.2vw, 76px); margin-block: 20px; line-height: 1.03; }
   .heroCopy > p { font-size: 16px; line-height: 1.65; max-width: 410px; }
-  .heroActions { gap: 8px 22px; margin-top: 20px; }
+  .heroActions { margin-top: 20px; }
   .searchPanel { margin-top: 20px; padding: 22px 18px; scroll-margin-top: 96px; }
   .searchHeading { flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-  .searchHeading > span { width: 100%; margin-left: 0; }
   .heroSearch { grid-template-columns: 1fr; gap: 16px; }
   .heroPrimary { min-height: 50px; padding-inline: 20px; }
-  .heroSecondary { font-size: 14px; }
   .heroFoot { min-height: 76px; flex-wrap: wrap; gap: 0 16px; padding-block: 12px; }
   .discoverLink { min-height: 42px; font-size: 11px; }
   .discoverLink span { width: 25px; height: 25px; }
   .introduction, .properties, .digital { padding-block: 64px; }
-  .introHeading { gap: 4px; }
   .home h2 { font-size: clamp(36px, 8.5vw, 50px); }
-  .introHeading p { font-size: 16px; margin-top: 20px; }
   .kicker { font-size: 10px; margin-bottom: 17px; }
   .serviceRows { grid-template-columns: 1fr; gap: 0; margin-top: 32px; }
-  .serviceLink { grid-template-columns: 22px 1fr 24px; gap: 12px; padding-block: 24px; min-height: auto; }
-  .serviceNumber { grid-column: auto; }
+  .serviceLink { grid-template-columns: 1fr 24px; gap: 12px; padding-block: 24px; min-height: auto; }
   .serviceLink h3 { font-size: 18px; }
   .serviceLink p { font-size: 15px; margin-top: 8px; }
   .sectionHeading { display: grid; gap: 22px; margin-bottom: 30px; }
@@ -193,4 +219,5 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .home *, .home *::before, .home *::after { transition: none; }
+  .serviceLink:hover .serviceArrow, .arrowLink:hover span, .lightArrowLink:hover span { transform: none; }
 }

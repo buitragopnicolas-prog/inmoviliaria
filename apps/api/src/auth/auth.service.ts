@@ -1,3 +1,4 @@
+import { recordConsent } from '../common/privacy.js';
 import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -30,9 +31,11 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.$transaction(async (tx) => {
       const created = await tx.user.create({
-        data: { name, email, phone, passwordHash, role: 'USER' },
+        data: { name, email, phone, passwordHash, role: 'USER', portal: dto.portal ?? 'TENANT' },
       });
 
+      await recordConsent(tx, dto, 'registration', created.id);
+      if (created.portal !== 'TENANT') return created;
       const existingTenant = await tx.tenant.findFirst({
         where: { email: { equals: email, mode: 'insensitive' }, userId: null },
         orderBy: { createdAt: 'asc' },
@@ -87,8 +90,8 @@ export class AuthService {
       .trim();
   }
 
-  private async issueToken(user: { id: string; email: string; name: string; role: 'ADMIN' | 'USER' }) {
-    const payload = { sub: user.id, email: user.email, name: user.name, role: user.role };
+  private async issueToken(user: { id: string; email: string; name: string; portal: string; role: 'ADMIN' | 'USER' }) {
+    const payload = { sub: user.id, email: user.email, name: user.name, role: user.role, portal: user.portal };
     return {
       accessToken: await this.jwt.signAsync(payload),
       user: payload,

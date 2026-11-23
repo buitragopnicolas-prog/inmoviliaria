@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsDateString, IsInt, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsDateString, IsInt, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 
 export class InvoiceLineItemInputDto {
   @IsString()
@@ -14,9 +14,13 @@ export class InvoiceLineItemInputDto {
 }
 
 export class CreateInvoiceDto {
+  @IsOptional() @IsString() @MaxLength(64)
+  accountId?: string;
+
+  @IsOptional()
   @IsString()
   @MaxLength(64)
-  leaseId!: string;
+  leaseId?: string;
 
   @IsDateString()
   period!: string;

@@ -24,19 +24,25 @@ const { render, fireEvent, cleanup, waitFor, within, act } = await import('@test
 const actionSource = await readFile('apps/web/app/actions.ts', 'utf8');
 const actionNames = [...actionSource.matchAll(/export async function (\w+)/g)].map((match) => match[1]);
 const stubs = {
+  'read-site': 'import {defaultCopy} from "./apps/web/lib/site-content.ts"; export async function readSite(){return defaultCopy;}',
   ai: 'export async function runAiTool(...args) { globalThis.__ui.aiCalls.push(args); return globalThis.__ui.aiRun(...args); }',
   actions: actionNames.map((name) => `export async function ${name}(...args) { globalThis.__ui.calls.push({ name: '${name}', data: args.at(-1) }); return globalThis.__ui.result; }`).join('\n'),
   api: 'export async function apiFetch(path, ...args) { globalThis.__ui.requests.push([path, ...args]); const responses = globalThis.__ui.apiResponses; if (responses && Object.hasOwn(responses, path)) { if (responses[path] instanceof Error) throw responses[path]; return responses[path]; } return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
-  auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); return { name: "Admin JB" }; }',
+  auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); return { name: "Admin JB", portal:"TENANT" }; }',
   cache: 'export function revalidatePath(path) { globalThis.__ui.revalidated.push(path); }',
   headers: 'export function cookies() { throw new Error("Cookies are unavailable in this test"); }',
-  navigation: 'export function usePathname() { return globalThis.__ui.pathname; } export function redirect() { throw new Error("Unexpected redirect"); }',
+  navigation: 'export function notFound(){ throw new Error("Not found"); } export function usePathname() { return globalThis.__ui.pathname; } export function redirect() { throw new Error("Unexpected redirect"); }',
   link: 'import React from "react"; export default function Link({ children, onClick, ...props }) { return React.createElement("a", { ...props, onClick: event => { onClick?.(event); event.preventDefault(); } }, children); }',
   image: 'import React from "react"; export default function Image({ fill, priority, ...props }) { return React.createElement("img", props); }',
 };
 const names = ['AiTools', 'PropertyCard', 'PublicNavigation', 'ActiveLink', 'AuthForm', 'ContactForm', 'AdminNewsForm', 'AdminUserForm', 'AdminFileUploadForm', 'AdminPropertyForm', 'AdminPropertyEditForm', 'AdminAssignPropertyForm', 'AdminDeletePropertyButton', 'AdminInvoiceForm', 'AdminInvoiceManager', 'AdminLeaseContractForm', 'ManualPaymentForm', 'ManualPaymentReviewForm'];
 names.push('AdminWorkspace', 'AdminCreatePanel', 'AdminListControls', 'AdminContactStatusForm', 'AdminTableRegion', 'PublicSiteChrome');
-const entry = names.map((name) => `export { ${name} } from './apps/web/components/${name}.tsx';`).join('\n') +
+names.push('PropertyGallery');
+const entry = "export { PolicyProvider } from './apps/web/components/ConsentField.tsx';\n"+names.map((name) => `export { ${name} } from './apps/web/components/${name}.tsx';`).join('\n') +
+  "\nexport { ManualPaymentReviewQueue } from './apps/web/components/ManualPaymentReviewForm.tsx';" +
+  "\nexport { default as ContactPage } from './apps/web/app/contacto/page.tsx';" +
+  "\nexport { default as MyAccountPage } from './apps/web/app/mi-cuenta/page.tsx';" +
+  "\nexport { reportManualPaymentAction, contactAction, loginAction } from './apps/web/app/actions.ts';" +
   "\nexport { HomeHero } from './apps/web/components/home/HomeSections.tsx';\nexport { default as PayInvoicePage } from './apps/web/app/mi-cuenta/facturas/[id]/pagar/page.tsx';\nexport { default as AdminNewsPage } from './apps/web/app/admin/noticias/page.tsx';" +
   ['inmuebles', 'usuarios', 'facturas', 'contactos', 'archivos', 'conciliacion'].map((route) => `\nexport { default as Admin_${route} } from './apps/web/app/admin/${route}/page.tsx';`).join('') +
   "\nexport { default as AdminDashboardPage } from './apps/web/app/admin/page.tsx';\nexport * from './apps/web/lib/admin-lists.ts';\nexport { SkipToContentLink } from './apps/web/components/PublicSiteChrome.tsx';" +
@@ -49,7 +55,7 @@ await build({
   tsconfig: 'apps/web/tsconfig.json', sourcemap: 'inline', sourcesContent: true,
   plugins: [{ name: 'server-boundary', setup(builder) {
     builder.onResolve({ filter: /^@\/lib\/run-ai-tool$/ }, () => ({ path: 'ai', namespace: 'ui-stub' }));
-    builder.onResolve({ filter: /^(@\/app\/actions|@\/lib\/api|@\/lib\/auth|next\/(link|navigation|image|cache|headers))$/ }, ({ path }) => {
+    builder.onResolve({ filter: /^(@\/app\/actions|@\/lib\/api|@\/lib\/auth|@\/lib\/read-site|next\/(link|navigation|image|cache|headers))$/ }, ({ path }) => {
       const key = path === '@/app/actions' ? 'actions' : path.split('/').at(-1);
       return { path: key, namespace: 'ui-stub' };
     });
@@ -63,7 +69,58 @@ const config = { enabled: true, mode: 'manual', notice: 'Requiere verificación'
 function reset() { globalThis.__ui = { calls: [], roles: [], requests: [], revalidated: [], result: { success: 'Solicitud recibida' }, pathname: '/', invoice: structuredClone(invoice), config: structuredClone(config), news: [{ id: 'news-1', title: 'Noticia de prueba', createdAt: '2026-10-01', published: true }] }; }
 reset();
 afterEach(() => { cleanup(); reset(); });
-function component(name, props = {}) { return render(React.createElement(ui[name], props)); }
+function component(name, props = {}) { return render(React.createElement(ui[name], props),{wrapper:({children})=>React.createElement(ui.PolicyProvider,{value:{href:'/politica-de-datos',version:'a'.repeat(64)}},children)}); }
+
+test('la galería conserva los enlaces, recorre fotos con botones y teclado y devuelve el foco', () => {
+  const images = ['Sala', 'Cocina'].map((alt, index) => ({ id: String(index), alt, url: '/foto-' + index + '.jpg', sortOrder: index }));
+  const view = component('PropertyGallery', { images, title: 'Apartamento de prueba' });
+  const thumbnail = view.container.querySelector('summary');
+  assert.match(thumbnail.textContent, /Ver las 2 fotos/);
+  assert.deepEqual([...view.container.querySelectorAll('details a')].map(link => new URL(link.href).pathname), ['/foto-0.jpg', '/foto-1.jpg']);
+  const dialog = view.container.querySelector('dialog');
+  // JSDOM lacks the native dialog methods. Drive their DOM events explicitly.
+  dialog.showModal = () => { dialog.open = true; };
+  dialog.close = () => { dialog.open = false; dialog.dispatchEvent(new Event('close')); };
+  fireEvent.click(thumbnail);
+  const viewer = within(view.getByRole('dialog', { name: 'Fotografías de Apartamento de prueba' }));
+  assert.equal(viewer.getByRole('img').alt, 'Sala');
+  fireEvent.click(viewer.getByRole('button', { name: 'Foto anterior' }));
+  assert.equal(viewer.getByRole('img').alt, 'Cocina');
+  fireEvent.keyDown(dialog, { key: 'ArrowRight' });
+  assert.ok(viewer.getByText('Foto 1 de 2'));
+  fireEvent.keyDown(dialog, { key: 'ArrowLeft' });
+  assert.ok(viewer.getByText('Foto 2 de 2'));
+  fireEvent.click(viewer.getByRole('button', { name: 'Cerrar galería' }));
+  assert.equal(view.queryByRole('dialog'), null);
+  assert.equal(document.activeElement, thumbnail);
+});
+
+test('la ficha sin fotografías muestra la referencia sin ofrecer ampliación', () => {
+  const view = component('PropertyGallery', { images: [], title: 'Apartamento de prueba' });
+  assert.equal(view.queryByRole('link'), null);
+  view.rerender(React.createElement(ui.PropertyGallery, { images: [{ id: 'placeholder', url: '/property-placeholder.svg', alt: '' }], title: 'Apartamento de prueba' }));
+  assert.equal(view.getByRole('img').getAttribute('src'), '/property-placeholder.svg');
+  assert.equal(view.queryByRole('link'), null);
+});
+
+test('una sola fotografía conserva el enlace al original y omite los controles de recorrido', () => {
+  const view = component('PropertyGallery', { images: [{ id: '1', url: '/sala.jpg', alt: 'Sala' }], title: 'Casa de prueba' });
+  assert.match(view.getByRole('link', { name: /Ampliar foto/ }).href, /\/sala\.jpg$/);
+  assert.equal(view.container.querySelector('details'), null);
+  assert.equal(view.queryByRole('button', { name: 'Foto siguiente', hidden: true }), null);
+});
+
+test('el reintento devuelve el borrador de contacto y solo el correo en el acceso', async () => {
+  const values = { name: 'Persona de prueba', email: 'visita@example.test', phone: '5550100', subject: 'Visita de prueba', message: 'Quiero visitar este inmueble.' };
+  const data = new FormData();
+  for (const [key, value] of Object.entries(values)) data.set(key, value);
+  data.set('password', 'solo-para-la-prueba');
+  data.set('authorized','true'); data.set('policyVersion','a'.repeat(64));
+  globalThis.__ui.apiResponses = { '/contacts': new Error('Intenta de nuevo'), '/auth/login': new Error('Acceso rechazado') };
+  assert.deepEqual(await ui.contactAction({}, data), { error: 'Intenta de nuevo', values });
+  assert.deepEqual(JSON.parse(globalThis.__ui.requests[0][1].body), {...values,authorized:true,policyVersion:'a'.repeat(64)});
+  assert.deepEqual(await ui.loginAction({}, data), { error: 'Acceso rechazado', values: { email: values.email } });
+});
 
 test('herramientas IA validan antes de cargar modelos y limpian resultados al cambiar', async () => {
   globalThis.__ui.aiCalls = [];
@@ -97,8 +154,8 @@ test('herramientas IA bloquean dobles ejecuciones y permiten reintentar después
   fireEvent.change(view.getByRole('textbox', { name: /^Texto/ }), { target: { value: 'A sunny house' } });
   fireEvent.click(view.getByRole('button', { name: 'Procesar', exact: true }));
   await waitFor(() => assert.equal(globalThis.__ui.aiCalls.length, 1));
-  assert.equal(view.getByRole('button', { name: 'Procesando…' }).disabled, true);
-  assert.match(view.getByRole('status').textContent, /50/);
+  assert.equal(view.getByRole('button', { name: 'Procesando…' }).getAttribute('aria-disabled'), 'true');
+  assert.equal(view.getByRole('progressbar').value, 50);
   assert.equal(view.getByRole('button', { name: /Traducir texto/ }).disabled, true);
   await act(async () => { finish({ text: '🏡' }); });
   await waitFor(() => assert.equal(view.getByLabelText('Texto del resultado').value, '🏡'));
@@ -130,6 +187,8 @@ test('herramientas IA permiten descargar imágenes y audio y liberan sus vistas 
 test('el buscador del inicio envía filtros compatibles con el catálogo sin acciones de escritura', () => {
   const view = component('HomeHero');
   const form = view.getByRole('form', { name: 'Buscar inmuebles en arriendo' });
+  const photo = view.getByRole('img', { name: /imagen de referencia/ });
+  assert.ok(form.compareDocumentPosition(photo) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
   fireEvent.change(view.getByLabelText('Barrio o inmueble'), { target: { value: 'Chapinero' } });
   fireEvent.change(view.getByLabelText('Ciudad'), { target: { value: 'Bogotá' } });
   const rent = view.getByLabelText('Canon máximo (COP)');
@@ -140,6 +199,33 @@ test('el buscador del inicio envía filtros compatibles con el catálogo sin acc
   fireEvent.change(rent, { target: { value: '-1' } });
   assert.equal(form.checkValidity(), false);
   assert.equal(globalThis.__ui.calls.length, 0);
+});
+
+test('los destinos de la portada abren el catálogo, el portal o los servicios', async () => {
+  const hero = component('HomeHero');
+  const nav = within(hero.getByRole('navigation', { name: '¿Qué quieres hacer?' }));
+  const destinations = Object.fromEntries(nav.getAllByRole('link').map(link => [
+    link.textContent.replace('↗', ''), link.getAttribute('href'),
+  ]));
+  assert.deepEqual(destinations, {
+    Arrendatarios:'/arrendatarios', Propietarios:'/propietarios', 'Compra y vende': '/comprar', Arrendar: '/inmuebles',
+    'Vehículos y bienes': '/vehiculos-y-bienes', Servicios: '/servicios', Clientes: '/clientes',
+  });
+  for (const [servicio, expected] of [['juridicos','Servicios jurídicos'],['contables','Servicios contables'],['inmobiliarios','Servicios inmobiliarios']]) {
+    const contact = render(await ui.ContactPage({ searchParams: Promise.resolve({servicio}) }));
+    assert.equal(contact.getByLabelText('Asunto').value, expected);
+    fireEvent.change(contact.getByLabelText('Asunto'), { target: { value: 'Mi consulta' } });
+    assert.equal(contact.getByLabelText('Asunto').value, 'Mi consulta');
+    contact.unmount();
+  }
+});
+
+test('contacto mantiene el asunto libre con un interés ausente, desconocido o repetido', async () => {
+  for (const interes of [undefined, 'otro', 'constructor', ['compra', 'bienes']]) {
+    const contact = render(await ui.ContactPage({ searchParams: Promise.resolve({ interes }) }));
+    assert.equal(contact.getByLabelText('Asunto').value, '');
+    contact.unmount();
+  }
 });
 
 test('las tarjetas enlazan al detalle y distinguen disponibilidad, fotografías y administración', () => {
@@ -189,7 +275,7 @@ test('menú móvil: enlaces por rol, navegación con teclado, Escape y salida de
     assert.equal(mobile.hidden, true);
     assert.equal(document.activeElement, toggle);
     fireEvent.click(toggle);
-    fireEvent.click(within(mobile).getByRole('link', { name: 'Inmuebles' }));
+    fireEvent.click(within(mobile).getByRole('link', { name: 'Arriendos' }));
     assert.equal(mobile.hidden, true);
     fireEvent.click(toggle);
     fireEvent.blur(toggle, { relatedTarget: links[0] });
@@ -221,14 +307,46 @@ test('login y contacto envían datos y muestran el resultado de la acción', asy
   assert.ok(await contact.findByRole('status'));
 });
 
+test('contacto y login permiten corregir una respuesta fallida desde el mismo botón', async () => {
+  const email = 'persona@example.test';
+  for (const login of [false, true]) {
+    const values = login ? { email } : { name: 'Persona de prueba', email, phone: '5550100', subject: 'Una visita', message: 'Solicitud de prueba.' };
+    const view = login ? component('AuthForm', { mode: 'login' }) : component('ContactForm');
+    const button = view.getByRole('button', { name: login ? 'Ingresar' : 'Enviar solicitud' });
+    const form = button.form;
+    for (const [name, value] of Object.entries(values)) fireEvent.change(form.elements[name], { target: { value } });
+    if (login) fireEvent.change(form.elements.password, { target: { value: 'clave-de-prueba' } });
+    else fireEvent.click(form.elements.authorized);
+    const response = Promise.withResolvers();
+    globalThis.__ui.result = response.promise;
+    const before = globalThis.__ui.calls.length;
+    button.focus();
+    fireEvent.click(button);
+    await waitFor(() => assert.equal(button.getAttribute('aria-busy'), 'true'));
+    fireEvent.click(button);
+    assert.equal(document.activeElement, button);
+    await act(async () => response.resolve({ error: 'Intenta otra vez', values }));
+    assert.equal(globalThis.__ui.calls.length, before + 1);
+    assert.equal(view.getByRole('alert').textContent, 'Intenta otra vez');
+    assert.equal(document.activeElement, button);
+    for (const [name, value] of Object.entries(values)) assert.equal(form.elements[name].value, value);
+    if (login) assert.equal(form.elements.password.value, '');
+    const edit = login ? form.elements.password : form.elements.message;
+    fireEvent.change(edit, { target: { value: 'Corrección de prueba' } });
+    globalThis.__ui.result = {};
+    await submit(view, button.textContent, login ? 'loginAction' : 'contactAction', { email, [edit.name]: 'Corrección de prueba' });
+    view.unmount();
+  }
+});
+
 test('formularios administrativos envían la acción correspondiente', async () => {
   const cases = [
-    ['AdminNewsForm', {}, 'Publicar noticia', 'createNewsAction'],
+    ['AdminNewsForm', {}, 'Guardar artículo', 'createNewsAction'],
     ['AdminUserForm', {}, 'Crear usuario', 'createAdminUserAction'],
     ['AdminFileUploadForm', {}, 'Cargar archivos', 'uploadFilesAction'],
     ['AdminPropertyForm', { tenants: [] }, 'Publicar inmueble', 'createPropertyAction'],
     ['AdminPropertyEditForm', { property, tenants: [] }, 'Guardar cambios', 'updatePropertyAction'],
-    ['AdminInvoiceForm', { leases: [], services: [], products: [] }, 'Crear factura', 'createInvoiceAction'],
+    ['AdminInvoiceForm', { accounts:[], leases: [], services: [], products: [] }, 'Crear factura', 'createInvoiceAction'],
   ];
   for (const [name, props, button, action] of cases) {
     const view = component(name, props);
@@ -275,6 +393,22 @@ test('editar y eliminar facturas envía acciones distintas con el mismo identifi
   await submit(view, 'Eliminar factura', 'deleteInvoiceAction', { id: invoice.id });
 });
 
+test('la vuelta de una edición encuentra el registro con el filtro y la paginación actuales', () => {
+  const items = Array.from({ length: 18 }, (_, n) => ({ id: String(n + 1) }));
+  const query = { buscar: 'Centro & sur', estado: 'PENDING', pagina: 2 };
+  const destination = new URL(ui.adminReturnHref('/admin/facturas', query, '17'), 'https://jb.example');
+  assert.equal(destination.searchParams.get('buscar'), query.buscar);
+  assert.equal(destination.searchParams.get('estado'), query.estado);
+  assert.equal(destination.hash, '#editar-17');
+  const target = destination.searchParams.get('fila');
+  assert.equal(ui.adminEditResults(items, query, target).page, 2);
+  const reordered = [items[16], ...items.filter(item => item.id !== target)];
+  assert.equal(ui.adminEditResults(reordered, query, target).page, 1);
+  assert.equal(ui.adminEditResults(reordered, query, target).focusId, 'editar-17');
+  assert.equal(ui.adminEditResults([], query, target).focusId, 'resultados-edicion');
+  assert.equal(ui.adminEditResults(items, query, undefined).focusId, undefined);
+});
+
 test('contratos permiten cargar y retirar el PDF sin confundir las acciones', async () => {
   const view = component('AdminLeaseContractForm', { leaseId: 'lease-1', userId: 'user-1', contractFile: { originalName: 'contrato.pdf', size: 2048 } });
   await submit(view, 'Reemplazar PDF', 'uploadLeaseContractAction', { leaseId: 'lease-1' });
@@ -290,10 +424,57 @@ test('un contrato sin PDF permite su primera carga y no ofrece retirarlo', async
 
 test('revisar un pago conserva la decisión de cada botón en FormData', async () => {
   for (const [button, decision] of [['Confirmar', 'CONFIRM'], ['Solicitar revisión', 'REVIEW'], ['Rechazar', 'REJECT']]) {
-    const view = component('ManualPaymentReviewForm', { paymentId: 'payment-1' });
+    const view = component('ManualPaymentReviewQueue', { children: React.createElement(ui.ManualPaymentReviewForm, { paymentId: 'payment-1' }) });
     await submit(view, button, 'reviewManualPaymentAction', { paymentId: 'payment-1', decision });
     view.unmount();
   }
+});
+
+test('conciliación identifica la decisión pendiente, mantiene el foco y permite corregir un error', async () => {
+  const request = Promise.withResolvers();
+  globalThis.__ui.result = request.promise;
+  const view = component('ManualPaymentReviewQueue', { children: React.createElement(ui.ManualPaymentReviewForm, { paymentId: 'payment-1' }) });
+  const button = view.getByRole('button', { name: 'Rechazar' });
+  const note = view.getByLabelText('Nota de revisión');
+  fireEvent.change(note, { target: { value: 'Nota de prueba' } });
+  button.focus();
+  fireEvent.click(button);
+  await view.findByText('Registrando rechazo…');
+  assert.equal(button.getAttribute('aria-busy'), 'true');
+  assert.equal(document.activeElement, button);
+  fireEvent.click(button);
+  fireEvent.click(view.getByRole('button', { name: 'Confirmar' }));
+  await act(async () => request.resolve({ paymentId: 'payment-1', error: 'Revisa la nota.' }));
+  assert.equal(globalThis.__ui.calls.length, 1);
+  assert.equal(view.getByRole('alert').textContent, 'Revisa la nota.');
+  assert.equal(note.value, 'Nota de prueba');
+  assert.equal(button.getAttribute('aria-disabled'), 'false');
+});
+
+test('Mi cuenta consulta el pago exacto del titular y muestra el saldo de su factura', async () => {
+  const payment = { reference: 'MAN-PRUEBA', status: 'APPROVED', amount: 300000, provider: 'MANUAL' };
+  const older = { ...payment, reference: 'MAN-ANTERIOR' };
+  const bill = { ...invoice, balance: 400000, payments: [older, payment] };
+  globalThis.__ui.apiResponses = { '/invoices/me': [bill], '/leases/me': [] };
+  async function account(query) {
+    return render(await ui.MyAccountPage({ searchParams: Promise.resolve(query) }));
+  }
+  for (const query of [{}, { pago: 'aprobado' }, { referencia: 'AJENA' }, { referencia: [payment.reference, older.reference] }]) {
+    const view = await account(query);
+    assert.equal(view.queryByRole('status'), null);
+    view.unmount();
+  }
+  for (const [status, label] of [['APPROVED', 'Pago aprobado'], ['AWAITING_VERIFICATION', 'Pendiente de verificación'], ['UNDER_REVIEW', 'Pago en revisión'], ['REJECTED', 'Pago rechazado'], ['REFUNDED', 'Pago reembolsado'], ['FUTURO', 'Estado del pago por verificar']]) {
+    payment.status = status;
+    const view = await account({ referencia: payment.reference, pago: 'aprobado' });
+    const notice = view.getByRole('status');
+    assert.ok(notice.textContent.startsWith(label));
+    assert.equal(notice.classList.contains('success'), status === 'APPROVED');
+    for (const expected of [invoice.code, payment.reference, '300.000', '400.000']) assert.ok(notice.textContent.includes(expected));
+    view.unmount();
+  }
+  assert.ok(globalThis.__ui.roles.every(role => role === 'USER'));
+  assert.ok(globalThis.__ui.requests.every(([path, , authenticated]) => ['/invoices/me', '/leases/me'].includes(path) && authenticated));
 });
 
 test('reportar un pago envía factura, importe y referencia y evita un segundo envío', async () => {
@@ -303,9 +484,25 @@ test('reportar un pago envía factura, importe y referencia y evita un segundo e
   assert.equal(view.getByRole('button', { name: 'Ya realicé el pago' }).disabled, true);
 });
 
+test('la acción envía solo el contrato multipart y usa el estado devuelto en un reintento', async () => {
+  const path = '/payments/invoices/invoice-1/manual-report';
+  globalThis.__ui.apiResponses = { [path]: { reference: 'MAN-1', status: 'UNDER_REVIEW' } };
+  const form = new FormData();
+  for (const [key, value] of Object.entries({ invoiceId: 'invoice-1', method: 'BANK_TRANSFER', amount: '1000000', bankReference: 'BANCO-1', paidAt: '2026-10-01T12:00', idempotencyKey: 'solicitud-sintetica-1', '$ACTION_KEY': 'interno' })) form.set(key, value);
+  form.set('receipt', new File(['%PDF-1.4'], 'sintetico.pdf', { type: 'application/pdf' }));
+  const result = await ui.reportManualPaymentAction({}, form);
+  const [[endpoint, request, authenticated]] = globalThis.__ui.requests;
+  assert.equal(endpoint, path);
+  assert.equal(authenticated, true);
+  assert.deepEqual([...request.body.keys()].sort(), ['amount', 'bankReference', 'idempotencyKey', 'method', 'paidAt', 'receipt']);
+  assert.equal(request.body.get('receipt').name, 'sintetico.pdf');
+  assert.equal(result.success, 'Pago en revisión. Referencia MAN-1.');
+});
+
 test('página de pago permite checkout y confirmación mock sólo en su modo correspondiente', async () => {
   for (const [reference, mode, button, action] of [[undefined, 'gateway', 'Continuar al pago', 'beginPaymentAction'], ['MOCK-1', 'mock', 'Simular pago aprobado', 'approveMockAction']]) {
     globalThis.__ui.config.mode = mode;
+    globalThis.__ui.invoice.payments = [{ reference: 'MOCK-1', provider: 'MOCK', status: 'PENDING', amount: invoice.balance }];
     const view = render(await ui.PayInvoicePage({ params: Promise.resolve({ id: invoice.id }), searchParams: Promise.resolve({ reference }) }));
     assert.deepEqual(globalThis.__ui.roles, ['USER']);
     await submit(view, button, action);

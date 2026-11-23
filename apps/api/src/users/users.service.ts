@@ -188,6 +188,7 @@ export class UsersService {
           include: { tenantProfile: { select: { id: true } } },
         })
       : null;
+    if (linkedUser && (linkedUser.role!=='USER' || linkedUser.portal!=='TENANT')) throw new ConflictException('Ese correo corresponde a otro perfil.');
     if (linkedUser?.tenantProfile) {
       throw new ConflictException('La cuenta web ya tiene un perfil de usuario asociado.');
     }

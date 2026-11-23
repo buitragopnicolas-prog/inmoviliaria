@@ -3,14 +3,9 @@
 import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import { aiTools, validateAiInput, type AiToolId } from '@/lib/ai-tools';
 import type { AiResult } from '@/lib/run-ai-tool';
+import { aiProgress, type AiProgress } from '@/lib/ai-progress';
+import { StatusNotice } from './StatusNotice';
 import styles from './AiTools.module.css';
-
-function progressMessage(status: string, percent?: number) {
-  if (status === 'ready' || status === 'done') return 'Procesando…';
-  if (typeof percent !== 'number') return 'Descargando o preparando el modelo…';
-  const value = Math.min(100, Math.max(0, percent)).toFixed(0);
-  return `Descargando o preparando el modelo · ${value} % del archivo`;
-}
 
 export function AiTools() {
   const [id, setId] = useState<AiToolId>('ocr');
@@ -19,7 +14,7 @@ export function AiTools() {
   const [file, setFile] = useState<File | null>(null);
   const [from, setFrom] = useState<'es' | 'en'>('es');
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState('');
+  const [progress, setProgress] = useState<AiProgress | null>(null);
   const [error, setError] = useState('');
   const [result, setResult] = useState<AiResult | null>(null);
   const [url, setUrl] = useState('');
@@ -65,20 +60,22 @@ export function AiTools() {
     const issue = validateAiInput(id, text, secondText, file);
     if (issue) { setError(issue); return; }
     running.current = true;
-    setBusy(true); setResult(null); setStatus('Preparando el modelo…');
+    let listening = true;
+    setBusy(true); setResult(null); setProgress({ label: 'Preparando el modelo', bars: {} });
     try {
       const { runAiTool } = await import('@/lib/run-ai-tool');
-      const output = await runAiTool(id, { text, secondText, file, from }, (progress) => {
-        if (!mounted.current) return;
-        setStatus(progressMessage(progress.status, progress.progress));
+      const output = await runAiTool(id, { text, secondText, file, from }, (event) => {
+        if (!mounted.current || !listening) return;
+        setProgress(previous => aiProgress(id, event, previous));
       });
-      if (mounted.current) { setResult(output); setStatus('Proceso completado.'); }
+      if (mounted.current) setResult(output);
     } catch (cause) {
       console.error('No se pudo ejecutar la herramienta IA', cause);
-      if (mounted.current) { setError('No se pudo completar el proceso. Comprueba tu conexión, el formato del archivo y la memoria disponible. Para crear imágenes, necesitas WebGPU. Puedes volver a intentarlo.'); setStatus(''); }
+      if (mounted.current) setError('No se pudo completar el proceso. Comprueba tu conexión, el formato del archivo y la memoria disponible. Para crear imágenes, necesitas WebGPU. Puedes volver a intentarlo.');
     } finally {
+      listening = false;
       running.current = false;
-      if (mounted.current) setBusy(false);
+      if (mounted.current) { setBusy(false); setProgress(null); }
     }
   }
 
@@ -86,10 +83,10 @@ export function AiTools() {
     <p className={styles.privacy}>Tus archivos y textos se procesan en este navegador. La primera ejecución descarga un modelo desde Hugging Face y los recursos necesarios desde jsDelivr. El navegador puede guardarlos para futuras visitas.</p>
     <div className={styles.workspace}>
       <aside className={styles.tools} aria-label="Elegir herramienta">
-        {aiTools.map((item) => <button key={item.id} type="button" aria-pressed={id === item.id} disabled={busy} className={styles.tool} onClick={() => { setId(item.id); setFile(null); setResult(null); setError(''); setStatus(''); }}><span>{item.title}</span><small>{item.size}</small></button>)}
+        {aiTools.map((item) => <button key={item.id} type="button" aria-pressed={id === item.id} disabled={busy} className={styles.tool} onClick={() => { setId(item.id); setFile(null); setResult(null); setError(''); }}><span>{item.title}</span><small>{item.size}</small></button>)}
       </aside>
-      <div className={`card ${styles.panel}`} aria-busy={busy}>
-        <div><span className="eyebrow">{{ image: 'Imágenes', audio: 'Audio', text: 'Texto' }[tool.kind]}</span><h2>{tool.title}</h2><p className="muted">{tool.description}</p></div>
+      <div className={`card ${styles.panel}`}>
+        <div key={id} className={styles.toolHeading}><span className="eyebrow">{{ image: 'Imágenes', audio: 'Audio', text: 'Texto' }[tool.kind]}</span><h2>{tool.title}</h2><p className="muted">{tool.description}</p></div>
         <form className="form" onSubmit={handleSubmit}>
           <fieldset disabled={busy} className={styles.fields}>
             {tool.kind !== 'text' ? <label key={id}>Seleccionar {tool.kind === 'image' ? 'imagen' : 'audio'}<input type="file" accept={`${tool.kind}/*`} onChange={(event) => { setFile(event.target.files?.[0] ?? null); setResult(null); setError(''); }} /><span className="hint">Máximo 25 MB. {file ? `Seleccionado: ${file.name}` : 'El archivo se utiliza únicamente en tu dispositivo.'}</span></label> : <>
@@ -100,10 +97,16 @@ export function AiTools() {
           </fieldset>
           <p className={styles.download}>Descarga inicial aproximada: <strong>{tool.size}</strong>. Puede tardar varios minutos y consumir memoria del dispositivo. Se inicia al pulsar «Procesar».</p>
           {id === 'image' && <p className="hint">Las imágenes son conceptuales: no representan el estado real de un inmueble.</p>}
-          <button className="button" type="submit" disabled={busy}>{busy ? 'Procesando…' : 'Procesar'}</button>
+          <button className="button" type="submit" aria-busy={busy} aria-disabled={busy}>{busy ? 'Procesando…' : 'Procesar'}</button>
         </form>
-        <p role="status" aria-live="polite">{status}</p>
-        {error && <p className="alert error" role="alert">{error}</p>}
+        {progress && <div className={styles.progress}>
+          <StatusNotice message={progress.label} />
+          {Object.entries(progress.bars).map(([label, percent]) => <label key={label}>
+            <span>{label}</span><progress aria-label={label} max={100} value={percent} /><span>{percent} %</span>
+          </label>)}
+        </div>}
+        {error && <StatusNotice message={error} tone="error" />}
+        {result && <StatusNotice message="Proceso completado." tone="success" />}
         {result && <section className={styles.result} aria-label="Resultado"><h3>Resultado</h3>
           {result.text !== undefined && <label className="form">Texto generado<textarea aria-label="Texto del resultado" rows={8} readOnly value={result.text || 'El modelo no devolvió texto. Prueba con otro archivo o contenido.'} /></label>}
           {url && result.media === 'image' && <img src={url} alt="Resultado generado por la herramienta IA" />}

@@ -1,9 +1,12 @@
+import { DocumentLinks } from '@/components/DocumentLinks';
+import { readSite } from '@/lib/read-site';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ApiError, apiFetch } from '@/lib/api';
 import { fecha } from '@/lib/format';
 import type { NewsPost } from '@/lib/types';
+import { NewsReadingPosition } from '@/components/NewsReadingPosition';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,18 +29,22 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const newsPost = await getNewsPost(slug);
   const paragraphs = newsPost.content.split(/\r?\n\r?\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
-  const sourceLabel = newsPost.sourceLabel?.trim() || 'Asesoría Inmobiliaria JB';
+  const sourceLabel = newsPost.sourceLabel?.trim() || (await readSite()).identidad.name;
   return (
     <section className="section pageTop">
       <div className="container">
         <article className="newsArticle card">
-          <span className="eyebrow">Noticias</span>
+          <span className="eyebrow">{newsPost.category || 'Noticia'}</span>
           <div className="newsMeta"><strong>{sourceLabel}</strong><span>{fecha(newsPost.createdAt)}</span></div>
           <h1>{newsPost.title}</h1>
           <p className="newsSummary">{newsPost.summary}</p>
-          <div className="newsParagraphs">{paragraphs.map((paragraph, index) => <p key={`${newsPost.id}-${index}`}>{paragraph}</p>)}</div>
+          <NewsReadingPosition key={newsPost.id} articleId={newsPost.id}>{paragraphs.map((paragraph, index) =>
+            <p key={index} id={`parrafo-${index + 1}`}>{paragraph}</p>
+          )}</NewsReadingPosition>
+          {!!newsPost.additionalLinks?.length && <section><h2>Fuentes y enlaces</h2><ul>{newsPost.additionalLinks.map(href=><li key={href}><a className="textLink formattedCopy" href={href} rel="noopener noreferrer" target="_blank">{href}</a></li>)}</ul></section>}
+          {!!newsPost.attachments?.length && <section><h2>Documentos de la publicación</h2><DocumentLinks files={newsPost.attachments} scope="publicos"/></section>}
           <div className="detailActions">
-            <Link className="button ghost small" href="/noticias">Volver a noticias</Link>
+            <Link className="button ghost small" href={`/noticias#noticia-${newsPost.id}`}>Volver a noticias</Link>
             {newsPost.externalUrl && <a className="button small" href={newsPost.externalUrl} rel="noreferrer noopener" target="_blank">Abrir fuente original</a>}
           </div>
         </article>

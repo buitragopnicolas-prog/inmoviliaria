@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { assetUrl, pesos } from '@/lib/format';
-import type { Property } from '@/lib/types';
+import { propertyPhotoUrl, pesos } from '@/lib/format';
+import type { CatalogProperty } from '@/lib/public-catalog';
 import { UiIcon } from './UiIcon';
 import styles from './PropertyCard.module.css';
 
-export function PropertyCard({ property }: { property: Property }) {
+export function PropertyCard({ property }: { property: CatalogProperty }) {
   const image = property.images[0];
   const isIllustration = /\.svg(?:[?#]|$)/i.test(image?.url ?? '');
   const isSeedIllustration = /\/uploads\/seed\/[^?#]+\.svg(?:[?#]|$)/i.test(image?.url ?? '');
@@ -17,7 +17,7 @@ export function PropertyCard({ property }: { property: Property }) {
         <div className={styles.image}>
           <Image
             className={isIllustration ? styles.illustration : undefined}
-            src={assetUrl(image?.url)}
+            src={propertyPhotoUrl(image?.url)}
             alt={isSeedIllustration ? `Ilustración de referencia: ${property.title}` : image?.alt ?? property.title}
             fill
             sizes="(max-width: 680px) calc(100vw - 32px), (max-width: 1000px) calc((100vw - 72px) / 2), (max-width: 1288px) calc((100vw - 96px) / 3), 397px"

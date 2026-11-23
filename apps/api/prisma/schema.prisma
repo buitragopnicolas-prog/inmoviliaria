@@ -108,6 +108,7 @@ enum StoredFilePurpose {
   GENERIC
   LEASE_CONTRACT
   PAYMENT_RECEIPT
+  MANAGED_PDF
 }
 
 enum FileScanStatus {
@@ -115,6 +116,12 @@ enum FileScanStatus {
   CLEAN
   INFECTED
   SCAN_FAILED
+}
+
+enum AccountPortal {
+  TENANT
+  OWNER
+  SERVICES
 }
 
 model User {
@@ -131,7 +138,10 @@ model User {
   payments      Payment[]           @relation("PaymentOwner")
   reviewedPayments Payment[]        @relation("PaymentReviewer")
   paymentAuditEvents PaymentAuditEvent[] @relation("PaymentAuditActor")
+  portal        AccountPortal @default(TENANT)
+  saleListings  SaleOffer[]
   tenantProfile Tenant?
+  receivedPdfs  StoredFile[] @relation("PdfRecipient")
   storedFiles   StoredFile[] @relation("StoredFileCreator")
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -184,6 +194,8 @@ model TenantAlias {
 }
 
 model Property {
+  ownerCategory String?
+  ownerRevision Int @default(1)
   id                String          @id @default(cuid())
   legacyCode        String?         @unique
   sourceSheet       String?
@@ -257,10 +269,18 @@ model StoredFile {
   publicPath   String            @unique
   createdById  String?
   createdBy    User?             @relation("StoredFileCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  serviceType   String?
+  recipientId   String?
+  recipient     User? @relation("PdfRecipient", fields: [recipientId], references: [id], onDelete: Restrict)
+  newsPostId    String?
+  newsPost      NewsPost? @relation(fields: [newsPostId], references: [id], onDelete: SetNull)
+  rentalTemplate RentalTemplate?
   leaseContract Lease?           @relation("LeaseContractFile")
   paymentReceipt Payment?        @relation("PaymentReceiptFile")
   createdAt    DateTime          @default(now())
 
+  @@index([recipientId, createdAt])
+  @@index([newsPostId])
   @@index([purpose, scanStatus, createdAt])
 }
 
@@ -362,10 +382,10 @@ model Invoice {
   amount            Int
   status            InvoiceStatus             @default(PENDING)
   paidAt            DateTime?
-  leaseId           String
+  leaseId           String?
   tenantId          String?
   userId            String?
-  lease             Lease                     @relation(fields: [leaseId], references: [id])
+  lease             Lease?                    @relation(fields: [leaseId], references: [id], onDelete: Restrict)
   tenant            Tenant?                   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   user              User?                     @relation(fields: [userId], references: [id], onDelete: SetNull)
   lineItems         InvoiceLineItem[]
@@ -534,7 +554,52 @@ model ContactMessage {
   updatedAt DateTime      @updatedAt
 }
 
+model SiteSection {
+  id        String   @id
+  values    Json
+  revision  Int      @default(1)
+  updatedAt DateTime @updatedAt
+}
+
+model SaleOffer {
+  ownerAccountId String?
+  ownerAccount User? @relation(fields: [ownerAccountId], references: [id], onDelete: Restrict)
+  bedrooms Int?
+  address String?
+  neighborhood String?
+  features String[] @default([])
+  id          String   @id @default(cuid())
+  catalog     String
+  title       String
+  category    String
+  city        String   @default("")
+  description String
+  price       Decimal  @db.Decimal(14, 0)
+  images      String[] @default([])
+  published   Boolean  @default(false)
+  revision    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([catalog, published, createdAt])
+}
+
+model RentalTemplate {
+  key    String @id
+  fileId String @unique
+  file   StoredFile @relation(fields: [fileId], references: [id], onDelete: Restrict)
+}
+
+model Suggestion {
+  id        String @id @default(cuid())
+  message   String
+  createdAt DateTime @default(now())
+}
+
 model NewsPost {
+  category    String @default("Noticia")
+  additionalLinks String[] @default([])
+  attachments StoredFile[]
   id          String   @id @default(cuid())
   title       String
   slug        String   @unique
@@ -549,4 +614,15 @@ model NewsPost {
   updatedAt   DateTime @updatedAt
 
   @@index([published, createdAt])
+}
+
+model PrivacyConsent {
+  id String @id @default(cuid())
+  subjectId String
+  purpose String
+  version String
+  policyHref String
+  policyText String
+  acceptedAt DateTime @default(now())
+  @@index([subjectId, purpose])
 }

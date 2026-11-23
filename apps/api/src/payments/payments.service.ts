@@ -1,3 +1,4 @@
+import { recordConsent } from '../common/privacy.js';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import type { Response } from 'express';
@@ -92,6 +93,7 @@ export class PaymentsService {
             receiptFileId: storedReceipt?.id, invoiceId, tenantId: invoice.tenantId, userId,
           },
         });
+        await recordConsent(tx,{authorized:input.authorized==='true',policyVersion:input.policyVersion},'payment:'+created.id,userId);
         await tx.paymentAuditEvent.create({
           data: { paymentId: created.id, actorId: userId, toStatus: 'AWAITING_VERIFICATION', note: 'Pago manual reportado por el usuario.' },
         });

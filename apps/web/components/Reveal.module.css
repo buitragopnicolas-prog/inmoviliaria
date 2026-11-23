@@ -4,16 +4,16 @@
 }
 
 .reveal[data-reveal-state='pending']:not(:focus-within) {
-  opacity: .35;
+  opacity: .78;
   transform: translateY(12px);
 }
 
 .reveal[data-reveal-state='revealed'] {
-  transition: opacity 460ms ease, transform 460ms ease;
+  transition: opacity var(--motion-panel) var(--motion-ease), transform var(--motion-panel) var(--motion-ease);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
-.reveal:focus-within {
+.reveal[data-reveal-state]:focus-within {
   opacity: 1;
   transform: none;
   transition: none;

@@ -1,10 +1,11 @@
 'use client';
 
 import { useRef, useState, type KeyboardEvent } from 'react';
+import { defaultCopy } from '@/lib/site-content';
 import { ActiveLink } from './ActiveLink';
 import { UiIcon } from './UiIcon';
 
-export function PublicNavigation({ role }: { role?: 'ADMIN' | 'USER' }) {
+export function PublicNavigation({ role, copy = defaultCopy.identidad }: { role?: 'ADMIN' | 'USER'; copy?: typeof defaultCopy.identidad }) {
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   function closeMenu() { setOpen(false); toggle.current?.focus(); }
@@ -12,12 +13,12 @@ export function PublicNavigation({ role }: { role?: 'ADMIN' | 'USER' }) {
     if (event.key === 'Escape') closeMenu();
   }
   const destinations = [
-    { href: '/', label: 'Inicio' },
-    { href: '/inmuebles', label: 'Inmuebles' },
-    { href: '/noticias', label: 'Noticias' },
-    { href: '/nosotros', label: 'Nosotros' },
-    { href: '/contacto', label: 'Contacto' },
-    { href: '/herramientas-ia', label: 'Herramientas IA' },
+    { href: '/', label: copy.navHome },
+    { href: '/inmuebles', label: copy.navRent },
+    { href: '/noticias', label: copy.navNews },
+    { href: '/nosotros', label: copy.navAbout },
+    { href: '/contacto', label: copy.navContact },
+    { href: '/herramientas-ia', label: copy.navTools },
     ...(role === 'ADMIN' ? [{ href: '/admin', label: 'Administración' }] : []),
     ...(role === 'USER' ? [{ href: '/mi-cuenta', label: 'Mi cuenta' }] : []),
   ];

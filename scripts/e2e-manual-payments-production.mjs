@@ -190,6 +190,7 @@ async function runFlow() {
   const payPath = `/mi-cuenta/facturas/${ids.invoice}/pagar`;
   const body = form(await page(payPath, ct), 'invoiceId', ids.invoice);
   assert.equal(body.get('method'), 'QR');
+  body.set('authorized','true');
   body.set('bankReference', run); body.set('paidAt', new Date(Date.now() - 60000).toISOString());
   const receipt = pdf(); body.set('receipt', new Blob([receipt], { type: 'application/pdf' }), `${run}.pdf`);
   assert.equal((await raw(payPath, { web: true, method: 'POST', token: ct, body })).status, 200);
@@ -202,7 +203,7 @@ async function runFlow() {
   const pending = await api(`/invoices/me/${ids.invoice}`, { token: ct });
   assert.equal(pending.balance, 100); assert.equal(pending.approvedAmount, 0);
   const duplicate = new FormData();
-  for (const key of ['method', 'amount', 'idempotencyKey', 'bankReference', 'paidAt']) duplicate.set(key, body.get(key));
+  for (const key of ['method', 'amount', 'idempotencyKey', 'bankReference', 'paidAt','authorized','policyVersion']) duplicate.set(key, body.get(key));
   duplicate.set('receipt', new Blob([receipt], { type: 'application/pdf' }), `${run}.pdf`);
   const dup = await api(`/payments/invoices/${ids.invoice}/manual-report`, { token: ct, method: 'POST', body: duplicate });
   assert.equal(dup.id, payment.id);
