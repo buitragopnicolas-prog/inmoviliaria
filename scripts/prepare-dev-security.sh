@@ -117,11 +117,12 @@ spec:
             - |
               echo 'JB_MINIO autenticación del administrador de almacenamiento'
               attempts=0
-              until mc alias set root http://minio-service:9000 "\$MINIO_ROOT_USER" "\$MINIO_ROOT_PASSWORD" >/tmp/minio-result 2>&1; do
-                if grep -Eiq 'access denied|signature.*match|access key.*not exist|invalid credentials' /tmp/minio-result; then
-                  echo 'JB_MINIO el servidor rechazó las credenciales configuradas en DEV'
-                  exit 1
-                fi
+              until reason=\$(mc alias set root http://minio-service:9000 "\$MINIO_ROOT_USER" "\$MINIO_ROOT_PASSWORD" 2>&1); do
+                case "\$reason" in
+                  *[Aa]ccess*[Dd]enied*|*[Ss]ignature*not*match*|*[Aa]ccess*[Kk]ey*not*exist*|*[Ii]nvalid*[Cc]redentials*)
+                    echo 'JB_MINIO el servidor rechazó las credenciales configuradas en DEV'
+                    exit 1 ;;
+                esac
                 attempts=\$((attempts+1))
                 if [ "\$attempts" -ge 15 ]; then echo 'JB_MINIO sin conexión autenticada al servicio de DEV'; exit 1; fi
                 sleep 2
