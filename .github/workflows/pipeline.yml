@@ -315,7 +315,7 @@ jobs:
               printf 'JB-DEV-MINIO-1\n'
               cat "$archive"
             fi
-          } | ssh -T -i ~/.ssh/inmo-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+          } | ssh -T -i ~/.ssh/inmo-deploy-key -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA"
 
   deploy-prod:

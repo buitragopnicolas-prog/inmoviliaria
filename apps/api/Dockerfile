@@ -3,12 +3,12 @@ WORKDIR /app
 COPY package*.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
-RUN npm ci && mkdir -p apps/api/node_modules
+RUN npm ci
 
 FROM dependencies AS builder
 WORKDIR /app
 COPY . .
-RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npm run prisma:generate -w @inmobiliaria/api && npm run build -w @inmobiliaria/api
+RUN mkdir -p apps/api/node_modules && DATABASE_URL=postgresql://build:build@localhost:5432/build npm run prisma:generate -w @inmobiliaria/api && npm run build -w @inmobiliaria/api
 
 FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS runner
 WORKDIR /app
