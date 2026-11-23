@@ -5,6 +5,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { JSDOM } from 'jsdom';
+import { within } from '@testing-library/react';
 import bcrypt from 'bcryptjs';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../apps/api/dist/generated/prisma/client.js';
@@ -226,7 +227,9 @@ async function webCase() {
 async function accountNotice(path, token) {
   const dom = new JSDOM(await webPage(path, token));
   try {
-    return dom.window.document.querySelector('.accountPage [role="status"]')?.textContent ?? null;
+    const account = dom.window.document.querySelector('.accountPage');
+    assert.ok(account, 'La respuesta debe mostrar la cuenta del cliente.');
+    return within(account).queryByRole('status')?.textContent ?? null;
   } finally { dom.window.close(); }
 }
 
