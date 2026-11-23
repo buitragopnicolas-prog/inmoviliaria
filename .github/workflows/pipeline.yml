@@ -207,6 +207,9 @@ jobs:
           cleanup_run="$(node -p "JSON.parse(require('node:fs').readFileSync('coverage/production-payment-cleanup-e2e.json')).run")"
           npm run test:e2e:production:ci -- --cleanup "$cleanup_run"
           bash -n scripts/e2e-production-vps.sh scripts/vps-ssh-entry.sh
+          if ! command -v pdftotext >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends poppler-utils
+          fi
           JB_TEST_COVERAGE=1 node scripts/e2e-portals-ci.mjs
           NODE_V8_COVERAGE="$GITHUB_WORKSPACE/coverage/tmp" npm run test:catalog-edge
           npx --no-install c8 report --merge-async

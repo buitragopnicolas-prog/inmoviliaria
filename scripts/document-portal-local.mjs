@@ -2,6 +2,7 @@ import { browserCoverage } from './e2e-browser-coverage.mjs';
 import { fixturePolicy } from './portal-privacy-test-data.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
 import { syntheticPdf } from './synthetic-pdf.mjs';
 
@@ -76,11 +77,24 @@ try {
   await clientPage.getByRole('link',{name:'Mis documentos PDF'}).click();
   const link=clientPage.getByRole('link',{name:'Ver PDF '+privateFile.name});
   const privatePath=await link.getAttribute('href');
+  const navigation=client.waitForEvent('response', reply => reply.url() === web+privatePath && reply.request().isNavigationRequest());
   const popup=clientPage.waitForEvent('popup');
   await link.click();
   const pdfViewer=await popup;
   await pdfViewer.waitForLoadState('load');
-  await pdfViewer.locator('embed[type="application/pdf"]').waitFor({state:'attached'});
+  const pdfResponse=await navigation;
+  assert.equal(pdfResponse.status(),200);
+  assert.equal(pdfResponse.headers()['content-type'],'application/pdf');
+  assert.match(pdfResponse.headers()['content-disposition'],/^inline/);
+  if (process.platform === 'win32') {
+    await pdfViewer.locator('embed[type="application/pdf"]').waitFor({state:'attached'});
+  } else {
+    // Linux headless Chrome can hand the document to its PDF extension.
+    // Check the PDF returned by the same authenticated URL with a native reader.
+    const response=await client.request.get(pdfResponse.url());
+    const text=execFileSync('pdftotext',['-','-'],{input:await response.body(),encoding:'utf8'});
+    assert.ok(text.includes('DOCUMENTO SINTETICO DE PRUEBA'));
+  }
   await pdfViewer.close();
   await checkFile(client,privatePath,privateFile);
   await checkFile(client,privatePath+'?download=1',privateFile,'attachment');
