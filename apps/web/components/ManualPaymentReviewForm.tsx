@@ -39,7 +39,7 @@ function ReviewActions() {
   </>;
 }
 
-export function ManualPaymentReviewForm({ paymentId }: { paymentId: string }) {
+export function ManualPaymentReviewForm({ paymentId }: Readonly<{ paymentId: string }>) {
   const context = useContext(ReviewContext);
   const [note, setNote] = useState('');
   if (!context) throw new Error('El formulario de revisión requiere la cola de conciliación.');

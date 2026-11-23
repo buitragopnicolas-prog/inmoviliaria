@@ -5,7 +5,7 @@ import type { CatalogProperty } from '@/lib/public-catalog';
 import { UiIcon } from './UiIcon';
 import styles from './PropertyCard.module.css';
 
-export function PropertyCard({ property }: { property: CatalogProperty }) {
+export function PropertyCard({ property }: Readonly<{ property: CatalogProperty }>) {
   const image = property.images[0];
   const isIllustration = /\.svg(?:[?#]|$)/i.test(image?.url ?? '');
   const isSeedIllustration = /\/uploads\/seed\/[^?#]+\.svg(?:[?#]|$)/i.test(image?.url ?? '');

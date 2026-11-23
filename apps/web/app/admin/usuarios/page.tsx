@@ -15,9 +15,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminUsersPage({
   searchParams,
-}: {
+}: Readonly<{
   searchParams: Promise<AdminSearchParams>;
-}) {
+}>) {
   await requireUser('ADMIN');
   const params = await searchParams;
   const listQuery = readAdminQuery(params);

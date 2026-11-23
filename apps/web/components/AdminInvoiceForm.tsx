@@ -15,12 +15,12 @@ export function AdminInvoiceForm({
   leases, accounts,
   services,
   products,
-}: {
+}: Readonly<{
   leases: Lease[];
   accounts: import('@/lib/documents').DocumentAccount[];
   services: ChargeCatalogItem[];
   products: ChargeCatalogItem[];
-}) {
+}>) {
   const [state, action, pending] = useActionState<ActionState, FormData>(createInvoiceAction, {});
   const [serviceDraft, setServiceDraft] = useState<DraftLine[]>([]);
   const [productDraft, setProductDraft] = useState<DraftLine[]>([]);
