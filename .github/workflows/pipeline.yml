@@ -289,6 +289,10 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
           persist-credentials: false
+      - name: Receive approved DEV storage images
+        env:
+          JB_DEV_MINIO_TRANSFER: ${{ secrets.JB_DEV_MINIO_TRANSFER }}
+        run: bash scripts/receive-dev-storage-transfer.sh
       - name: SSH deploy dev
         env:
           VPS_HOST: ${{ vars.VPS_HOST }}
@@ -304,7 +308,14 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
           umask 077
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/inmo-deploy-key
-          ssh -i ~/.ssh/inmo-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+          archive="$RUNNER_TEMP/jb-dev-minio.oci.tar"
+          trap 'rm -f -- "$archive" ~/.ssh/inmo-deploy-key' EXIT
+          {
+            if [[ -f "$archive" ]]; then
+              printf 'JB-DEV-MINIO-1\n'
+              cat "$archive"
+            fi
+          } | ssh -T -i ~/.ssh/inmo-deploy-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA"
 
   deploy-prod:

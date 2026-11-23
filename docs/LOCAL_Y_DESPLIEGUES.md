@@ -63,6 +63,10 @@ El namespace, PostgreSQL, MinIO, migraciones y seed de dev están instalados. AP
 
 El registro A `dev` apunta al VPS y responde en ambos DNS autoritativos de Hostinger. Nginx usa `k8s/nginx-dev-https.conf`, con un certificado Let's Encrypt propio de dev y redirección HTTP a HTTPS. Certbot renueva el certificado mediante el webroot `/var/www/html`. La web dev incorpora esa URL HTTPS al compilarse.
 
+### Recuperación de las imágenes de MinIO en DEV
+
+Cuando los registros externos rechacen las versiones fijadas, el job `development` puede recibir una copia cifrada de las dos imágenes Linux amd64. El operador configura temporalmente `JB_DEV_MINIO_TRANSFER` con un enlace firmado de un borrador de GitHub y su frase de descifrado. El runner comprueba el SHA-256 y envía el paquete por la entrada estándar de la conexión SSH de DEV. El VPS repite la comprobación, verifica la referencia de la instalación y registra las imágenes en `containerd` antes de comprobar el servicio. La [huella autorizada](../docker/minio/dev-images.sha256) identifica un paquete concreto. Al verificar la importación, se retiran el secreto y el borrador temporal. Los siguientes despliegues utilizan las imágenes registradas.
+
 ## CI/CD
 
 Sonar es obligatorio para dev y producción. Consulte [la configuración de Sonar](SONAR.md) para iniciar el servidor local en Docker y configurar CI/VPS. El workflow espera el Quality Gate, y el VPS vuelve a comprobar la aprobación del SHA exacto antes de efectuar cambios. Sin Sonar accesible, sin análisis o con rechazo, no se despliega. Corrija los problemas y repita las pruebas y el análisis antes de volver a intentar el despliegue.
