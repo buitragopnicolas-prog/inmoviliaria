@@ -4,7 +4,7 @@ import { saveSection, type PublicationState } from '@/app/admin/publishing-actio
 import { sections, type SectionId } from '@/lib/site-content';
 import { StatusNotice } from './StatusNotice';
 
-export function SiteSectionForm({id,values,revision}:{id:SectionId;values:Record<string,string>;revision:number}) {
+export function SiteSectionForm({id,values,revision}:Readonly<{id:SectionId;values:Record<string,string>;revision:number}>) {
   const [version,setVersion] = useState(revision);
   const formRef = useRef<HTMLFormElement>(null);
   const [state,action,pending]=useActionState<PublicationState,FormData>(async (previous, data)=>{

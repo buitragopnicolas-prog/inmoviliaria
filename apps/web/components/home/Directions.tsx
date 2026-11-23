@@ -14,7 +14,7 @@ export const directions = { luz:'Luz', orbita:'Órbita', recorridos:'Recorridos'
 export type Direction = keyof typeof directions;
 type Cover = SiteCopy['portada'];
 
-export function StylePicker({current}:{current:Direction}) {
+export function StylePicker({current}:Readonly<{current:Direction}>) {
   return <nav className={styles.picker} aria-label="Comparar portadas"><div className="container">
     <span>Diseño de portada</span><div>{(Object.entries(directions) as [Direction,string][]).map(([key,label])=>
       <Link key={key} href={'/?estilo='+key} prefetch={false} aria-current={current===key?'page':undefined}>{label}</Link>)}</div>
@@ -22,16 +22,16 @@ export function StylePicker({current}:{current:Direction}) {
   </div></nav>;
 }
 
-function Title({copy}:{copy:Cover}) {
+function Title({copy}:Readonly<{copy:Cover}>) {
   return <><p className={styles.location}>{copy.kicker}</p><h1 id="home-title">{copy.first} <em>{copy.second}</em></h1><p className={styles.intro}>{copy.intro}</p></>;
 }
 
-function Destinations({copy}:{copy:Cover}) {
+function Destinations({copy}:Readonly<{copy:Cover}>) {
   return <nav className={styles.destinations} aria-label="¿Qué quieres hacer?">{destinations.map(([key,url])=>
     <Link href={url} key={url}>{copy[key]}<span aria-hidden="true">↗</span></Link>)}</nav>;
 }
 
-export async function InventoryWheel({copy, portfolio = false}:{copy:Cover; portfolio?:boolean}) {
+export async function InventoryWheel({copy, portfolio = false}:Readonly<{copy:Cover; portfolio?:boolean}>) {
   const published = await loadPublicData<Property[]>('/properties');
   if (published===null) return <DataUnavailable label="la galería de inmuebles" retryHref={portfolio ? '/' : '/?estilo=orbita'}/>;
   const items:WheelItem[]=[];
@@ -51,7 +51,7 @@ export async function InventoryWheel({copy, portfolio = false}:{copy:Cover; port
   return <WorksWheel items={items} portfolio={portfolio}/>;
 }
 
-function RouteMap({copy}:{copy:Cover}) {
+function RouteMap({copy}:Readonly<{copy:Cover}>) {
   const groups=[
     {name:'Encontrar un inmueble o un bien', entries:[['rent','/inmuebles'],['buy','/comprar'],['goods','/vehiculos-y-bienes']]},
     {name:'Publicar mi inmueble', entries:[['owners','/propietarios']]},
@@ -64,7 +64,7 @@ function RouteMap({copy}:{copy:Cover}) {
     </details>)}</nav>;
 }
 
-export function DesignHero({direction,copy}:{direction:Exclude<Direction,'original'>;copy:Cover}) {
+export function DesignHero({direction,copy}:Readonly<{direction:Exclude<Direction,'original'>;copy:Cover}>) {
   let content;
   if (direction === 'luz') {
     content = <LightSurface image={copy.photo} alt={copy.photoAlt} caption={copy.caption}>

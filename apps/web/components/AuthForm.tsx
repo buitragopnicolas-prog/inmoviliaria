@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { loginAction, registerAction } from '@/app/actions';
 import { StatusNotice } from './StatusNotice';
 
-export function AuthForm({ mode, showRegistrationLink = false, portal = 'TENANT' }: { mode: 'login' | 'register'; portal?: Portal; showRegistrationLink?: boolean }) {
+export function AuthForm({ mode, showRegistrationLink = false, portal = 'TENANT' }: Readonly<{ mode: 'login' | 'register'; portal?: Portal; showRegistrationLink?: boolean }>) {
   const [state, action, pending] = useActionState(mode === 'login' ? loginAction : registerAction, {});
   const policy=usePublishedPolicy();
   const draft = state.values;

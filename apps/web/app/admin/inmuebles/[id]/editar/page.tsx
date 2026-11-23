@@ -8,7 +8,7 @@ import type { Property, TenantOption } from '@/lib/types';
 export const metadata: Metadata = { title: 'Editar inmueble' };
 export const dynamic = 'force-dynamic';
 
-export default async function EditPropertyPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<AdminSearchParams> }) {
+export default async function EditPropertyPage({ params, searchParams }: Readonly<{ params: Promise<{ id: string }>; searchParams: Promise<AdminSearchParams> }>) {
   await requireUser('ADMIN');
   const { id } = await params;
   const query = readAdminQuery(await searchParams);

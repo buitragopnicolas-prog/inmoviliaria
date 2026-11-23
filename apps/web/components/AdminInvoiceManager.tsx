@@ -8,7 +8,7 @@ import type { Invoice, InvoiceStatus } from '@/lib/types';
 import { adminReturnHref, type AdminQuery } from '@/lib/admin-lists';
 import { StatusNotice } from './StatusNotice';
 
-export function AdminInvoiceManager({ invoices, query }: { invoices: Invoice[]; query?: AdminQuery }) {
+export function AdminInvoiceManager({ invoices, query }: Readonly<{ invoices: Invoice[]; query?: AdminQuery }>) {
   if (invoices.length === 0) return <div className="empty">No hay facturas emitidas.</div>;
   return (
     <AdminTableRegion label="Facturas emitidas">
@@ -19,7 +19,7 @@ export function AdminInvoiceManager({ invoices, query }: { invoices: Invoice[]; 
   );
 }
 
-function InvoiceRows({ invoice, query }: { invoice: Invoice; query?: AdminQuery }) {
+function InvoiceRows({ invoice, query }: Readonly<{ invoice: Invoice; query?: AdminQuery }>) {
   const [open, setOpen] = useState(false);
   const [updateState, updateAction, updating] = useActionState(async (previous: ActionState, data: FormData) => {
     const result = await updateInvoiceAction(previous, data);

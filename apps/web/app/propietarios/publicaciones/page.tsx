@@ -5,7 +5,7 @@ import { apiFetch } from '@/lib/api';
 import { Reveal } from '@/components/Reveal';
 import { StatusNotice } from '@/components/StatusNotice';
 import { OwnerListingForm, type OwnerListing } from '@/components/OwnerListingForm';
-export default async function Publications({searchParams}:{searchParams:Promise<{editar?:string;nuevo?:string;guardado?:string}>}) {
+export default async function Publications({searchParams}:Readonly<{searchParams:Promise<{editar?:string;nuevo?:string;guardado?:string}>}>) {
   const user=await requireUser('USER');
   if(user.portal!=='OWNER') redirect('/propietarios');
   const [rows,params]=await Promise.all([apiFetch<OwnerListing[]>('/owner/listings',{},true),searchParams]);

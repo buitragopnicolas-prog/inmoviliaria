@@ -5,7 +5,7 @@ import type { DocumentAccount, DocumentFile } from '@/lib/documents';
 import { DocumentLinks } from '@/components/DocumentLinks';
 import { PdfUploadForm } from '@/components/PdfUploadForm';
 
-export default async function AccountDocuments({searchParams}:{searchParams:Promise<{cliente?:string}>}) {
+export default async function AccountDocuments({searchParams}:Readonly<{searchParams:Promise<{cliente?:string}>}>) {
   await requireUser('ADMIN');
   const accounts=await apiFetch<DocumentAccount[]>('/admin/documents/accounts',{},true);
   const requested=(await searchParams).cliente;

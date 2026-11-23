@@ -10,7 +10,7 @@ const clamp=(value:number,min:number,max:number)=>Math.min(max,Math.max(min,valu
 
 // Ring to vertical drum, adapted from crafterui's Works Wheel on 21st.
 // Turn 0 is the ring. Every whole turn thereafter puts another photo in front.
-export function WorksWheel({items, portfolio = false}:{items:WheelItem[]; portfolio?:boolean}) {
+export function WorksWheel({items, portfolio = false}:Readonly<{items:WheelItem[]; portfolio?:boolean}>) {
   const stage=useRef<HTMLButtonElement>(null);
   const wheel=useRef<HTMLSpanElement>(null);
   const cards=useRef<(HTMLSpanElement|null)[]>([]);

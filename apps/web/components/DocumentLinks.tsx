@@ -1,6 +1,6 @@
 import type { DocumentFile } from '@/lib/documents';
 
-export function DocumentLinks({files,scope}:{files:DocumentFile[];scope:'privados'|'publicos'}) {
+export function DocumentLinks({files,scope}:Readonly<{files:DocumentFile[];scope:'privados'|'publicos'}>) {
   return <ul className="pdfList">{files.map(file=>{
     const path='/documentos/'+scope+'/'+encodeURIComponent(file.id);
     return <li key={file.id}><div>{file.serviceType && <span>Contrato de prestación de servicios · {file.serviceType}<br/></span>}<strong>{file.originalName}</strong><small>PDF · {Math.max(1,Math.round(file.size/1024))} KB</small></div>

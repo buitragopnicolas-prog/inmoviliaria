@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { saveOffer } from '@/app/admin/publishing-actions';
 import { saleCatalogs, type SaleOffer } from '@/lib/sale-offers';
 import { StatusNotice } from './StatusNotice';
-export function SaleOfferForm({offer}:{offer?:SaleOffer}){
+export function SaleOfferForm({offer}:Readonly<{offer?:SaleOffer}>){
   const [state,action,pending]=useActionState(saveOffer,{});
   const [busy,start]=useTransition();
   const [catalog,setCatalog]=useState(offer?.catalog??'comprar');

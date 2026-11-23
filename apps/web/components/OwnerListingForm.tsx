@@ -5,7 +5,7 @@ import { propertyPhotoUrl } from '@/lib/format';
 import { ConsentField, usePublishedPolicy } from './ConsentField';
 import { StatusNotice } from './StatusNotice';
 export type OwnerListing={id:string;operation:'sale'|'rent';title:string;description:string;category:string;city:string;address:string;neighborhood:string;bedrooms:number;features:string[];price:string;images:string[];published:boolean;revision:number;slug?:string;status?:string};
-export function OwnerListingForm({item}:{item?:OwnerListing}) {
+export function OwnerListingForm({item}:Readonly<{item?:OwnerListing}>) {
   const [state,setState]=useState({error:''});
   const [pending,start]=useTransition();
   const policy=usePublishedPolicy();

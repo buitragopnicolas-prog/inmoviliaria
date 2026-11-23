@@ -5,7 +5,7 @@ import { apiFetch } from '@/lib/api';
 import { pesos } from '@/lib/format';
 import { saleCatalogs, type SaleOffer } from '@/lib/sale-offers';
 import { SaleOfferForm } from '@/components/SaleOfferForm';
-export default async function SalesAdmin({searchParams}:{searchParams:Promise<{editar?:string;nueva?:string}>}){
+export default async function SalesAdmin({searchParams}:Readonly<{searchParams:Promise<{editar?:string;nueva?:string}>}>){
   await requireUser('ADMIN');
   const {editar,nueva}=await searchParams;
   const rows=await apiFetch<SaleOffer[]>('/admin/sales',{},true);

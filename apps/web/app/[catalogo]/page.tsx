@@ -9,7 +9,7 @@ import { readSite } from '@/lib/read-site';
 import { isSaleCatalog, type SaleCatalog, type SaleOffer } from '@/lib/sale-offers';
 
 type Filters = Record<string, string | string[] | undefined>;
-async function Results({ catalog, query }: { catalog: SaleCatalog; query: string }) {
+async function Results({ catalog, query }: Readonly<{ catalog: SaleCatalog; query: string }>) {
   const offers = await loadPublicData<SaleOffer[]>('/sales/'+(catalog==='comprar'?'market':catalog)+'?'+query);
   if (offers === null) return <DataUnavailable label="las ofertas de venta" retryHref={`/${catalog}?${query}`} />;
   const { catalogos } = await readSite();
@@ -20,7 +20,7 @@ async function Results({ catalog, query }: { catalog: SaleCatalog; query: string
   </Link></Reveal>)}</div>;
 }
 
-export default async function SaleCatalogPage({params,searchParams}:{params:Promise<{catalogo:string}>;searchParams:Promise<Filters>}) {
+export default async function SaleCatalogPage({params,searchParams}:Readonly<{params:Promise<{catalogo:string}>;searchParams:Promise<Filters>}>) {
   const [{catalogo}, filters, {catalogos}] = await Promise.all([params, searchParams, readSite()]);
   if (!isSaleCatalog(catalogo)) notFound();
   const property = catalogo === 'comprar';

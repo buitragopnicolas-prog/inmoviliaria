@@ -47,6 +47,10 @@ services:
     volumes:
       - ./apps/api/src:/usr/src/apps/api/src:ro
       - ./apps/api/tsconfig.json:/usr/src/apps/api/tsconfig.json:ro
+      - ./apps/api/package.json:/usr/src/apps/api/package.json:ro
+      - ./apps/web/package.json:/usr/src/apps/web/package.json:ro
+      - ./node_modules:/usr/src/node_modules:ro
+      - ./shared:/usr/src/shared:ro
       - ./apps/web/app:/usr/src/apps/web/app:ro
       - ./apps/web/components:/usr/src/apps/web/components:ro
       - ./apps/web/lib:/usr/src/apps/web/lib:ro

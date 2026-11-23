@@ -4,10 +4,10 @@ import Form from 'next/form';
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { type readCatalogFilters } from '@/lib/catalog-filters';
 
-export function CatalogFilterForm({ values, children }: {
+export function CatalogFilterForm({ values, children }: Readonly<{
   values: ReturnType<typeof readCatalogFilters>['values'];
   children: ReactNode;
-}) {
+}>) {
   const form = useRef<HTMLFormElement>(null);
   const valuesInUrl = JSON.stringify([values.search, values.city, values.maxRent]);
   const lastSubmission = useRef(valuesInUrl);

@@ -7,7 +7,7 @@ import styles from './Directions.module.css';
 type OrientationSource = typeof DeviceOrientationEvent & {requestPermission?:()=>Promise<string>};
 const limit=(value:number)=>Math.max(0,Math.min(1,value));
 
-export function LightSurface({image,alt,caption,children}:{image:string;alt:string;caption:string;children:ReactNode}) {
+export function LightSurface({image,alt,caption,children}:Readonly<{image:string;alt:string;caption:string;children:ReactNode}>) {
   const surface=useRef<HTMLDivElement>(null);
   const canvas=useRef<HTMLCanvasElement>(null);
   const lastSample=useRef(-Infinity);
