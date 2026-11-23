@@ -6,11 +6,11 @@ import type { UsersService } from '../users/users.service.js';
 
 test('revalida identidad y rol con la base de datos', async () => {
   const users = {
-    findById: async () => ({ id: 'user-1', email: 'actual@example.com', name: 'Nombre actual', role: 'USER', passwordHash: 'hash' }),
+    findById: async () => ({ id: 'user-1', email: 'actual@example.com', name: 'Nombre actual', role: 'USER', portal:'OWNER', passwordHash: 'hash' }),
   } as unknown as UsersService;
   const strategy = new JwtStrategy(users);
   const current = await strategy.validate({ sub: 'user-1', email: 'anterior@example.com', name: 'Anterior', role: 'ADMIN' });
-  assert.deepEqual(current, { sub: 'user-1', email: 'actual@example.com', name: 'Nombre actual', role: 'USER' });
+  assert.deepEqual(current, { sub: 'user-1', email: 'actual@example.com', name: 'Nombre actual', role: 'USER', portal:'OWNER' });
 });
 
 test('rechaza cuentas eliminadas o sin contraseña activa', async () => {

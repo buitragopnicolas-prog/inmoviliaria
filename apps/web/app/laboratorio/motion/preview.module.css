@@ -1,0 +1,19 @@
+.controls { padding-block: 24px; }
+.controls form { margin: 0; }
+.preview[data-intensity='sutil'] { --motion-fast: 120ms; --motion-distance: 1px; }
+.preview[data-intensity='inmersiva'] { --motion-fast: 320ms; --motion-distance: 7px; }
+
+.preview[data-direction='minimal'] section { background: var(--surface); }
+.preview[data-direction='minimal'] h1 { font-size: clamp(44px, 5vw, 68px); }
+.preview[data-direction='minimal'] figure,
+.preview[data-direction='minimal'] picture { filter: grayscale(1); }
+
+.preview[data-direction='proptech'] section { background: var(--primary); color: white; }
+.preview[data-direction='proptech'] h1 { font-family: var(--font-sans), sans-serif; }
+.preview[data-direction='proptech'] h1 em { color: var(--gold-soft); }
+.preview[data-direction='proptech'] h1 + p,
+.preview[data-direction='proptech'] span:has(+ h1),
+.preview[data-direction='proptech'] section > div > div:last-child a { color: white; }
+.preview[data-direction='proptech'] section a:focus-visible { outline-color: var(--gold-soft); }
+.preview[data-direction='proptech'] form,
+.preview[data-direction='proptech'] h2 { color: var(--primary); }

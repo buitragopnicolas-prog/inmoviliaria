@@ -1,0 +1,857 @@
+{
+  "identidad": {
+    "title": "Identidad y navegación",
+    "fields": {
+      "name": {
+        "label": "Nombre de la inmobiliaria",
+        "kind": "text",
+        "value": "Asesoría Inmobiliaria JB"
+      },
+      "tagline": {
+        "label": "Lema de la marca",
+        "kind": "text",
+        "value": "Espacios para vivir"
+      },
+      "description": {
+        "label": "Descripción en buscadores",
+        "kind": "long",
+        "value": "Encuentra inmuebles, vehículos y bienes y consulta los servicios de la inmobiliaria."
+      },
+      "navHome": {
+        "label": "Menú · Inicio",
+        "kind": "text",
+        "value": "Inicio"
+      },
+      "navRent": {
+        "label": "Menú · Arriendos",
+        "kind": "text",
+        "value": "Arriendos"
+      },
+      "navNews": {
+        "label": "Menú · Artículos",
+        "kind": "text",
+        "value": "Boletín jurídico y noticias"
+      },
+      "navAbout": {
+        "label": "Menú · Nosotros",
+        "kind": "text",
+        "value": "Nosotros"
+      },
+      "navContact": {
+        "label": "Menú · Contacto",
+        "kind": "text",
+        "value": "Contacto"
+      },
+      "navTools": {
+        "label": "Menú · Herramientas",
+        "kind": "text",
+        "value": "Herramientas IA"
+      }
+    }
+  },
+  "portada": {
+    "title": "Inicio · Portada y destinos",
+    "fields": {
+      "kicker": {
+        "label": "Texto superior",
+        "kind": "text",
+        "value": "Bogotá, Colombia"
+      },
+      "first": {
+        "label": "Titular · primera línea",
+        "kind": "text",
+        "value": "Tu inmueble."
+      },
+      "second": {
+        "label": "Titular · segunda línea",
+        "kind": "text",
+        "value": "Nuestro compromiso."
+      },
+      "intro": {
+        "label": "Introducción",
+        "kind": "long",
+        "value": "Encuentra inmuebles para comprar o arrendar, explora vehículos y bienes y conoce nuestros servicios."
+      },
+      "buy": {
+        "label": "Primer destino",
+        "kind": "text",
+        "value": "Compra y vende"
+      },
+      "rent": {
+        "label": "Segundo destino",
+        "kind": "text",
+        "value": "Arrendar"
+      },
+      "goods": {
+        "label": "Tercer destino",
+        "kind": "text",
+        "value": "Vehículos y bienes"
+      },
+      "services": {
+        "label": "Cuarto destino",
+        "kind": "text",
+        "value": "Servicios"
+      },
+      "clients": {
+        "label": "Quinto destino",
+        "kind": "text",
+        "value": "Clientes"
+      },
+      "searchTitle": {
+        "label": "Título del buscador",
+        "kind": "text",
+        "value": "Busca un inmueble en arriendo"
+      },
+      "searchButton": {
+        "label": "Botón del buscador",
+        "kind": "text",
+        "value": "Buscar inmuebles"
+      },
+      "photo": {
+        "label": "Fotografía de portada",
+        "kind": "image",
+        "value": "/images/jb-architecture-hero-1920.webp"
+      },
+      "photoAlt": {
+        "label": "Descripción de la foto",
+        "kind": "text",
+        "value": "Arquitectura contemporánea con balcones y vegetación, imagen de referencia"
+      },
+      "caption": {
+        "label": "Pie de foto",
+        "kind": "text",
+        "value": "Imagen de referencia"
+      },
+      "discover": {
+        "label": "Enlace a destacados",
+        "kind": "text",
+        "value": "Arriendos destacados"
+      },
+      "contact": {
+        "label": "Enlace de contacto",
+        "kind": "text",
+        "value": "Contactar a JB"
+      },
+      "featured": {
+        "label": "Título de destacados",
+        "kind": "text",
+        "value": "Inmuebles destacados en arriendo."
+      },
+      "featuredIntro": {
+        "label": "Descripción de destacados",
+        "kind": "long",
+        "value": "Conoce los inmuebles disponibles en arriendo. Cada detalle cuenta al elegir."
+      },
+      "featuredLink": {
+        "label": "Enlace al catálogo",
+        "kind": "text",
+        "value": "Explorar el catálogo"
+      },
+      "news": {
+        "label": "Título de artículos destacados",
+        "kind": "text",
+        "value": "Artículos de la inmobiliaria"
+      },
+      "newsLink": {
+        "label": "Enlace a publicaciones",
+        "kind": "text",
+        "value": "Ver publicaciones"
+      },
+      "searchLabel": {
+        "label": "Buscador · barrio o inmueble",
+        "value": "Barrio o inmueble",
+        "kind": "text"
+      },
+      "cityLabel": {
+        "label": "Buscador · ciudad",
+        "value": "Ciudad",
+        "kind": "text"
+      },
+      "rentLabel": {
+        "label": "Buscador · canon máximo",
+        "value": "Canon máximo (COP)",
+        "kind": "text"
+      },
+      "emptyFeatured": {
+        "label": "Destacados · texto sin inmuebles",
+        "value": "Consulta el catálogo para conocer los inmuebles disponibles.",
+        "kind": "text"
+      },
+      "emptyFeaturedLink": {
+        "label": "Destacados · enlace sin inmuebles",
+        "value": "Explorar inmuebles",
+        "kind": "text"
+      },
+      "emptyNews": {
+        "label": "Artículos · texto sin publicaciones",
+        "value": "Pronto publicaremos novedades inmobiliarias y enlaces a medios digitales relevantes.",
+        "kind": "text"
+      },
+      "owners": {
+        "label": "Botón · Propietarios",
+        "kind": "text",
+        "value": "Propietarios"
+      },
+      "tenants": {
+        "label": "Botón · Arrendatarios",
+        "kind": "text",
+        "value": "Arrendatarios"
+      },
+      "portfolioLabel": {
+        "label": "Galería · sección",
+        "kind": "text",
+        "value": "Portafolio de arriendos"
+      },
+      "portfolioTitle": {
+        "label": "Galería · titular",
+        "kind": "text",
+        "value": "Recorra nuestra selección de inmuebles."
+      },
+      "lightTitle": {
+        "label": "Buscador · titular sobre la foto",
+        "kind": "text",
+        "value": "Encuentre el espacio que le pertenece."
+      },
+      "journeyTitle": {
+        "label": "Recorridos · titular",
+        "kind": "text",
+        "value": "¿Qué quieres hacer?"
+      },
+      "findPath": {
+        "label": "Recorridos · encontrar",
+        "kind": "text",
+        "value": "Buscar un inmueble o un bien"
+      },
+      "publishPath": {
+        "label": "Recorridos · publicar",
+        "kind": "text",
+        "value": "Publicar mi propiedad"
+      },
+      "accountPath": {
+        "label": "Recorridos · cuenta",
+        "kind": "text",
+        "value": "Entrar a mi cuenta"
+      }
+    }
+  },
+  "accesos": {
+    "title": "Inicio · Servicios para tu inmueble",
+    "fields": {
+      "title": {
+        "label": "Título de sección",
+        "kind": "text",
+        "value": "Servicios para tu inmueble"
+      },
+      "visit": {
+        "label": "Primer acceso · título",
+        "kind": "text",
+        "value": "Agendar una visita"
+      },
+      "visitText": {
+        "label": "Primer acceso · descripción",
+        "kind": "long",
+        "value": "Elige un inmueble y solicita una visita desde su ficha."
+      },
+      "visitHref": {
+        "label": "Primer acceso · enlace",
+        "kind": "link",
+        "value": "/inmuebles"
+      },
+      "manage": {
+        "label": "Segundo acceso · título",
+        "kind": "text",
+        "value": "Administrar mi inmueble"
+      },
+      "manageText": {
+        "label": "Segundo acceso · descripción",
+        "kind": "long",
+        "value": "Conoce los servicios de administración de la inmobiliaria."
+      },
+      "manageHref": {
+        "label": "Segundo acceso · enlace",
+        "kind": "link",
+        "value": "/propietarios"
+      },
+      "contract": {
+        "label": "Tercer acceso · título",
+        "kind": "text",
+        "value": "Consultar mi contrato"
+      },
+      "contractText": {
+        "label": "Tercer acceso · descripción",
+        "kind": "long",
+        "value": "Accede a los documentos y las facturas de tu cuenta."
+      },
+      "contractHref": {
+        "label": "Tercer acceso · enlace",
+        "kind": "link",
+        "value": "/arrendatarios"
+      }
+    }
+  },
+  "documentos": {
+    "title": "Inicio · Contratos y gestión documental",
+    "fields": {
+      "kicker": {
+        "label": "Texto superior",
+        "kind": "text",
+        "value": "Contratos y gestión documental"
+      },
+      "title": {
+        "label": "Titular",
+        "kind": "text",
+        "value": "La tranquilidad también está en los detalles."
+      },
+      "intro": {
+        "label": "Descripción",
+        "kind": "long",
+        "value": "Un arriendo reúne mucho más que un inmueble. También son sus condiciones, sus documentos y la información que necesitas consultar."
+      },
+      "first": {
+        "label": "Primer punto",
+        "kind": "text",
+        "value": "Documentos disponibles"
+      },
+      "firstText": {
+        "label": "Descripción del primer punto",
+        "kind": "long",
+        "value": "Accede a los contratos asociados a tu cuenta."
+      },
+      "second": {
+        "label": "Segundo punto",
+        "kind": "text",
+        "value": "Acompañamiento cercano"
+      },
+      "secondText": {
+        "label": "Descripción del segundo punto",
+        "kind": "long",
+        "value": "Contacta a nuestro equipo cuando necesites orientación sobre tu arriendo."
+      },
+      "link": {
+        "label": "Texto del botón",
+        "kind": "text",
+        "value": "Conversemos"
+      },
+      "href": {
+        "label": "Destino del botón",
+        "kind": "link",
+        "value": "/contacto"
+      },
+      "photo": {
+        "label": "Fotografía de la sección",
+        "kind": "image",
+        "value": "/images/jb-interior-1200.webp"
+      },
+      "alt": {
+        "label": "Descripción de la foto",
+        "kind": "text",
+        "value": "Interior arquitectónico con materiales naturales y luz de día"
+      },
+      "caption": {
+        "label": "Pie de foto",
+        "kind": "text",
+        "value": "Espacios pensados para vivir · Imagen de referencia"
+      },
+      "mark": {
+        "label": "Texto sobre la foto",
+        "kind": "text",
+        "value": "JB / HABITAR"
+      }
+    }
+  },
+  "cuenta": {
+    "title": "Inicio · Cuenta y llamada de contacto",
+    "fields": {
+      "kicker": {
+        "label": "Texto superior",
+        "kind": "text",
+        "value": "Cuenta del arrendatario"
+      },
+      "title": {
+        "label": "Titular",
+        "kind": "text",
+        "value": "Menos búsquedas. Más claridad."
+      },
+      "intro": {
+        "label": "Descripción",
+        "kind": "long",
+        "value": "La información de tu arriendo tiene un lugar. Desde tu cuenta puedes consultar documentos, revisar facturas y encontrar tu historial de pagos."
+      },
+      "link": {
+        "label": "Texto del botón",
+        "kind": "text",
+        "value": "Ir a mi cuenta"
+      },
+      "panelKicker": {
+        "label": "Texto superior del recuadro",
+        "kind": "text",
+        "value": "El espacio de tu arriendo"
+      },
+      "panelTitle": {
+        "label": "Título del recuadro",
+        "kind": "text",
+        "value": "Tu cuenta, en orden."
+      },
+      "panelIntro": {
+        "label": "Descripción del recuadro",
+        "kind": "text",
+        "value": "Lo que puedes consultar al ingresar"
+      },
+      "first": {
+        "label": "Primer elemento",
+        "kind": "text",
+        "value": "Contratos"
+      },
+      "firstText": {
+        "label": "Primera descripción",
+        "kind": "text",
+        "value": "Documentos asociados a tu arriendo"
+      },
+      "second": {
+        "label": "Segundo elemento",
+        "kind": "text",
+        "value": "Facturas"
+      },
+      "secondText": {
+        "label": "Segunda descripción",
+        "kind": "text",
+        "value": "Valores, vencimientos y estados"
+      },
+      "third": {
+        "label": "Tercer elemento",
+        "kind": "text",
+        "value": "Historial"
+      },
+      "thirdText": {
+        "label": "Tercera descripción",
+        "kind": "text",
+        "value": "Consulta de tus pagos registrados"
+      },
+      "note": {
+        "label": "Nota del recuadro",
+        "kind": "text",
+        "value": "Disponible para arrendatarios con cuenta."
+      },
+      "contactKicker": {
+        "label": "Contacto · texto superior",
+        "kind": "text",
+        "value": "Un buen comienzo es una conversación"
+      },
+      "contactTitle": {
+        "label": "Contacto · título",
+        "kind": "text",
+        "value": "Hablemos de tu próximo paso."
+      },
+      "contactIntro": {
+        "label": "Contacto · descripción",
+        "kind": "long",
+        "value": "¿Buscas un lugar o necesitas acompañamiento con tu inmueble? Estamos para escucharte."
+      },
+      "contactButton": {
+        "label": "Contacto · botón",
+        "kind": "text",
+        "value": "Hablar con un asesor"
+      },
+      "contactHref": {
+        "label": "Contacto · enlace",
+        "kind": "link",
+        "value": "/contacto"
+      },
+      "contactPhoto": {
+        "label": "Contacto · fotografía",
+        "kind": "image",
+        "value": "/images/jb-architecture-hero-960.webp"
+      }
+    }
+  },
+  "nosotros": {
+    "title": "Nosotros",
+    "fields": {
+      "kicker": {
+        "label": "Texto superior",
+        "kind": "text",
+        "value": "Quiénes somos"
+      },
+      "title": {
+        "label": "Titular",
+        "kind": "text",
+        "value": "Confianza para arrendar y administrar tu inmueble"
+      },
+      "intro": {
+        "label": "Presentación",
+        "kind": "long",
+        "value": "Combinamos asesoría cercana con herramientas digitales para simplificar publicaciones, contratos, facturas y pagos."
+      },
+      "photo": {
+        "label": "Fotografía",
+        "kind": "image",
+        "value": "/images/jb-interior-1200.webp"
+      },
+      "alt": {
+        "label": "Descripción de la fotografía",
+        "kind": "text",
+        "value": "Interior inmobiliario de referencia"
+      },
+      "caption": {
+        "label": "Texto sobre la fotografía",
+        "kind": "text",
+        "value": "Nuestro equipo y nuestra forma de trabajar"
+      },
+      "first": {
+        "label": "Primer valor",
+        "kind": "text",
+        "value": "Transparencia"
+      },
+      "firstText": {
+        "label": "Primer valor · descripción",
+        "kind": "long",
+        "value": "Canon, administración y estado de facturas visibles para cada arrendatario."
+      },
+      "second": {
+        "label": "Segundo valor",
+        "kind": "text",
+        "value": "Acompañamiento"
+      },
+      "secondText": {
+        "label": "Segundo valor · descripción",
+        "kind": "long",
+        "value": "Atención para propietarios y usuarios durante el proceso de arriendo."
+      },
+      "third": {
+        "label": "Tercer valor",
+        "kind": "text",
+        "value": "Gestión digital"
+      },
+      "thirdText": {
+        "label": "Tercer valor · descripción",
+        "kind": "long",
+        "value": "Portal seguro para administrar publicaciones y pagos."
+      },
+      "purpose": {
+        "label": "Texto superior del propósito",
+        "kind": "text",
+        "value": "Nuestro propósito"
+      },
+      "purposeTitle": {
+        "label": "Titular del propósito",
+        "kind": "text",
+        "value": "Hacer que arrendar sea claro, ágil y seguro."
+      },
+      "purposeText": {
+        "label": "Descripción del propósito",
+        "kind": "long",
+        "value": "Publicamos inmuebles con información y galerías. Los arrendatarios pueden consultar sus obligaciones y gestionar sus pagos desde su cuenta."
+      },
+      "button": {
+        "label": "Botón de contacto",
+        "kind": "text",
+        "value": "Hablar con un asesor"
+      }
+    }
+  },
+  "contacto": {
+    "title": "Contacto, pie de página y política",
+    "fields": {
+      "footerText": {
+        "label": "Descripción del pie",
+        "kind": "long",
+        "value": "Administramos inmuebles para arriendo con claridad, respaldo y acompañamiento digital."
+      },
+      "explore": {
+        "label": "Título de enlaces",
+        "kind": "text",
+        "value": "Explora"
+      },
+      "links": {
+        "label": "Enlaces del pie · una línea por enlace, en formato texto y barra vertical y destino",
+        "kind": "links",
+        "value": "Compra y vende | /comprar\nArrendar | /inmuebles\nVehículos y bienes | /vehiculos-y-bienes\nServicios | /servicios\nBoletín jurídico y noticias | /noticias\nQuiénes somos | /nosotros\nContactar asesor | /contacto\nHerramientas IA | /herramientas-ia\nArrendatarios | /arrendatarios\nPropietarios | /propietarios\nClientes | /clientes"
+      },
+      "contact": {
+        "label": "Título de contacto",
+        "kind": "text",
+        "value": "Contacto"
+      },
+      "city": {
+        "label": "Ciudad o dirección",
+        "kind": "text",
+        "value": "Bogotá, Colombia"
+      },
+      "phone": {
+        "label": "Teléfono",
+        "kind": "phone",
+        "value": "+57 601 555 0185"
+      },
+      "email": {
+        "label": "Correo",
+        "kind": "email",
+        "value": "contacto@asesoriainmobiliariajb.com"
+      },
+      "hours": {
+        "label": "Horario",
+        "kind": "text",
+        "value": "Lunes a viernes · 8:00 a. m. – 6:00 p. m."
+      },
+      "rights": {
+        "label": "Derechos en el pie",
+        "kind": "text",
+        "value": "Todos los derechos reservados."
+      },
+      "heading": {
+        "label": "Título de la página Contacto",
+        "kind": "text",
+        "value": "Habla con un asesor"
+      },
+      "intro": {
+        "label": "Presentación de contacto",
+        "kind": "long",
+        "value": "Cuéntanos qué necesitas y cómo podemos contactarte."
+      },
+      "policyLabel": {
+        "label": "Nombre del enlace a la política",
+        "kind": "text",
+        "value": "Política de tratamiento de datos"
+      },
+      "policyHref": {
+        "label": "Enlace a tu política publicada (opcional)",
+        "kind": "optionalLink",
+        "value": ""
+      },
+      "policyText": {
+        "label": "Texto propio de la política (opcional)",
+        "kind": "long",
+        "value": ""
+      },
+      "whatsapp": {
+        "label": "WhatsApp de contacto con indicativo de país",
+        "kind": "phone",
+        "value": "+57 313 539 4406"
+      }
+    }
+  },
+  "servicios": {
+    "title": "Servicios y contactos",
+    "fields": {
+      "title": {
+        "label": "Título",
+        "kind": "text",
+        "value": "Servicios de la inmobiliaria"
+      },
+      "intro": {
+        "label": "Presentación",
+        "kind": "long",
+        "value": "Elige el área de asesoría para consultar con el equipo."
+      },
+      "legal": {
+        "label": "Primer servicio",
+        "kind": "optionalText",
+        "value": "Servicios jurídicos"
+      },
+      "legalText": {
+        "label": "Descripción",
+        "kind": "long",
+        "value": "Consulta sobre contratos y trámites relacionados con tu inmueble."
+      },
+      "legalLink": {
+        "label": "Contacto jurídico",
+        "kind": "link",
+        "value": "/contacto?servicio=juridicos"
+      },
+      "accounting": {
+        "label": "Segundo servicio",
+        "kind": "optionalText",
+        "value": "Servicios contables"
+      },
+      "accountingText": {
+        "label": "Descripción",
+        "kind": "long",
+        "value": "Solicita orientación sobre cuentas, soportes y obligaciones de tu inmueble."
+      },
+      "accountingLink": {
+        "label": "Contacto contable",
+        "kind": "link",
+        "value": "/contacto?servicio=contables"
+      },
+      "property": {
+        "label": "Tercer servicio",
+        "kind": "optionalText",
+        "value": "Servicios inmobiliarios"
+      },
+      "propertyText": {
+        "label": "Descripción",
+        "kind": "long",
+        "value": "Consulta la publicación, comercialización y administración de inmuebles."
+      },
+      "propertyLink": {
+        "label": "Contacto inmobiliario",
+        "kind": "link",
+        "value": "/contacto?servicio=inmobiliarios"
+      },
+      "button": {
+        "label": "Botón de contacto",
+        "kind": "text",
+        "value": "Contactar al equipo"
+      },
+      "service4": {
+        "kind": "optionalText",
+        "label": "Servicio 4 · nombre (vacío para ocultar)",
+        "value": "Servicios tributarios"
+      },
+      "service4Text": {
+        "kind": "long",
+        "label": "Servicio 4 · descripción amplia",
+        "value": "Cuéntanos qué declaración, obligación o trámite tributario necesitas revisar para que el equipo se comunique contigo."
+      },
+      "service5": {
+        "kind": "optionalText",
+        "label": "Servicio 5 · nombre (vacío para ocultar)",
+        "value": ""
+      },
+      "service5Text": {
+        "kind": "long",
+        "label": "Servicio 5 · descripción amplia",
+        "value": ""
+      },
+      "service6": {
+        "kind": "optionalText",
+        "label": "Servicio 6 · nombre (vacío para ocultar)",
+        "value": ""
+      },
+      "service6Text": {
+        "kind": "long",
+        "label": "Servicio 6 · descripción amplia",
+        "value": ""
+      },
+      "service7": {
+        "kind": "optionalText",
+        "label": "Servicio 7 · nombre (vacío para ocultar)",
+        "value": ""
+      },
+      "service7Text": {
+        "kind": "long",
+        "label": "Servicio 7 · descripción amplia",
+        "value": ""
+      },
+      "service8": {
+        "kind": "optionalText",
+        "label": "Servicio 8 · nombre (vacío para ocultar)",
+        "value": ""
+      },
+      "service8Text": {
+        "kind": "long",
+        "label": "Servicio 8 · descripción amplia",
+        "value": ""
+      }
+    }
+  },
+  "catalogos": {
+    "title": "Catálogos, artículos y clientes",
+    "fields": {
+      "rentTitle": {
+        "label": "Arriendos · título",
+        "kind": "text",
+        "value": "Inmuebles en arriendo"
+      },
+      "rentIntro": {
+        "label": "Arriendos · descripción",
+        "kind": "long",
+        "value": "Explora espacios disponibles y encuentra el adecuado para ti."
+      },
+      "buyTitle": {
+        "label": "Comprar · título",
+        "kind": "text",
+        "value": "Compra y vende"
+      },
+      "buyIntro": {
+        "label": "Comprar · descripción",
+        "kind": "long",
+        "value": "Busca inmuebles, vehículos y otros bienes en venta, o publica tu inmueble."
+      },
+      "goodsTitle": {
+        "label": "Vehículos y bienes · título",
+        "kind": "text",
+        "value": "Vehículos y bienes en venta"
+      },
+      "goodsIntro": {
+        "label": "Vehículos y bienes · descripción",
+        "kind": "long",
+        "value": "Busca por artículo o categoría para ver las fotografías y el precio de cada oferta."
+      },
+      "articleTitle": {
+        "label": "Artículos · título",
+        "kind": "text",
+        "value": "Boletín jurídico y noticias"
+      },
+      "articleIntro": {
+        "label": "Artículos · descripción",
+        "kind": "long",
+        "value": "Consulta conceptos jurídicos, guías, artículos de opinión y noticias de la inmobiliaria."
+      },
+      "clientTitle": {
+        "label": "Clientes · título",
+        "kind": "text",
+        "value": "Clientes de servicios"
+      },
+      "clientIntro": {
+        "label": "Clientes · descripción",
+        "kind": "long",
+        "value": "Consulta tus contratos de prestación de servicios jurídicos, contables o tributarios y tus facturas."
+      },
+      "clientButton": {
+        "label": "Clientes · botón",
+        "kind": "text",
+        "value": "Entrar a mi cuenta"
+      },
+      "toolsKicker": {
+        "label": "Herramientas IA · encabezado corto",
+        "value": "Tecnología a tu servicio",
+        "kind": "text"
+      },
+      "toolsTitle": {
+        "label": "Herramientas IA · título",
+        "value": "Herramientas IA",
+        "kind": "text"
+      },
+      "toolsIntro": {
+        "label": "Herramientas IA · presentación",
+        "value": "Prepara fotografías, transcribe notas y trabaja con tus textos desde tu dispositivo.",
+        "kind": "text"
+      },
+      "emptyOffers": {
+        "label": "Ventas · catálogo sin publicaciones",
+        "value": "Todavía no hay ofertas publicadas en este catálogo.",
+        "kind": "text"
+      },
+      "emptyArticles": {
+        "label": "Artículos · lista vacía",
+        "value": "Aún no hay noticias publicadas.",
+        "kind": "text"
+      },
+      "pressTitle": {
+        "label": "Artículos · sección de prensa",
+        "value": "Prensa del sector",
+        "kind": "text"
+      },
+      "ownerTitle": {
+        "label": "Propietarios · título",
+        "kind": "text",
+        "value": "Propietarios"
+      },
+      "ownerIntro": {
+        "label": "Propietarios · descripción",
+        "kind": "long",
+        "value": "Publica un inmueble en arriendo o venta, administra sus fotografías y consulta tus facturas."
+      },
+      "tenantTitle": {
+        "label": "Arrendatarios · título",
+        "kind": "text",
+        "value": "Arrendatarios"
+      },
+      "tenantIntro": {
+        "label": "Arrendatarios · descripción",
+        "kind": "long",
+        "value": "Consulta tu contrato de arrendamiento, tus documentos y tus facturas."
+      }
+    }
+  }
+}

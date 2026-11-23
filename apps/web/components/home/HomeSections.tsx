@@ -1,127 +1,133 @@
 import Link from 'next/link';
 import { Reveal } from '../Reveal';
 import { UiIcon } from '../UiIcon';
+import { defaultCopy } from '@/lib/site-content';
 import styles from './HomeSections.module.css';
 
-export function HomeHero() {
+export const destinations = [ ['buy', '/comprar'], ['rent', '/inmuebles'], ['goods', '/vehiculos-y-bienes'], ['services', '/servicios'], ['tenants', '/arrendatarios'], ['owners', '/propietarios'], ['clients', '/clientes'] ] as const;
+
+export function HomeHero({ featuredHref = '#inmuebles-destacados', copy = defaultCopy.portada, brand = defaultCopy.identidad.name }: Readonly<{ featuredHref?: string; copy?: typeof defaultCopy.portada; brand?: string }>) {
   return (
     <section className={styles.hero} aria-labelledby="home-title">
       <div className={`container ${styles.heroContent}`}>
-        <div className={styles.heroMain}>
-          <div className={styles.heroCopy}>
-            <span className={styles.heroKicker}>Bogotá, Colombia · Asesoría inmobiliaria JB</span>
-            <h1 id="home-title">Tu inmueble.<br />Nuestro <em>compromiso.</em></h1>
-            <p>Arriendos y administración con acompañamiento cercano. Espacios para vivir y claridad para cuidar tu patrimonio.</p>
-            <div className={styles.heroActions}>
-              <a className={styles.heroBrowse} href="#buscar-inmueble">Encuentra tu espacio <span aria-hidden="true">↓</span></a>
-              <Link className={styles.heroSecondary} href="/contacto">Hablar con un asesor <span aria-hidden="true">→</span></Link>
-            </div>
-          </div>
-          <div className={styles.heroVisual}>
-            <picture className={styles.heroImage}>
-              <source media="(max-width: 1000px)" srcSet="/images/jb-architecture-hero-960.webp" />
-              <img src="/images/jb-architecture-hero-1920.webp" alt="Arquitectura contemporánea con balcones y vegetación, imagen de referencia" width="1920" height="1081" fetchPriority="high" />
-            </picture>
-            <div className={styles.heroImageCaption}><span>EL COMIENZO DE ALGO TUYO</span><p>Un espacio para tu<br /><em>próxima etapa.</em></p><small>Imagen de referencia</small></div>
-          </div>
+        <div className={styles.heroCopy}>
+          <span className={styles.heroKicker}>{copy.kicker} · {brand}</span>
+          <h1 id="home-title"><span className={styles.titleLine}>{copy.first}</span>{' '}<span className={styles.titleLine}><em>{copy.second}</em></span></h1>
+          <p>{copy.intro}</p>
+          <nav className={styles.heroActions} aria-label="¿Qué quieres hacer?">
+            {destinations.map(([label, href]) => (
+              <Link key={label} href={href}>{copy[label]}<span aria-hidden="true">↗</span></Link>
+            ))}
+          </nav>
         </div>
-        <div className={styles.searchPanel} id="buscar-inmueble">
-          <div className={styles.searchHeading}><UiIcon name="search" /><h2>¿Dónde quieres empezar?</h2><span>Inmuebles en arriendo</span></div>
-          <form action="/inmuebles" method="get" className={styles.heroSearch} aria-label="Buscar inmuebles en arriendo">
-            <label htmlFor="home-search">Barrio o inmueble<input id="home-search" name="search" type="search" placeholder="Ej. Chapinero o apartamento" /></label>
-            <label htmlFor="home-city">Ciudad<input id="home-city" name="city" placeholder="Ej. Bogotá" autoComplete="address-level2" /></label>
-            <label htmlFor="home-max-rent">Canon máximo (COP)<input id="home-max-rent" name="maxRent" type="number" min="1" step="1" placeholder="Ej. 2500000" /></label>
-            <button className="button" type="submit"><UiIcon name="search" />Buscar inmuebles</button>
-          </form>
+        <HomeSearch copy={copy} />
+        <div className={styles.heroVisual}>
+          <picture className={styles.heroImage}>
+            <source media="(max-width: 1000px)" srcSet={copy.photo === defaultCopy.portada.photo ? "/images/jb-architecture-hero-960.webp" : copy.photo} />
+            <img src={copy.photo} alt={copy.photoAlt} width="1920" height="1081" fetchPriority="high" />
+          </picture>
+          <div className={styles.heroImageCaption}><small>{copy.caption}</small></div>
         </div>
         <div className={styles.heroFoot}>
-          <a className={styles.discoverLink} href="#nuestro-enfoque"><span aria-hidden="true">↓</span> Descubre nuestro enfoque</a>
-          <Link className={styles.catalogLink} href="/inmuebles">Ver todos los inmuebles <span aria-hidden="true">↗</span></Link>
+          <a className={styles.discoverLink} href={featuredHref}><span aria-hidden="true">↓</span> {copy.discover}</a>
+          <Link className={styles.catalogLink} href="/contacto">{copy.contact} <span aria-hidden="true">↗</span></Link>
         </div>
       </div>
     </section>
   );
 }
 
-export function ServiceIntroduction() {
+export function ServiceIntroduction({ copy = defaultCopy.accesos } = {}) {
   return (
     <section className={styles.introduction} id="nuestro-enfoque" aria-labelledby="approach-title">
       <div className="container">
-        <Reveal className={styles.introHeading}>
-          <span className={styles.kicker}>01 / Una mirada integral</span>
-          <div><h2 id="approach-title">Detrás de cada inmueble,<br />hay una <em>decisión importante.</em></h2><p>Encontrar un lugar, administrar un arriendo o tener tus documentos a mano. Conectamos cada parte de esa experiencia con información clara y atención cercana.</p></div>
-        </Reveal>
+        <h2 id="approach-title">{copy.title}</h2>
         <div className={styles.serviceRows}>
-          <Reveal><Link href="/inmuebles" className={styles.serviceLink}><span className={styles.serviceNumber}>01</span><div><h3>Encuentra tu espacio</h3><p>Ubicación, características y valores para elegir con información.</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
-          <Reveal delay={70}><Link href="/contacto" className={styles.serviceLink}><span className={styles.serviceNumber}>02</span><div><h3>Conversemos de tu inmueble</h3><p>Cuéntanos qué necesitas para su administración y arriendo.</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
-          <Reveal delay={140}><Link href="/mi-cuenta" className={styles.serviceLink}><span className={styles.serviceNumber}>03</span><div><h3>Tu información, a mano</h3><p>Consulta tus contratos, facturas e historial desde tu cuenta.</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
+          <Reveal><Link href={copy.visitHref} className={styles.serviceLink}><div><h3>{copy.visit}</h3><p>{copy.visitText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
+          <Reveal delay={70}><Link href={copy.manageHref} className={styles.serviceLink}><div><h3>{copy.manage}</h3><p>{copy.manageText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
+          <Reveal delay={140}><Link href={copy.contractHref} className={styles.serviceLink}><div><h3>{copy.contract}</h3><p>{copy.contractText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
         </div>
       </div>
     </section>
   );
 }
 
-export function DocumentsSection() {
+export function DocumentsSection({ copy = defaultCopy.documentos } = {}) {
   return (
     <section className={styles.documents} aria-labelledby="documents-title">
       <div className={`container ${styles.documentsGrid}`}>
         <Reveal className={styles.interiorFigure}>
           <figure>
-            <img src="/images/jb-interior-1200.webp" width="1200" height="900" alt="Interior arquitectónico de ambientación, con materiales naturales y luz de día" loading="lazy" decoding="async" />
-            <figcaption>Espacios pensados para vivir · Imagen de referencia</figcaption>
+            <img src={copy.photo} width="1200" height="900" alt={copy.alt} loading="lazy" decoding="async" />
+            <figcaption>{copy.caption}</figcaption>
           </figure>
-          <span className={styles.figureIndex} aria-hidden="true">JB / HABITAR</span>
+          <span className={styles.figureIndex} aria-hidden="true">{copy.mark}</span>
         </Reveal>
         <Reveal className={styles.documentCopy}>
-          <span className={styles.kicker}>03 / Contratos y gestión documental</span>
-          <h2 id="documents-title">La tranquilidad<br />también está<br /><em>en los detalles.</em></h2>
-          <p>Un arriendo reúne mucho más que un inmueble. También son sus condiciones, sus documentos y la información que necesitas consultar.</p>
+          <span className={styles.kicker}>{copy.kicker}</span>
+          <h2 id="documents-title">{copy.title}</h2>
+          <p>{copy.intro}</p>
           <ul className={styles.documentList}>
-            <li><UiIcon name="document" /><div><h3>Documentos disponibles</h3><p>Accede a los contratos asociados a tu cuenta.</p></div></li>
-            <li><UiIcon name="message" /><div><h3>Acompañamiento cercano</h3><p>Contacta a nuestro equipo cuando necesites orientación sobre tu arriendo.</p></div></li>
+            <li><UiIcon name="document" /><div><h3>{copy.first}</h3><p>{copy.firstText}</p></div></li>
+            <li><UiIcon name="message" /><div><h3>{copy.second}</h3><p>{copy.secondText}</p></div></li>
           </ul>
-          <Link className={styles.lightArrowLink} href="/contacto">Conversemos <span aria-hidden="true">↗</span></Link>
+          <Link className={styles.lightArrowLink} href={copy.href}>{copy.link} <span aria-hidden="true">↗</span></Link>
         </Reveal>
       </div>
     </section>
   );
 }
 
-export function DigitalSection() {
+export function DigitalSection({ copy = defaultCopy.cuenta } = {}) {
   return (
     <section className={styles.digital} aria-labelledby="digital-title">
       <div className={`container ${styles.digitalGrid}`}>
         <Reveal className={styles.digitalCopy}>
-          <span className={styles.kicker}>04 / Cercanía también en digital</span>
-          <h2 id="digital-title">Menos búsquedas.<br /><em>Más claridad.</em></h2>
-          <p>La información de tu arriendo tiene un lugar. Desde tu cuenta puedes consultar documentos, revisar facturas y encontrar tu historial de pagos.</p>
-          <Link className={styles.arrowLink} href="/mi-cuenta">Ir a mi cuenta <span aria-hidden="true">↗</span></Link>
+          <span className={styles.kicker}>{copy.kicker}</span>
+          <h2 id="digital-title">{copy.title}</h2>
+          <p>{copy.intro}</p>
+          <Link className={styles.arrowLink} href="/arrendatarios">{copy.link} <span aria-hidden="true">↗</span></Link>
         </Reveal>
         <Reveal className={styles.accountOverview}>
-          <div className={styles.accountHeading}><span>EL ESPACIO DE TU ARRIENDO</span><UiIcon name="home" /></div>
-          <h3>Tu cuenta, en orden.</h3>
-          <p>Lo que puedes consultar al ingresar</p>
+          <div className={styles.accountHeading}><span>{copy.panelKicker}</span><UiIcon name="home" /></div>
+          <h3>{copy.panelTitle}</h3>
+          <p>{copy.panelIntro}</p>
           <ol className={styles.accountList}>
-            <li><UiIcon name="folder" /><div><strong>Contratos</strong><span>Documentos asociados a tu arriendo</span></div><span aria-hidden="true">01</span></li>
-            <li><UiIcon name="document" /><div><strong>Facturas</strong><span>Valores, vencimientos y estados</span></div><span aria-hidden="true">02</span></li>
-            <li><UiIcon name="check" /><div><strong>Historial</strong><span>Consulta de tus pagos registrados</span></div><span aria-hidden="true">03</span></li>
+            <li><UiIcon name="folder" /><div><strong>{copy.first}</strong><span>{copy.firstText}</span></div><span aria-hidden="true">01</span></li>
+            <li><UiIcon name="document" /><div><strong>{copy.second}</strong><span>{copy.secondText}</span></div><span aria-hidden="true">02</span></li>
+            <li><UiIcon name="check" /><div><strong>{copy.third}</strong><span>{copy.thirdText}</span></div><span aria-hidden="true">03</span></li>
           </ol>
-          <div className={styles.accountNote}>Disponible para arrendatarios con cuenta.</div>
+          <div className={styles.accountNote}>{copy.note}</div>
         </Reveal>
       </div>
     </section>
   );
 }
 
-export function ContactSection() {
+export function ContactSection({ copy = defaultCopy.cuenta } = {}) {
   return (
     <section className={styles.contact} aria-labelledby="contact-title">
-      <img className={styles.contactImage} src="/images/jb-architecture-hero-960.webp" alt="" width="960" height="540" loading="lazy" decoding="async" />
+      <img className={styles.contactImage} src={copy.contactPhoto} alt="" width="960" height="540" loading="lazy" decoding="async" />
       <Reveal className={`container ${styles.contactContent}`}>
-        <span className={styles.heroKicker}>Un buen comienzo es una conversación</span>
-        <h2 id="contact-title">Hablemos de tu<br /><em>próximo paso.</em></h2>
-        <div><p>¿Buscas un lugar o necesitas acompañamiento con tu inmueble? Estamos para escucharte.</p><Link className={`${styles.heroPrimary} button`} href="/contacto">Hablar con un asesor <span aria-hidden="true">↗</span></Link></div>
+        <span className={styles.heroKicker}>{copy.contactKicker}</span>
+        <h2 id="contact-title">{copy.contactTitle}</h2>
+        <div><p>{copy.contactIntro}</p><Link className={`${styles.heroPrimary} button`} href={copy.contactHref}>{copy.contactButton} <span aria-hidden="true">↗</span></Link></div>
       </Reveal>
     </section>
+  );
+}
+
+export function HomeSearch({copy}:{copy:typeof defaultCopy.portada}) {
+  return (
+    <div className={styles.searchPanel} id="buscar-inmueble">
+          <div className={styles.searchHeading}><UiIcon name="search" /><h2>{copy.searchTitle}</h2></div>
+          <form action="/inmuebles" method="get" className={styles.heroSearch} aria-label="Buscar inmuebles en arriendo">
+            <noscript><input type="hidden" name="vista" value="completa" /></noscript>
+            <label htmlFor="home-search">{copy.searchLabel}<input id="home-search" name="search" type="search" placeholder="Ej. Chapinero o apartamento" /></label>
+            <label htmlFor="home-city">{copy.cityLabel}<input id="home-city" name="city" placeholder="Ej. Bogotá" autoComplete="address-level2" /></label>
+            <label htmlFor="home-max-rent">{copy.rentLabel}<input id="home-max-rent" name="maxRent" type="number" min="1" step="1" placeholder="Ej. 2500000" /></label>
+            <button className="button" type="submit"><UiIcon name="search" />{copy.searchButton}</button>
+          </form>
+        </div>
   );
 }

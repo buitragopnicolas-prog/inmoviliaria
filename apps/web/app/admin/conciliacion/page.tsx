@@ -5,7 +5,7 @@ import { fecha, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { BankPaymentNotification, ImportBatch, ReceivingBankAccount } from '@/lib/types';
 import type { ManualPaymentReport } from '@/lib/types';
-import { ManualPaymentReviewForm } from '@/components/ManualPaymentReviewForm';
+import { ManualPaymentReviewForm, ManualPaymentReviewQueue } from '@/components/ManualPaymentReviewForm';
 import { AdminEmptyState, AdminListControls, AdminPagination } from '@/components/AdminListControls';
 import { adminMatches, adminStatusLabel, paginateAdmin, readAdminQuery, type AdminSearchParams } from '@/lib/admin-lists';
 import styles from '@/components/AdminWorkspace.module.css';
@@ -33,16 +33,16 @@ export default async function ReconciliationPage({ searchParams }: Readonly<{ se
       <nav className={styles.detailLinks} aria-label="Secciones de conciliación"><a href="#pagos-manuales">Pagos por revisar · {manualPayments.length}</a><a href="#notificaciones">Notificaciones bancarias</a><a href="#cuentas">Cuentas receptoras</a><a href="#cargas">Cargas históricas</a></nav>
 
       <div className="card tableCard" id="pagos-manuales"><div className="tableTitle"><div><span className="eyebrow">Verificación humana</span><h2>Pagos manuales pendientes</h2></div><span>{manualPayments.length} por revisar</span></div>
-        <div className="manualPaymentsGrid">
+        <ManualPaymentReviewQueue><div className="manualPaymentsGrid">
           {manualPayments.map((payment) => <article className="manualPaymentAdminCard" key={payment.id}>
-            <div className="manualPaymentAdminHead"><div><span className={`status ${payment.status === 'UNDER_REVIEW' ? 'review' : 'pending'}`}>{payment.status === 'UNDER_REVIEW' ? 'EN REVISIÓN' : 'PENDIENTE'}</span><h3>{payment.user?.name ?? payment.tenant?.name ?? 'Usuario'}</h3><p>{payment.invoice.lease.property.title} · {payment.invoice.code}</p></div><strong>{pesos(payment.amount)}</strong></div>
+            <div className="manualPaymentAdminHead"><div><span className={`status ${payment.status === 'UNDER_REVIEW' ? 'review' : 'pending'}`}>{payment.status === 'UNDER_REVIEW' ? 'EN REVISIÓN' : 'PENDIENTE'}</span><h3>{payment.user?.name ?? payment.tenant?.name ?? 'Usuario'}</h3><p>{payment.invoice.lease?.property.title ?? 'Servicios'} · {payment.invoice.code}</p></div><strong>{pesos(payment.amount)}</strong></div>
             <dl className="paymentAuditData"><div><dt>Método</dt><dd>{manualMethod(payment.manualMethod)}</dd></div><div><dt>Referencia</dt><dd>{payment.bankReference}</dd></div><div><dt>Pago informado</dt><dd>{fecha(payment.paidAt)}</dd></div><div><dt>Reporte</dt><dd>{fecha(payment.reportedAt)}</dd></div></dl>
             {payment.receiptFile ? <a className="button outline small" href={`/documentos/pagos/${payment.receiptFile.id}`} target="_blank" rel="noreferrer">Ver comprobante</a> : <p className="muted">Sin comprobante adjunto.</p>}
             {payment.reviewNote && <p className="alert">Nota de revisión: {payment.reviewNote}</p>}
             <ManualPaymentReviewForm paymentId={payment.id} />
           </article>)}
           {manualPayments.length === 0 && <div className="empty">No hay reportes manuales pendientes.</div>}
-        </div>
+        </div></ManualPaymentReviewQueue>
       </div>
 
       <div className="card tableCard" id="cuentas"><div className="tableTitle"><h2>Cuentas receptoras</h2><span>{accounts.length} configuradas</span></div>

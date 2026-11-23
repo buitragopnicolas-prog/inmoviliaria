@@ -5,6 +5,13 @@ export const assetUrl = (path?: string) => {
   return /^https?:\/\//i.test(path) ? path : `${publicApiUrl()}${path}`;
 };
 
+// Las rutas de fotografía propias pasan por el mismo origen de la web.
+export const isPublicPhotoPath = (path: string) =>
+  /^\/(?:uploads\/seed\/[\w-]+\.svg|api\/files\/[\w-]+\/content)$/.test(path);
+
+export const propertyPhotoUrl = (path?: string) =>
+  path && isPublicPhotoPath(path) ? `/fotos${path}` : assetUrl(path);
+
 export const pesos = (amount: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 const formatoFechaLocal = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' });
 const formatoFechaCalendario = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'UTC' });

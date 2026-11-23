@@ -1,6 +1,10 @@
-import { IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { ConsentInput } from '../../common/privacy.js';
+import { IsEmail, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
-export class RegisterDto {
+export class RegisterDto extends ConsentInput {
+  @IsOptional() @IsIn(['TENANT','OWNER','SERVICES'])
+  portal?: 'TENANT' | 'OWNER' | 'SERVICES';
+
   @IsString()
   @MinLength(3)
   @MaxLength(120)

@@ -254,7 +254,7 @@ export class PropertiesService {
       if (tour360Mode === 'REMOVE') updateData.tour360Url = null;
 
       await this.prisma.$transaction(async (tx) => {
-        await tx.property.update({ where: { id: propertyId }, data: updateData });
+        await tx.property.update({ where: { id: propertyId }, data: {...updateData,ownerRevision:{increment:1}} });
 
         if (imageMode === 'REPLACE' || imageMode === 'DEFAULT') {
           await tx.propertyImage.deleteMany({ where: { propertyId } });
@@ -530,7 +530,7 @@ export class PropertiesService {
         where: { email: tenant.email.toLowerCase() },
         include: { tenantProfile: { select: { id: true } } },
       });
-      if (user && !user.tenantProfile) {
+      if (user?.role==='USER' && user.portal==='TENANT' && !user.tenantProfile) {
         return tx.tenant.update({ where: { id: tenant.id }, data: { userId: user.id } });
       }
     }
@@ -556,6 +556,7 @@ export class PropertiesService {
           include: { tenantProfile: true },
         })
       : null;
+    if (linkedUser && (linkedUser.role!=='USER' || linkedUser.portal!=='TENANT')) throw new BadRequestException('Ese correo corresponde a otro perfil.');
     if (linkedUser?.tenantProfile) {
       return tx.tenant.update({
         where: { id: linkedUser.tenantProfile.id },

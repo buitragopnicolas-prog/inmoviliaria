@@ -1,3 +1,5 @@
+import { consentFor } from './portal-privacy-test-data.mjs';
+import { syntheticPdf } from './synthetic-pdf.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -29,8 +31,11 @@ const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: data
 const run = `E2E-CI-${randomUUID().slice(0, 8).toUpperCase()}`;
 const results = { run, passed: false, cases: [], security: [] };
 let admin, customer, outsider, source, service;
+const policyText='Política sintética del entorno aislado de integración.';
+const policy=consentFor({policyText});
 
 try {
+  await prisma.siteSection.upsert({where:{id:'contacto'},create:{id:'contacto',values:{policyText}},update:{values:{policyText}}});
   admin = await login(required('E2E_ADMIN_EMAIL'), required('E2E_ADMIN_PASSWORD'));
   customer = await login(required('E2E_CUSTOMER_EMAIL'), required('E2E_CUSTOMER_PASSWORD'));
   assert.equal(admin.user.role, 'ADMIN');
@@ -90,7 +95,7 @@ async function newInvoice(label) {
 async function apiCase(method) {
   const invoice = await newInvoice(method);
   const pdf = receiptPdf(`${run} ${method}`);
-  const fields = { method, amount: String(invoice.balance),
+  const fields = { ...policy, method, amount: String(invoice.balance),
     paidAt: new Date(Date.now() - 60000).toISOString(),
     bankReference: `${run}-${method}`, idempotencyKey: randomUUID() };
   const path = `/payments/invoices/${invoice.id}/manual-report`;
@@ -180,6 +185,7 @@ async function webCase() {
   assert.equal(qr.status, 200);
   assert.deepEqual(Buffer.from(await qr.arrayBuffer()), await readFile('scripts/fixtures/manual-payment-qr.svg'));
   const form = findForm(html, 'invoiceId', invoice.id);
+  form.set('authorized','true'); form.set('policyVersion',policy.policyVersion);
   form.set('bankReference', `${run}-WEB`);
   form.set('paidAt', new Date(Date.now() - 60000).toISOString());
   const pdf = receiptPdf(`${run} WEB`);
@@ -191,6 +197,12 @@ async function webCase() {
     .find(item => item.invoiceId === invoice.id);
   assert.ok(payment?.receiptFileId);
   await checkPending(invoice, payment, pdf);
+  const accountPath = `/mi-cuenta?referencia=${encodeURIComponent(payment.reference)}`;
+  const pendingNotice = await accountNotice(accountPath, customer.accessToken);
+  assert.ok(pendingNotice?.startsWith('Pendiente de verificación.'));
+  assert.ok(pendingNotice.includes(invoice.code) && pendingNotice.includes(payment.reference));
+  assert.equal(await accountNotice('/mi-cuenta?pago=aprobado', customer.accessToken), null);
+  assert.equal(await accountNotice(accountPath, outsider.accessToken), null);
   for (const token of [customer.accessToken, admin.accessToken]) {
     const response = await web(`/documentos/pagos/${payment.receiptFileId}`, { token });
     assert.equal(response.status, 200);
@@ -205,9 +217,17 @@ async function webCase() {
   review.set('note', `${run}: aprobación desde formulario web de prueba.`);
   assert.equal((await web('/admin/conciliacion', { method: 'POST', token: admin.accessToken, body: review })).status, 200);
   await checkApproved(invoice, payment);
+  assert.ok((await accountNotice(accountPath, customer.accessToken))?.startsWith('Pago aprobado.'));
   assert.match(await webPage(payPath, customer.accessToken), /Esta factura no tiene saldo pendiente/);
   results.cases.push({ method: 'WEB_FORMS', invoice: invoice.code, payment: payment.id, status: 'PAID', balance: 0 });
   console.log('Formularios web: reporte con PDF, visor privado, confirmación ADMIN y factura pagada: OK');
+}
+
+async function accountNotice(path, token) {
+  const dom = new JSDOM(await webPage(path, token));
+  try {
+    return dom.window.document.querySelector('.accountPage [role="status"]')?.textContent ?? null;
+  } finally { dom.window.close(); }
 }
 
 function findForm(html, name, value) {
@@ -222,17 +242,7 @@ function findForm(html, name, value) {
 }
 
 function receiptPdf(label) {
-  const stream = `BT /F1 14 Tf 50 740 Td (COMPROBANTE SINTETICO CI - NO ES UN PAGO REAL) Tj 0 -30 Td (${label}) Tj ET`;
-  const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`];
-  let pdf = '%PDF-1.4\n';
-  const offsets = [0];
-  objects.forEach((object, index) => { offsets.push(Buffer.byteLength(pdf)); pdf += `${index + 1} 0 obj\n${object}\nendobj\n`; });
-  const xref = Buffer.byteLength(pdf);
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  pdf += offsets.slice(1).map(offset => `${String(offset).padStart(10, '0')} 00000 n \n`).join('');
-  return Buffer.from(`${pdf}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return syntheticPdf(label, 'COMPROBANTE SINTETICO CI - NO ES UN PAGO REAL');
 }
 
 function formWithReceipt(fields, pdf) {

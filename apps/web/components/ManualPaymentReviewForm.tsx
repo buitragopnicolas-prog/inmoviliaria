@@ -1,19 +1,51 @@
 'use client';
 
-import { useActionState } from 'react';
-import { reviewManualPaymentAction } from '@/app/actions';
+import { createContext, useActionState, useContext, useState, type ReactNode } from 'react';
+import { useFormStatus } from 'react-dom';
+import { reviewManualPaymentAction, type ActionState } from '@/app/actions';
+import { StatusNotice } from './StatusNotice';
+
+const ReviewContext = createContext<{
+  action: (formData: FormData) => void;
+  result: ActionState & { paymentId?: string };
+} | null>(null);
+
+export function ManualPaymentReviewQueue({ children }: { children: ReactNode }) {
+  const [result, action, pending] = useActionState(reviewManualPaymentAction, {});
+  return <ReviewContext.Provider value={{ action, result }}>
+    {!pending && result.success && <StatusNotice message={result.success} focusOnRemoval />}
+    {children}
+  </ReviewContext.Provider>;
+}
+
+const decisions = [
+  ['CONFIRM', 'Confirmar', 'Confirmando pago…', 'button small'],
+  ['REVIEW', 'Solicitar revisión', 'Registrando revisión…', 'button outline small'],
+  ['REJECT', 'Rechazar', 'Registrando rechazo…', 'button danger small'],
+] as const;
+
+function ReviewActions() {
+  const { pending, data } = useFormStatus();
+  const decision = data?.get('decision');
+  const selected = decisions.find(([value]) => value === decision);
+  return <>
+    <div className="reviewActions">
+      {decisions.map(([value, label, , className]) => <button key={value} type="submit" className={className}
+        name="decision" value={value} aria-disabled={pending} aria-busy={pending && decision === value}
+        onClick={event => { if (pending) event.preventDefault(); }}>{label}</button>)}
+    </div>
+    {pending && selected && <StatusNotice message={selected[2]} />}
+  </>;
+}
 
 export function ManualPaymentReviewForm({ paymentId }: { paymentId: string }) {
-  const [state, action, pending] = useActionState(reviewManualPaymentAction, {});
-  return <form className="manualReviewForm" action={action}>
+  const context = useContext(ReviewContext);
+  const [note, setNote] = useState('');
+  if (!context) throw new Error('El formulario de revisión requiere la cola de conciliación.');
+  return <form className="manualReviewForm" action={context.action}>
     <input type="hidden" name="paymentId" value={paymentId} />
-    <label>Nota de revisión<textarea name="note" rows={2} placeholder="Motivo para rechazo o revisión" /></label>
-    <div className="reviewActions">
-      <button type="submit" className="button small" name="decision" value="CONFIRM" disabled={pending}>Confirmar</button>
-      <button type="submit" className="button outline small" name="decision" value="REVIEW" disabled={pending}>Solicitar revisión</button>
-      <button type="submit" className="button danger small" name="decision" value="REJECT" disabled={pending}>Rechazar</button>
-    </div>
-    {state.error && <p className="alert error" role="alert">{state.error}</p>}
-    {state.success && <p className="alert success" role="status">{state.success}</p>}
+    <label>Nota de revisión<textarea name="note" rows={2} value={note} onChange={event => setNote(event.target.value)} placeholder="Motivo para rechazo o revisión" /></label>
+    <ReviewActions />
+    {context.result.paymentId === paymentId && context.result.error && <StatusNotice message={context.result.error} tone="error" />}
   </form>;
 }

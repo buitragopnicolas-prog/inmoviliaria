@@ -1,0 +1,1 @@
+ALTER TABLE "NewsPost" ADD COLUMN "additionalLinks" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

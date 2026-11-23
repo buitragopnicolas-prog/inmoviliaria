@@ -1,15 +1,21 @@
+import { FilesService } from '../storage/files.service.js';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateNewsPostDto } from './dto/create-news-post.dto.js';
 
+const articleRelations = {
+  createdBy: { select: { id: true, name: true } },
+  attachments: { where: { purpose: 'MANAGED_PDF', scanStatus: 'CLEAN' }, select: { id: true, originalName: true, size: true, createdAt:true }, orderBy:{createdAt:'asc'} },
+} as const;
+
 @Injectable()
 export class NewsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly files: FilesService) {}
 
   listPublished() {
     return this.prisma.newsPost.findMany({
       where: { published: true },
-      include: { createdBy: { select: { id: true, name: true } } },
+      include: articleRelations,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -17,7 +23,7 @@ export class NewsService {
   featured() {
     return this.prisma.newsPost.findMany({
       where: { published: true },
-      include: { createdBy: { select: { id: true, name: true } } },
+      include: articleRelations,
       orderBy: { createdAt: 'desc' },
       take: 3,
     });
@@ -26,7 +32,7 @@ export class NewsService {
   async findBySlug(slug: string) {
     const newsPost = await this.prisma.newsPost.findFirst({
       where: { slug, published: true },
-      include: { createdBy: { select: { id: true, name: true } } },
+      include: articleRelations,
     });
     if (!newsPost) throw new NotFoundException('Noticia no encontrada.');
     return newsPost;
@@ -34,25 +40,48 @@ export class NewsService {
 
   listAdmin() {
     return this.prisma.newsPost.findMany({
-      include: { createdBy: { select: { id: true, name: true } } },
+      include: articleRelations,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async create(dto: CreateNewsPostDto, administratorId: string) {
-    return this.prisma.newsPost.create({
-      data: {
-        title: dto.title.trim(),
-        slug: await this.uniqueSlug(dto.title),
-        summary: dto.summary.trim(),
-        content: dto.content.trim(),
-        sourceLabel: this.optionalText(dto.sourceLabel),
-        externalUrl: this.optionalText(dto.externalUrl),
-        published: dto.published ?? true,
-        createdById: administratorId,
-      },
-      include: { createdBy: { select: { id: true, name: true } } },
-    });
+  private editorialFields(dto: CreateNewsPostDto) {
+    return {
+      title: dto.title.trim(), summary: dto.summary.trim(), content: dto.content?.trim() ?? '',
+      category: dto.category,
+      additionalLinks: dto.additionalLinks && [...new Set(dto.additionalLinks)],
+      sourceLabel: this.optionalText(dto.sourceLabel) ?? null,
+      externalUrl: this.optionalText(dto.externalUrl) ?? null,
+      published: dto.published ?? true,
+    };
+  }
+
+  async update(id: string, dto: CreateNewsPostDto, administratorId: string, pdfs: Express.Multer.File[]) {
+    await this.ensureExists(id);
+    const stored = await this.files.uploadManagedPdfs(pdfs, administratorId);
+    try {
+      return await this.prisma.newsPost.update({ where: {id}, data: {
+        ...this.editorialFields(dto),
+        attachments: { connect: stored.map(({id})=>({id})), disconnect: dto.removePdfIds?.map(id=>({id})) },
+      }, include: articleRelations });
+    } catch (error) {
+      await this.files.removeStoredFiles(stored);
+      throw error;
+    }
+  }
+
+  async create(dto: CreateNewsPostDto, administratorId: string, pdfs: Express.Multer.File[]) {
+    const slug = await this.uniqueSlug(dto.title);
+    const stored = await this.files.uploadManagedPdfs(pdfs, administratorId);
+    try {
+      return await this.prisma.newsPost.create({ data: {
+        ...this.editorialFields(dto), slug, createdById: administratorId,
+        attachments: { connect: stored.map(({id})=>({id})) },
+      }, include: articleRelations });
+    } catch (error) {
+      await this.files.removeStoredFiles(stored);
+      throw error;
+    }
   }
 
   async archive(newsPostId: string) {

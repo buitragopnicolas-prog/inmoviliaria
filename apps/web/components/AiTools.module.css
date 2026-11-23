@@ -21,5 +21,14 @@
 .result a { justify-self: start; }
 .credits summary { cursor: pointer; color: var(--primary); }
 .credits p { margin-block: 12px; }
+.progress { min-width: 0; }
+.progress > label { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 3px 12px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.progress > label > span:first-child { grid-column: 1 / -1; overflow-wrap: anywhere; font-size: 14px; }
+.progress progress { width: 100%; height: 8px; accent-color: var(--primary); }
+@media screen and (prefers-reduced-motion: no-preference) {
+  .toolHeading, .result { animation: var(--motion-arrival); }
+  .tool { transition: translate var(--motion-fast) var(--motion-ease); }
+  .tool:enabled:active { translate: 0 1px; }
+}
 @media (max-width: 760px) { .workspace { grid-template-columns: 1fr; gap: 20px; } .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tool { flex-direction: column; align-items: start; gap: 4px; } }
 @media (prefers-reduced-motion: reduce) { .root button { transition: none; } }

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { AdminAssignPropertyForm } from '@/components/AdminAssignPropertyForm';
 import { AdminLeaseContractForm } from '@/components/AdminLeaseContractForm';
 import { apiFetch } from '@/lib/api';
-import { assetUrl, fecha, fechaCalendario, pesos } from '@/lib/format';
+import { propertyPhotoUrl, fecha, fechaCalendario, pesos } from '@/lib/format';
 import { requireUser } from '@/lib/auth';
 import type { AdminUserDetail, AdminUserInvoice, Property, UserFinancialState } from '@/lib/types';
 import { AdminCreatePanel } from '@/components/AdminCreatePanel';
@@ -67,6 +67,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             </article>
           </div>
 
+          {user.user?.role === 'USER' && <Link className="button outline" href={'/admin/documentos?cliente='+encodeURIComponent(user.user.id)}>Administrar PDF de este cliente</Link>}
+
           <AdminCreatePanel title="Asignar inmueble" description="Selecciona un inmueble disponible y define las condiciones del contrato."><AdminAssignPropertyForm userId={user.id} properties={availableProperties} /></AdminCreatePanel>
 
           <div className="card tableCard" id="contratos">
@@ -90,7 +92,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
               <thead><tr><th scope="col">Inmueble</th><th scope="col">Dirección</th><th scope="col">Vigencia</th><th scope="col">Valor mensual</th><th scope="col">Novedades</th><th scope="col">Estado</th></tr></thead>
               <tbody>{user.leases.map((lease) => (
                 <tr key={lease.id}>
-                  <td className="propertyRow"><div className="thumb"><Image src={assetUrl(lease.property.images[0]?.url)} alt={lease.property.title} fill sizes="54px" /></div>{lease.property.title}</td>
+                  <td className="propertyRow"><div className="thumb"><Image src={propertyPhotoUrl(lease.property.images[0]?.url)} alt={lease.property.title} fill sizes="54px" /></div>{lease.property.title}</td>
                   <td>{lease.property.address}<br /><span className="muted">{lease.property.neighborhood}, {lease.property.city}</span></td>
                   <td>{lease.startDate ? fechaCalendario(lease.startDate) : 'Sin fecha'}{lease.endDate ? ` – ${fechaCalendario(lease.endDate)}` : ''}</td>
                   <td>{pesos(lease.expectedMonthlyPayment ?? lease.property.monthlyRent)}</td>
@@ -108,7 +110,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
               <tbody>{user.invoices.map((invoice) => (
                 <tr key={invoice.id}>
                   <td>{invoice.code}</td>
-                  <td>{invoice.lease.property.title}</td>
+                  <td>{invoice.lease?.property.title ?? 'Servicios'}</td>
                   <td>{fechaCalendario(invoice.period)}</td>
                   <td>{fechaCalendario(invoice.dueDate)}</td>
                   <td>{pesos(invoice.amount)}</td>

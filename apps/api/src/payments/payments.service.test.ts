@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import test, { afterEach, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
@@ -34,6 +35,8 @@ function fixture(overrides: Record<string, unknown> = {}) {
     findUniqueOrThrow: async () => saved ?? { id: 'payment-1' },
   };
   const tx = {
+    siteSection:{findUnique:async()=>({values:{policyText:'Prueba unitaria'}})},
+    privacyConsent:{create:async()=>({})},
     payment,
     paymentAuditEvent: { create: async () => ({ id: 'audit-1' }) },
     invoice: { update: async () => ({ id: 'invoice-1' }) },
@@ -54,7 +57,7 @@ function fixture(overrides: Record<string, unknown> = {}) {
   return { service: new PaymentsService(prisma as never, invoices as never, files as never), prisma, invoices, files };
 }
 
-const report = { method: ManualPaymentMethodDto.BANK_TRANSFER, amount: 100_000, paidAt: '2026-09-25T10:00:00-05:00', bankReference: 'REF-123', idempotencyKey: 'idem-1234567890123456' };
+const report = { authorized:'true', policyVersion:createHash('sha256').update(JSON.stringify(['/politica-de-datos','Prueba unitaria'])).digest('hex'), method: ManualPaymentMethodDto.BANK_TRANSFER, amount: 100_000, paidAt: '2026-09-25T10:00:00-05:00', bankReference: 'REF-123', idempotencyKey: 'idem-1234567890123456' };
 
 test('crea un reporte manual pendiente y conserva la factura sin aprobar', async () => {
   const { service } = fixture();

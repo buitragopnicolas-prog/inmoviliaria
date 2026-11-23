@@ -9,7 +9,7 @@ import styles from './AdminWorkspace.module.css';
 
 const sections: Record<string, string> = {
   inmuebles: 'Inmuebles', usuarios: 'Usuarios', facturas: 'Facturación',
-  conciliacion: 'Conciliación', contactos: 'Contactos', noticias: 'Noticias', archivos: 'Archivos', contratos: 'Contratos',
+  conciliacion: 'Conciliación', contactos: 'Contactos', noticias: 'Boletín jurídico y noticias', formatos:'Formatos de arrendamiento', documentos:'Documentos por cliente', sugerencias:'Buzón de sugerencias', ofertas: 'Ofertas de venta', contenido: 'Contenido del sitio', archivos: 'Archivos', contratos: 'Contratos',
 };
 const details: Record<string, string> = { inmuebles: 'Editar inmueble', contratos: 'Contrato firmado' };
 

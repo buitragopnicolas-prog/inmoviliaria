@@ -26,6 +26,7 @@ COPY --from=builder --chown=node:node /app/apps/api/uploads/seed seed-assets
 COPY --from=builder --chown=node:node /app/apps/api/src/generated apps/api/src/generated
 COPY --from=builder --chown=node:node /app/apps/api/scripts apps/api/scripts
 COPY --from=builder --chown=node:node /app/integrations integrations
+COPY --from=builder --chown=node:node /app/shared shared
 USER node
 EXPOSE 4000
 CMD ["node", "apps/api/dist/main.js"]

@@ -1,10 +1,13 @@
+import { portalPaths, type Portal } from '@/lib/portals';
 import type { Metadata } from 'next';
 import { AuthForm } from '@/components/AuthForm';
 import { notFound } from 'next/navigation';
 import { isLocalRegistrationEnabled } from '@/lib/registration-policy';
 
 export const metadata: Metadata = { title: 'Crear cuenta' };
-export default function RegisterPage() {
+export default async function RegisterPage({searchParams}:{searchParams:Promise<{perfil?:string}>}) {
   if (!isLocalRegistrationEnabled()) notFound();
-  return <section className="authSection"><AuthForm mode="register" /></section>;
+  const {perfil}=await searchParams;
+  const portal=(Object.keys(portalPaths) as Portal[]).find(key=>portalPaths[key]==='/'+perfil) ?? 'TENANT';
+  return <section className="authSection"><AuthForm mode="register" portal={portal} /></section>;
 }

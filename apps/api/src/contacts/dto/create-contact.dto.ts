@@ -1,6 +1,7 @@
+import { ConsentInput } from '../../common/privacy.js';
 import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class CreateContactDto {
+export class CreateContactDto extends ConsentInput {
   @IsString()
   @MinLength(3)
   @MaxLength(120)

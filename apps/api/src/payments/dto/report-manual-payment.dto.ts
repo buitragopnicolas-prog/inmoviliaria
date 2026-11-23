@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsInt, IsString, Length, Max, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsString, Length, IsIn, Matches, Max, Min } from 'class-validator';
 
 export enum ManualPaymentMethodDto {
   QR = 'QR',
@@ -9,6 +9,8 @@ export enum ManualPaymentMethodDto {
 }
 
 export class ReportManualPaymentDto {
+  @IsIn(['true']) authorized!: string;
+  @Matches(/^[a-f0-9]{64}$/) policyVersion!: string;
   @IsEnum(ManualPaymentMethodDto)
   method!: ManualPaymentMethodDto;
 
