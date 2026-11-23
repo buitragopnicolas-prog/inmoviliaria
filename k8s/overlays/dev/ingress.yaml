@@ -11,6 +11,13 @@ spec:
     - host: dev.asesoriainmobiliariajb.com
       http:
         paths:
+          - path: /api/catalogo
+            pathType: Exact
+            backend:
+              service:
+                name: web-service
+                port:
+                  number: 3000
           - path: /api
             pathType: Prefix
             backend:

@@ -61,6 +61,7 @@ class ManualPaymentSmokeTests(unittest.TestCase):
             responses = {
                 "/api/health/ready": {"status": "ok"},
                 "/api/properties": [{"id": "test-property"}],
+                "/api/catalogo": [{"id": "test-property"}],
                 "/api/auth/login": {"accessToken": "test-token"},
                 "/api/auth/me": {"role": "ADMIN"},
                 "/api/payments/manual/config": self.config,

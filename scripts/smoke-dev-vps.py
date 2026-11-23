@@ -85,6 +85,8 @@ status, ready = request("/api/health/ready")
 assert status == 200 and json.loads(ready)["status"] == "ok"
 status, catalog = request("/api/properties")
 assert status == 200 and json.loads(catalog)
+status, cards = request("/api/catalogo")
+assert status == 200 and isinstance(json.loads(cards), list), "Catálogo web DEV: respuesta incorrecta"
 status, home = request("/")
 assert status == 200 and b"<html" in home
 verify_public_routes(home)

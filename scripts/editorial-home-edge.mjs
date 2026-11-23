@@ -44,8 +44,12 @@ try {
   await home.locator('#home-search').fill('Centro');
   await home.locator('#home-city').fill('Bogotá');
   await home.locator('#home-max-rent').fill('1800000');
+  const inventory = page.waitForResponse(result => new URL(result.url()).pathname === '/api/catalogo');
   await home.locator('form button[type=submit]').click();
   await page.waitForURL('**/inmuebles?**');
+  const result = await inventory;
+  assert.equal(result.status(), 200);
+  assert.ok(Array.isArray(await result.json()));
   const filters = new URL(page.url()).searchParams;
   assert.equal(filters.get('search'), 'Centro');
   assert.equal(filters.get('city'), 'Bogotá');
