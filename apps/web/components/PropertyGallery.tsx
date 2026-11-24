@@ -8,7 +8,7 @@ import type { PropertyImage } from '@/lib/types';
 import { UiIcon } from './UiIcon';
 import styles from './PropertyGallery.module.css';
 
-export function PropertyGallery({ images: records, title }: Readonly<{ images: PropertyImage[]; title: string }>) {
+export function PropertyGallery({ images: records, title, previewIndex }: Readonly<{ images: PropertyImage[]; title: string; previewIndex?: number }>) {
   const images = records.filter(image => image.url && image.url !== '/property-placeholder.svg');
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -21,7 +21,7 @@ export function PropertyGallery({ images: records, title }: Readonly<{ images: P
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || !dialog.current?.showModal) return;
     event.preventDefault();
     opener.current = event.currentTarget;
-    setIndex(0);
+    setIndex(previewIndex ?? 0);
     dialog.current.showModal();
   }
 
@@ -40,14 +40,14 @@ export function PropertyGallery({ images: records, title }: Readonly<{ images: P
     <span className={styles.expand}>{multiple ? `Ver las ${images.length} fotos` : 'Ampliar foto'} <span aria-hidden="true">↗</span></span>
   </>;
   return <>
-    <div className="gallery">
+    {previewIndex !== undefined ? <a className="textLink" href={propertyPhotoUrl(images[previewIndex]?.url)} onClick={open}>Ampliar foto</a> : <div className="gallery">
       {multiple ? <details>
         <summary className={styles.cover} onClick={open}>{cover}</summary>
         <ol className={styles.originals}>{images.map((image, position) =>
           <li key={image.id}><a href={propertyPhotoUrl(image.url)}>Foto {position + 1} · {image.alt || title}</a></li>
         )}</ol>
       </details> : <a className={styles.cover} href={propertyPhotoUrl(first.url)} onClick={open}>{cover}</a>}
-    </div>
+    </div>}
     <dialog ref={dialog} className={styles.viewer} aria-label={`Fotografías de ${title}`}
       onClose={() => { setIndex(null); opener.current?.focus({ preventScroll: true }); }}
       onKeyDown={event => {

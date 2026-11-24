@@ -9,8 +9,10 @@ export const assetUrl = (path?: string) => {
 export const isPublicPhotoPath = (path: string) =>
   /^\/(?:uploads\/seed\/[\w-]+\.svg|api\/files\/[\w-]+\/content)$/.test(path);
 
-export const propertyPhotoUrl = (path?: string) =>
-  path && isPublicPhotoPath(path) ? `/fotos${path}` : assetUrl(path);
+export function propertyPhotoUrl(path?: string) {
+  if (path?.startsWith('/fotos/') && isPublicPhotoPath(path.slice(6))) return path;
+  return path && isPublicPhotoPath(path) ? '/fotos' + path : assetUrl(path);
+}
 
 export const pesos = (amount: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 const formatoFechaLocal = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' });

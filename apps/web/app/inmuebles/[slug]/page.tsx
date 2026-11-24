@@ -1,3 +1,4 @@
+import { PublicPropertyLocation } from '@/components/PropertyLocation';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ApiError, apiFetch } from '@/lib/api';
@@ -44,6 +45,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             <div className="detailSpecs"><div><strong>{property.areaM2}</strong><span>m²</span></div><div><strong>{property.bedrooms}</strong><span>habitaciones</span></div><div><strong>{property.bathrooms}</strong><span>baños</span></div><div><strong>{property.parking}</strong><span>parqueaderos</span></div></div>
             <h2>Descripción</h2><p className="longText">{property.description}</p>
             <h2>Características</h2><div className="features">{property.features.map((feature) => <span key={feature}>✓ {feature}</span>)}</div>
+            <PublicPropertyLocation addressText={[property.address,property.neighborhood,property.city].filter(Boolean).join(', ')} latitude={property.latitude} longitude={property.longitude} />
             {property.tour360Url && (
               <>
                 <h2>Recorrido 360</h2>

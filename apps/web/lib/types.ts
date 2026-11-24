@@ -52,7 +52,8 @@ export interface PropertyLeaseAssignment {
 }
 
 export interface PropertyImage { id: string; url: string; alt: string; sortOrder: number }
-export interface Property {
+import type { PropertyLocation } from './property-location';
+export interface Property extends PropertyLocation {
   id: string;
   title: string;
   slug: string;

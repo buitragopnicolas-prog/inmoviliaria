@@ -1,4 +1,5 @@
 'use client';
+import { PropertyLocationField } from './PropertyLocation';
 import { useActionState, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { saveOffer } from '@/app/admin/publishing-actions';
@@ -17,6 +18,7 @@ export function SaleOfferForm({offer}:Readonly<{offer?:SaleOffer}>){
     <div className="twoCols"><label>Tipo de {catalog==='comprar'?'inmueble':'artículo'}<input name="category" required minLength={2} maxLength={80} placeholder={catalog==='comprar'?'Casa, apartamento…':'Carro, estufa…'} defaultValue={offer?.category}/></label>
     <label>Precio de venta (COP)<input name="price" type="number" min="1" max="99999999999999" step="1" required defaultValue={offer?.price}/></label></div>
     {catalog==='comprar'&&<label>Ciudad<input name="city" maxLength={100} defaultValue={offer?.city}/></label>}
+    {catalog==='comprar' && <PropertyLocationField location={offer} />}
     <label>Descripción<textarea name="description" rows={5} required minLength={5} maxLength={12000} defaultValue={offer?.description}/></label>
     {!!offer?.images.length && <fieldset><legend>Fotografías que deseas conservar</legend>{offer.images.map((url,i)=><label key={url}><img className="editorPreview" src={'/fotos'+url} alt={'Foto '+(i+1)}/><input type="checkbox" name="keep" value={url} defaultChecked/>Conservar foto {i+1}</label>)}</fieldset>}
     <label>Añadir fotografías<input name="photos" type="file" multiple accept="image/jpeg,image/png,image/webp"/><span className="hint">Hasta 10 fotos JPG, PNG o WebP de 5 MB. La primera será la portada.</span></label>

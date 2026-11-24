@@ -1,5 +1,11 @@
 # Rediseño UX/UI — desarrollo
 
+## Ubicación opcional de inmuebles en arriendo y venta
+
+Administración y cada propietario pueden colocar, mover o retirar el pin de sus inmuebles. La ficha pública muestra la ubicación guardada y un enlace a Google Maps. Un anuncio anterior conserva su dirección y adquiere un pin solo al elegirlo. Las coordenadas se guardan juntas en la misma operación que el anuncio. La prueba usa inmuebles sintéticos y verifica la selección por puntero y teclado, edición, retiro y visibilidad pública en ambos recorridos.
+
+La portada permite abrir la foto activa del anillo o del tambor en el visor de la galería, recorrer las fotos y volver al control con el teclado. La prueba espera a que el navegador decodifique las fotografías. La ficha con coordenadas abre el mapa directamente. Una ficha anterior ofrece buscar la dirección disponible en Google Maps hasta que se marque un pin.
+
 ## Auditoría inicial
 
 Base: `63b2524`; restauración: `codex/restore-before-ui-20260923`.

@@ -1,0 +1,15 @@
+.field, .publicMap { display: grid; gap: .8rem; min-width: 0; }
+.field { padding: 1rem; border: 1px solid var(--line); border-radius: .6rem; }
+.field legend { font-weight: 650; }
+.field p, .publicMap h2 { margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: .7rem 1rem; align-items: center; }
+.actions button { width: auto; }
+.publicMap { margin-block: 1.5rem; }
+.frame { position: relative; isolation: isolate; }
+.map { height: clamp(17rem, 42vw, 26rem); width: 100%; border-radius: .5rem; }
+.map:focus-visible { outline: 3px solid var(--gold-deep); outline-offset: 2px; }
+.pin { background: var(--primary); clip-path: polygon(0 0,100% 0,100% 58%,50% 100%,0 58%); border: 3px solid white; border-radius: 50% 50% 45% 45%; box-shadow: inset 0 0 0 2px var(--gold); }
+.centerButton { position: absolute; z-index: 800; top: .75rem; right: .75rem; padding: .5rem .8rem; border: 1px solid var(--line); border-radius: .4rem; background: white; color: var(--primary); cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) {
+  .frame { animation: var(--motion-arrival); }
+}

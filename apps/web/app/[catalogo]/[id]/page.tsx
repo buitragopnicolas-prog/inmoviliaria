@@ -1,3 +1,4 @@
+import { PublicPropertyLocation } from '@/components/PropertyLocation';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ApiError } from '@/lib/api';
@@ -24,6 +25,7 @@ export default async function SaleDetail({params}:Readonly<{params:Promise<{cata
     {offer.address && <p>{[offer.address,offer.neighborhood,offer.city].filter(Boolean).join(', ')} · {offer.bedrooms} habitaciones</p>}
     {!!offer.features?.length && <p>{offer.features.join(' · ')}</p>}
     <PropertyGallery title={offer.title} images={offer.images.map((url,i)=>({url,id:url,alt:offer.title+' · Foto '+(i+1),sortOrder:i}))}/>
+    {offer.catalog==='comprar' && <PublicPropertyLocation addressText={[offer.address,offer.neighborhood,offer.city].filter(Boolean).join(', ')} latitude={offer.latitude} longitude={offer.longitude} />}
     <div className="contactGrid section"><div className="formattedCopy">{offer.description}</div><div className="card formPanel"><h2>Consultar esta oferta</h2><ContactForm initialSubject={('Consulta: '+offer.title).slice(0,160)}/></div></div>
   </div></section>;
 }

@@ -9,7 +9,7 @@ import { paymentAccountHref, paymentStatusLabel } from '@/lib/payment-status';
 import { isLocalRegistrationEnabled } from '@/lib/registration-policy';
 import { adminReturnHref, readAdminQuery } from '@/lib/admin-lists';
 
-export type ActionState = { error?: string; success?: string };
+export type ActionState = { error?: string; success?: string; createdId?: string };
 export type AuthState = ActionState & { values?: { email: string; name?: string; phone?: string; portal?: string } };
 export type ContactState = ActionState & { values?: { name: string; email: string; phone: string; subject: string; message: string } };
 
@@ -98,12 +98,12 @@ export async function updateContactStatusAction(_previous: ActionState, formData
 
 export async function createPropertyAction(_previous: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    await apiFetch('/admin/properties', { method: 'POST', body: formData }, true);
+    const created = await apiFetch<{id:string}>('/admin/properties', { method: 'POST', body: formData }, true);
     revalidatePath('/admin/inmuebles');
     revalidatePath('/inmuebles');
-    return { success: 'El inmueble fue publicado correctamente.' };
+    return { success: 'El inmueble fue publicado correctamente.', createdId:created.id };
   } catch (error) {
-    return { error: messageOf(error) };
+    return { error: messageOf(error), createdId:_previous.createdId };
   }
 }
 

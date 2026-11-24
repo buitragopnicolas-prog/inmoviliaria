@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { animate } from 'motion';
 import Link from 'next/link';
+import { PropertyGallery } from '../PropertyGallery';
 import styles from './works-wheel.module.css';
 
 export type WheelItem = {id:string; title:string; image:string; alt:string; href:string; detail:string};
@@ -122,6 +123,8 @@ export function WorksWheel({items, portfolio = false}:Readonly<{items:WheelItem[
       <button type="button" aria-label="Foto anterior" disabled={shown<=(flat?1:0)} onClick={()=>go(position-1)}>←</button>
       <button type="button" aria-label="Foto siguiente" disabled={shown>=count} onClick={()=>go(shown+1)}>→</button>
     </div></div>
+    {portfolio && <PropertyGallery title="Galería de arriendos" previewIndex={Math.max(0, position-1)}
+      images={items.map((item, sortOrder) => ({ id:item.id, url:item.image, alt:item.alt, sortOrder }))} />}
     {portfolio && count > 1 && <fieldset className={styles.pager} aria-label="Elegir fotografía">
       {items.map((item,i)=><button key={item.id} type="button" aria-label={'Ver foto '+(i+1)} aria-pressed={!overview && shown===i+1} onClick={()=>go(i+1)}>{i+1}</button>)}
     </fieldset>}

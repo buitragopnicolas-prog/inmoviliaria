@@ -1,4 +1,5 @@
 'use client';
+import { PropertyLocationField } from './PropertyLocation';
 
 import { useActionState, useState } from 'react';
 import { createPropertyAction, type ActionState } from '@/app/actions';
@@ -14,6 +15,7 @@ export function AdminPropertyForm({ tenants }: { tenants: TenantOption[] }) {
       <h2>Publicar inmueble</h2>
       <div className="twoCols"><label>Título<input name="title" required /></label><label>Ciudad<input name="city" defaultValue="Bogotá" required /></label></div>
       <div className="twoCols"><label>Barrio<input name="neighborhood" required /></label><label>Dirección<input name="address" required /></label></div>
+      <PropertyLocationField key={state.createdId ?? 'new'} />
       <label>Descripción<textarea name="description" rows={4} required minLength={30} /></label>
       <div className="threeCols">
         <label>Canon mensual<input name="monthlyRent" type="number" min="1" required /></label>

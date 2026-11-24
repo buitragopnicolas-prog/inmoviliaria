@@ -17,7 +17,9 @@ import {
 const emptyToUndefined = ({ value }: { value: unknown }) =>
   typeof value === 'string' && value.trim() === '' ? undefined : value;
 
-export class CreatePropertyDto {
+import { LocationInput } from '../../common/property-location.js';
+
+export class CreatePropertyDto extends LocationInput {
   @IsString()
   @MinLength(5)
   @MaxLength(160)

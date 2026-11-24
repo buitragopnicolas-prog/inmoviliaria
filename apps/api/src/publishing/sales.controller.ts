@@ -5,8 +5,10 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 
+import { LocationInput, locationFields } from '../common/property-location.js';
+
 const catalogs = ['comprar', 'vehiculos-y-bienes'];
-class OfferInput {
+class OfferInput extends LocationInput {
   @IsIn(catalogs) catalog!: string;
   @IsString() @Length(2,150) title!: string;
   @IsString() @Length(2,80) category!: string;
@@ -46,11 +48,13 @@ export class SalesAdminController {
   constructor(private readonly prisma: PrismaService) {}
   @Get() list() { return this.prisma.saleOffer.findMany({orderBy:{createdAt:'desc'}}); }
   private async fields(body: OfferInput) {
-    const {revision: _revision, ...data} = body;
+    const {revision: _revision, latitude, longitude, ...data} = body;
+    const location = locationFields({latitude, longitude});
+    if (data.catalog !== 'comprar' && location.latitude != null) throw new BadRequestException('El pin corresponde a inmuebles en venta.');
     if (data.published && !data.images.length) throw new BadRequestException('Añade al menos una foto para publicar.');
     const count = await this.prisma.storedFile.count({where:{publicPath:{in:data.images},purpose:'PROPERTY_IMAGE',scanStatus:'CLEAN'}});
     if (count !== data.images.length) throw new BadRequestException('Fotografía no disponible.');
-    return {...data,city:data.catalog==='comprar' ? data.city : ''};
+    return {...data, ...(data.catalog === 'comprar' ? location : {latitude:null, longitude:null}), city:data.catalog==='comprar' ? data.city : ''};
   }
   @Post() async create(@Body() body: OfferInput) {
     return this.prisma.saleOffer.create({data:await this.fields(body)});
