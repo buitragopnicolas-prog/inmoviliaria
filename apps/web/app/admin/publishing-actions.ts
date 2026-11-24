@@ -43,6 +43,7 @@ export async function saveOffer(previous: PublicationState, form: FormData): Pro
     if(files.length) images.push(...await upload(files));
     const id=textField(form,'id');
     const data={...Object.fromEntries(['title','description','price','category','city','catalog'].map(key=>[key,textField(form,key).trim()])),
+      ...(form.has('latitude') && {latitude:textField(form,'latitude'),longitude:textField(form,'longitude')}),
       images,published:form.get('published')==='on',...(id && {revision:Number(form.get('revision'))})};
     const saved=await apiFetch<Pick<SaleOffer,'id'|'revision'>>('/admin/sales'+(id?'/'+encodeURIComponent(id):''),{method:id?'PUT':'POST',body:JSON.stringify(data)},true);
     revalidatePath('/admin/ofertas');revalidatePath('/comprar');revalidatePath('/vehiculos-y-bienes');

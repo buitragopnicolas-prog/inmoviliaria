@@ -28,6 +28,8 @@ En endpoints privados enviar `Authorization: Bearer <jwt>`.
 - `POST /admin/properties/:id/images` — administrador, añade fotos.
 - `DELETE /admin/properties/:id` — administrador, archiva la publicación.
 
+El pin opcional se envía con `latitude` y `longitude` en grados decimales en las altas y ediciones de `/admin/properties`, `/admin/sales` (catálogo `comprar`) y `/owner/listings`. Omitir ambos campos conserva la ubicación en una edición. Enviar ambos vacíos o nulos retira el pin. Una pareja incompleta o fuera de rango devuelve HTTP 400. Las fichas públicas de arriendo y de venta devuelven ambos números o ambos nulos. Se mantienen la titularidad, la revisión de la publicación y su visibilidad.
+
 Campos del formulario administrativo: `title`, `description`, `monthlyRent`, `administrationFee`, `deposit`, `city`, `neighborhood`, `address`, `bedrooms`, `bathrooms`, `areaM2`, `parking`, `features`, `published`, `photos`.
 
 Las fotos nuevas quedan publicadas bajo rutas del tipo `GET /files/:id/content`.

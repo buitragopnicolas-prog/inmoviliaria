@@ -98,7 +98,7 @@ jobs:
         run: |
           python3 -m venv /tmp/inmo-python-ci
           /tmp/inmo-python-ci/bin/pip install coverage==7.10.7
-          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py,scripts/backup-production.py' -m unittest discover -s scripts -p 'test_*.py'
+          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py,scripts/backup-production.py,scripts/reclaim-dev-images.py' -m unittest discover -s scripts -p 'test_*.py'
           /tmp/inmo-python-ci/bin/coverage xml -o coverage/python.xml
       - run: npm run test:web-errors
       - run: npm audit --audit-level=high
@@ -295,6 +295,7 @@ jobs:
         run: bash scripts/receive-dev-storage-transfer.sh
       - name: SSH deploy dev
         env:
+          JB_DEV_RECLAIM_SHA: ${{ vars.JB_DEV_RECLAIM_SHA }}
           VPS_HOST: ${{ vars.VPS_HOST }}
           VPS_USER: ${{ vars.VPS_USER }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -311,6 +312,9 @@ jobs:
           archive="$RUNNER_TEMP/jb-dev-minio.oci.tar"
           trap 'rm -f -- "$archive" ~/.ssh/inmo-deploy-key' EXIT
           {
+            if [[ "$DEPLOY_SHA" == "${JB_DEV_RECLAIM_SHA:-}" ]]; then
+              printf 'JB-DEV-SPACE-1\n'
+            fi
             if [[ -f "$archive" ]]; then
               printf 'JB-DEV-MINIO-1\n'
               cat "$archive"

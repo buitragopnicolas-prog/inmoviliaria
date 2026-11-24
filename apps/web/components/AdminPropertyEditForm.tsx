@@ -1,4 +1,5 @@
 'use client';
+import { PropertyLocationField } from './PropertyLocation';
 
 import Image from 'next/image';
 import { useActionState, useState } from 'react';
@@ -32,6 +33,7 @@ export function AdminPropertyEditForm({ property, tenants, query }: Readonly<{ p
           <label>Barrio<input name="neighborhood" defaultValue={property.neighborhood} required /></label>
           <label>Dirección<input name="address" defaultValue={property.address} required /></label>
         </div>
+        <PropertyLocationField location={property} />
         <label>Descripción<textarea name="description" rows={4} defaultValue={property.description} /></label>
         <div className="threeCols">
           <label>Canon mensual<input name="monthlyRent" type="number" min="0" defaultValue={property.monthlyRent} required /></label>

@@ -194,6 +194,8 @@ model TenantAlias {
 }
 
 model Property {
+  latitude Float?
+  longitude Float?
   ownerCategory String?
   ownerRevision Int @default(1)
   id                String          @id @default(cuid())
@@ -562,6 +564,8 @@ model SiteSection {
 }
 
 model SaleOffer {
+  latitude Float?
+  longitude Float?
   ownerAccountId String?
   ownerAccount User? @relation(fields: [ownerAccountId], references: [id], onDelete: Restrict)
   bedrooms Int?

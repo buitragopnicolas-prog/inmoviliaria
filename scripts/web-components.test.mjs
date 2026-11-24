@@ -64,6 +64,7 @@ await build({
   outfile: bundle, bundle: true, platform: 'node', format: 'esm', packages: 'external',
   tsconfig: 'apps/web/tsconfig.json', sourcemap: 'inline', sourcesContent: true,
   plugins: [{ name: 'server-boundary', setup(builder) {
+    builder.onResolve({ filter: /^next\/dynamic$/ }, () => ({ path: 'next/dynamic.js', external: true }));
     builder.onResolve({ filter: /^\.\/api$/ }, ({ importer }) => importer.endsWith('public-data.ts') ? {path:'api',namespace:'ui-stub'} : undefined);
     builder.onResolve({ filter: /^@\/lib\/run-ai-tool$/ }, () => ({ path: 'ai', namespace: 'ui-stub' }));
     builder.onResolve({ filter: /^(@\/app\/actions|@\/lib\/api|@\/lib\/auth|@\/lib\/read-site|next\/(link|navigation|image|cache|headers))$/ }, ({ path }) => {

@@ -3,10 +3,17 @@ set -euo pipefail
 
 # Only the development deployment invokes this receiver, after the SHA gate.
 [[ ! -t 0 ]] || exit 0
-header=''
-if ! IFS= read -r -n 32 header; then
-  [[ -z "$header" ]] && exit 0
-  exit 2
+read_header() {
+  header=''
+  if ! IFS= read -r -n 32 header; then
+    [[ -z "$header" ]] && exit 0
+    exit 2
+  fi
+}
+read_header
+if [[ "$header" == JB-DEV-SPACE-1 ]]; then
+  (cd "$(dirname "$0")/.." && python3 scripts/reclaim-dev-images.py)
+  read_header
 fi
 [[ "$header" == JB-DEV-MINIO-1 ]] || { echo 'Cabecera de importación DEV inválida.' >&2; exit 2; }
 [[ "$(uname -sm)" == 'Linux x86_64' ]] || exit 2

@@ -31,6 +31,17 @@ try {
     await mode.click();
     await gallery.getByRole('button', { name: 'Ver foto 2', exact: true }).click();
     await gallery.getByText(/^Foto 2 de/).waitFor();
+    const enlarge = gallery.getByRole('link', {name:'Ampliar foto'});
+    await enlarge.click();
+    const viewer = page.getByRole('dialog', {name:'Galería de arriendos'});
+    await viewer.getByText(/^Foto 2 de/).waitFor();
+    await viewer.locator('img').evaluate(img => img.decode());
+    assert.ok(await viewer.locator('img').evaluate(img => img.naturalWidth > 0));
+    await viewer.getByRole('button',{name:'Foto anterior'}).click();
+    await viewer.getByText(/^Foto 1 de/).waitFor();
+    await viewer.locator('img').evaluate(img => img.decode());
+    await viewer.getByRole('button',{name:'Cerrar galería'}).click();
+    assert.ok(await enlarge.evaluate(el => el === document.activeElement));
     const card = gallery.locator('a[href^="/inmuebles/"]').first();
     const detail = await card.getAttribute('href');
     assert.equal((await page.request.get(origin + detail)).status(), 200);

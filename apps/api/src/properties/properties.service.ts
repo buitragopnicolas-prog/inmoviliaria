@@ -6,6 +6,8 @@ import type { CreatePropertyDto } from './dto/create-property.dto.js';
 import type { SearchPropertiesDto } from './dto/search-properties.dto.js';
 import type { UpdatePropertyDto } from './dto/update-property.dto.js';
 
+import { locationFields } from '../common/property-location.js';
+
 const DEFAULT_PROPERTY_IMAGE_URL = '/property-placeholder.svg';
 
 type AssignmentMode = 'NONE' | 'EXISTING' | 'NEW';
@@ -113,6 +115,7 @@ export class PropertiesService {
     files: Express.Multer.File[],
     tour360File?: Express.Multer.File,
   ) {
+    const location = locationFields(dto);
     const slug = await this.uniqueSlug(dto.title);
     const features = this.parseFeatures(dto.features);
     const uploadedFiles = await this.files.uploadPropertyImages(files, administratorId);
@@ -134,6 +137,7 @@ export class PropertiesService {
             city: dto.city.trim(),
             neighborhood: dto.neighborhood.trim(),
             address: dto.address.trim(),
+            ...location,
             bedrooms: dto.bedrooms,
             bathrooms: dto.bathrooms,
             areaM2: dto.areaM2,
@@ -192,6 +196,7 @@ export class PropertiesService {
     });
     if (!property) throw new NotFoundException('Inmueble no encontrado.');
 
+    const location = locationFields(dto);
     const requestedImageMode = dto.imageMode ?? 'KEEP';
     const imageMode = photos.length > 0 && requestedImageMode === 'KEEP' ? 'APPEND' : requestedImageMode;
     if ((imageMode === 'APPEND' || imageMode === 'REPLACE') && photos.length === 0) {
@@ -237,6 +242,7 @@ export class PropertiesService {
         city: dto.city === undefined ? undefined : dto.city.trim(),
         neighborhood: dto.neighborhood === undefined ? undefined : dto.neighborhood.trim(),
         address: dto.address === undefined ? undefined : dto.address.trim(),
+        ...location,
         bedrooms: dto.bedrooms,
         bathrooms: dto.bathrooms,
         areaM2: dto.areaM2,

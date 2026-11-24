@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
+import { verifyPropertyMaps } from './e2e-property-map.mjs';
 import { fixturePolicy } from './portal-privacy-test-data.mjs';
 import { syntheticPdf } from './synthetic-pdf.mjs';
 const web='http://localhost:13613', api='http://localhost:14613/api';
@@ -53,6 +54,10 @@ try {
       bedrooms:'3', price:'1000000', published, authorized:true, policyVersion:consent.policyVersion,
     };
     for (const [key,value] of Object.entries(fields)) data.set(key,String(value));
+    if (operation === 'sale') {
+      data.set('latitude','12.58472');
+      data.set('longitude','-81.70056');
+    }
     if (revision !== undefined) data.set('revision',String(revision));
     if (created) data.set('photos',new Blob([bytes],{type:'image/webp'}),'foto.webp');
     return data;
@@ -63,14 +68,19 @@ try {
   const own=await json('/owner/listings',owner.accessToken);
   const lease=own.find(r=>r.id===rental.id);assert.ok(lease.images.length);
   assert.equal((await json('/properties/'+lease.slug)).bedrooms,3);
+  await verifyPropertyMaps({page,visit,session,admin,request,json,lease,sale});
   assert.deepEqual(await json('/owner/listings',second.accessToken),[]);
   assert.equal((await request('/owner/listings/'+sale.id,second.accessToken,'PUT',form('sale',{created:false,published:false,revision:1}))).status,404);
   await json('/admin/sales',admin,'POST',{catalog:'vehiculos-y-bienes',title:stamp+' vehículo',category:'Carro',city:'',description:'Vehículo de ensayo',price:'2000000',published:true,images:lease.images});
   await visit('/comprar?q='+encodeURIComponent(stamp));await page.locator('a.saleCard').first().waitFor();assert.equal(await page.locator('a.saleCard').count(),2);
   assert.ok((await page.locator('a.saleCard').evaluateAll(rows=>rows.map(a=>a.pathname))).some(p=>p.startsWith('/vehiculos-y-bienes/')));
   await session(owner.accessToken);await visit('/propietarios/publicaciones?editar='+sale.id);
+  await page.getByRole('button',{name:'Elegir en el mapa'}).click();
+  await page.getByRole('button',{name:'Marcar el centro del mapa'}).click();
+  const ownerLatitude = Number(await page.getByLabel('Latitud',{exact:true}).inputValue());
   await page.locator('[name=published]').selectOption('false');await page.locator('[name=authorized]').check();await page.getByRole('button',{name:'Guardar publicación'}).click();await page.waitForURL('**/publicaciones?guardado=1');
   assert.equal((await request('/sales/comprar/'+sale.id)).status,404);
+  assert.equal((await json('/owner/listings',owner.accessToken)).find(row=>row.id===sale.id).latitude,ownerLatitude);
   const salePhoto=own.find(r=>r.id===sale.id).images[0];
   assert.equal((await fetch('http://localhost:14613'+salePhoto)).status,404);
   const photoId=salePhoto.split('/')[3];

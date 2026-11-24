@@ -10,7 +10,9 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { FilesService } from '../storage/files.service.js';
 import { validateUploadedFile } from '../storage/file-validation.js';
 
-class ListingInput {
+import { LocationInput, locationFields } from '../common/property-location.js';
+
+class ListingInput extends LocationInput {
   @IsIn(['rent','sale']) operation!: 'rent'|'sale';
   @IsString() @Length(3,150) title!: string;
   @IsString() @Length(2,80) category!: string;
@@ -60,6 +62,7 @@ export class OwnerController {
     return this.save(owner(user),dto,files,id);
   }
   private async save(userId:string,dto:ListingInput,photos:Express.Multer.File[] = [],id?:string) {
+    const location = locationFields(dto);
     const rental=dto.operation==='rent';
     if (rental && Number(dto.price)>2147483647) throw new BadRequestException('El canon supera el máximo permitido.');
     if (id && !dto.revision) throw new BadRequestException('Falta la versión de la publicación.');
@@ -72,7 +75,7 @@ export class OwnerController {
     for (const photo of photos) validateUploadedFile(photo,['jpeg','png','webp'],5_000_000,'La fotografía');
     const uploaded=await this.files.uploadPropertyImages(photos,userId);
     const paths=uploaded.map(file=>file.publicPath);
-    const common={title:dto.title.trim(),description:dto.description.trim(),city:dto.city.trim(),neighborhood:dto.neighborhood.trim(),address:dto.address.trim(),
+    const common={...location,title:dto.title.trim(),description:dto.description.trim(),city:dto.city.trim(),neighborhood:dto.neighborhood.trim(),address:dto.address.trim(),
       bedrooms:Number(dto.bedrooms),features:dto.features.split(/[,\n]/).map(item=>item.trim()).filter(Boolean),published:dto.published==='true'};
     try {
       return await this.prisma.$transaction(async tx=>{
