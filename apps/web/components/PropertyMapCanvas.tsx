@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { divIcon, type Map as LeafletMap } from 'leaflet';
 import { MapContainer, Marker, TileLayer, ZoomControl, useMapEvents } from 'react-leaflet';
 import type { MapPoint } from '@/lib/property-location';
-import 'leaflet/dist/leaflet.css';
 import styles from './PropertyLocation.module.css';
 
 const countryCenter: MapPoint = [4.7, -74.5];
