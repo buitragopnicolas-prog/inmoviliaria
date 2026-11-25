@@ -98,7 +98,7 @@ jobs:
         run: |
           python3 -m venv /tmp/inmo-python-ci
           /tmp/inmo-python-ci/bin/pip install coverage==7.10.7
-          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py,scripts/backup-production.py,scripts/reclaim-dev-images.py,scripts/verify-dev-application.py' -m unittest discover -s scripts -p 'test_*.py'
+          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py,scripts/backup-production.py,scripts/reclaim-dev-images.py,scripts/verify-dev-application.py,scripts/wait-dev-node.py' -m unittest discover -s scripts -p 'test_*.py'
           /tmp/inmo-python-ci/bin/coverage xml -o coverage/python.xml
       - run: npm run test:web-errors
       - run: npm audit --audit-level=high
@@ -299,7 +299,7 @@ jobs:
           [[ "$(git rev-parse HEAD)" == "$DEPLOY_SHA" ]]
           api="asesoria-inmobiliaria-api:dev-$DEPLOY_SHA"
           web="asesoria-inmobiliaria-web:dev-$DEPLOY_SHA"
-          docker build --provenance=false -t "$api" -f apps/api/Dockerfile .
+          docker build --provenance=false --build-arg DEV_API_DEPS=true -t "$api" -f apps/api/Dockerfile .
           docker build --provenance=false -t "$web" -f apps/web/Dockerfile \
             --build-arg NEXT_PUBLIC_API_URL=https://dev.asesoriainmobiliariajb.com .
           package="$RUNNER_TEMP/jb-dev-application.tar.gz"

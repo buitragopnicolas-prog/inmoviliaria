@@ -75,6 +75,7 @@ kubectl -n "$namespace" get secret asesoria-secrets >/dev/null
 kubectl -n "$namespace" get service postgres-service minio-service >/dev/null
 if [[ "$stage" == dev ]]; then
   bash "$repo/scripts/import-dev-storage-images.sh" "$release"
+  python3 "$repo/scripts/wait-dev-node.py"
   bash "$repo/scripts/prepare-dev-security.sh"
   odoo_secret="$(kubectl -n "$namespace" get secret odoo-secrets --ignore-not-found -o name)"
   if [[ -z "$odoo_secret" ]]; then

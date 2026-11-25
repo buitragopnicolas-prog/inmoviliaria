@@ -3,7 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
-RUN npm ci
+ARG DEV_API_DEPS=false
+RUN if [ "$DEV_API_DEPS" = true ]; then npm ci --workspace=@inmobiliaria/api; else npm ci; fi
 
 FROM dependencies AS builder
 WORKDIR /app
