@@ -2,19 +2,37 @@
 set -euo pipefail
 
 # Only the development deployment invokes this receiver, after the SHA gate.
-[[ ! -t 0 ]] || exit 0
+release="${1:-}"
+repo="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -t 0 ]]; then [[ -z "$release" ]] && exit 0; exit 2; fi
 read_header() {
   header=''
   if ! IFS= read -r -n 32 header; then
-    [[ -z "$header" ]] && exit 0
-    exit 2
+    [[ -z "$header" ]] || exit 2
   fi
 }
 read_header
 if [[ "$header" == JB-DEV-SPACE-1 ]]; then
-  (cd "$(dirname "$0")/.." && python3 scripts/reclaim-dev-images.py)
+  (cd "$repo" && python3 scripts/reclaim-dev-images.py)
   read_header
 fi
+if [[ -n "$release" ]]; then
+  [[ "$header" == JB-DEV-APP-1 ]] || { echo 'Falta el paquete de aplicación de DEV.' >&2; exit 2; }
+  (
+    umask 077
+    archive="$(mktemp)"
+    trap 'rm -f -- "$archive"' EXIT
+    timeout 900 python3 "$repo/scripts/verify-dev-application.py" "$release" "$archive"
+    gzip -dc "$archive" | ctr -n k8s.io images import -
+    registry="$(ctr -n k8s.io images ls -q)"
+    for component in api web; do
+      grep -Fxq "docker.io/library/asesoria-inmobiliaria-$component:dev-$release" <<< "$registry"
+    done
+    echo "Imágenes de la API y de la web de DEV verificadas e importadas para $release."
+  )
+  read_header
+fi
+[[ -n "$header" ]] || exit 0
 [[ "$header" == JB-DEV-MINIO-1 ]] || { echo 'Cabecera de importación DEV inválida.' >&2; exit 2; }
 [[ "$(uname -sm)" == 'Linux x86_64' ]] || exit 2
 umask 077

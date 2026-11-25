@@ -102,68 +102,11 @@ fi
 kubectl -n "$namespace" logs "job/$role_job" --tail=20
 
 bash "$repo/scripts/dev-storage-ready.sh"
-policy_job="minio-app-policy-$(date +%s)"
-cat > "$job_file" <<EOF
-apiVersion: batch/v1
-kind: Job
-metadata: { name: $policy_job, namespace: $namespace }
-spec:
-  backoffLimit: 1
-  activeDeadlineSeconds: 180
-  ttlSecondsAfterFinished: 86400
-  template:
-    metadata: { labels: { job-role: minio-init } }
-    spec:
-      restartPolicy: Never
-      containers:
-        - name: configure-policy
-          image: quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
-          resources:
-            requests: { cpu: 10m, memory: 48Mi }
-          command: ["/bin/sh", "-ec"]
-          args:
-            - |
-              echo 'JB_MINIO autenticación del administrador de almacenamiento'
-              attempts=0
-              until reason=\$(mc alias set root http://minio-service:9000 "\$MINIO_ROOT_USER" "\$MINIO_ROOT_PASSWORD" 2>&1); do
-                case "\$reason" in
-                  *[Aa]ccess*[Dd]enied*|*[Ss]ignature*not*match*|*[Aa]ccess*[Kk]ey*not*exist*|*[Ii]nvalid*[Cc]redentials*)
-                    echo 'JB_MINIO el servidor rechazó las credenciales configuradas en DEV'
-                    exit 1 ;;
-                esac
-                attempts=\$((attempts+1))
-                if [ "\$attempts" -ge 15 ]; then echo 'JB_MINIO sin conexión autenticada al servicio de DEV'; exit 1; fi
-                sleep 2
-              done
-              echo 'JB_MINIO configuración del bucket privado'
-              mc mb --ignore-existing root/inmobiliaria-assets
-              mc anonymous set none root/inmobiliaria-assets
-              echo 'JB_MINIO configuración de la cuenta y la política de la aplicación'
-              mc admin user add root "\$MINIO_APP_USER" "\$MINIO_APP_PASSWORD"
-              mc admin policy create root inmobiliaria-app-policy /security/app-policy.json
-              mc admin policy attach root inmobiliaria-app-policy --user "\$MINIO_APP_USER"
-              mc alias set app http://minio-service:9000 "\$MINIO_APP_USER" "\$MINIO_APP_PASSWORD" >/dev/null
-              echo 'JB_MINIO comprobación de escritura y lectura del objeto de prueba'
-              printf 'dev-security-probe' | mc pipe app/inmobiliaria-assets/security/dev-probe.txt >/dev/null
-              test "\$(mc cat app/inmobiliaria-assets/security/dev-probe.txt)" = dev-security-probe
-              if mc admin info app >/dev/null 2>&1; then echo 'La cuenta runtime obtuvo privilegios administrativos.' >&2; exit 1; fi
-              mc rm app/inmobiliaria-assets/security/dev-probe.txt >/dev/null
-          envFrom:
-            - secretRef: { name: asesoria-secrets }
-          volumeMounts:
-            - { name: app-policy, mountPath: /security, readOnly: true }
-      volumes:
-        - name: app-policy
-          configMap: { name: minio-app-policy }
-EOF
-kubectl apply -f "$job_file"
-if ! kubectl -n "$namespace" wait --for=condition=complete "job/$policy_job" --timeout=180s; then
-  bash "$repo/scripts/dev-storage-ready.sh" --status
-  bash "$repo/scripts/dev-release-status.sh" "$policy_job" || true
-  for pod in $(kubectl -n "$namespace" get pods -l "job-name=$policy_job" -o name); do
-    kubectl -n "$namespace" logs "$pod" 2>/dev/null | grep '^JB_MINIO ' || true
-  done
-  exit 1
-fi
-kubectl -n "$namespace" logs "job/$policy_job" --tail=20
+# The pinned server ships mc. Reuse its ready replica and private connection
+# instead of scheduling a second storage pod on the recovering DEV node.
+{
+  printf '%s\n' "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" "$MINIO_APP_USER" "$MINIO_APP_PASSWORD"
+  cat "$repo/docker/minio/app-policy.json"
+} | timeout 150 kubectl -n "$namespace" exec -i deployment/minio -c minio -- \
+    sh -ec "$(cat "$repo/scripts/configure-dev-storage.sh")"
 echo 'Credenciales y privilegios mínimos de DEV configurados.'
