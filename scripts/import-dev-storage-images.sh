@@ -12,7 +12,9 @@ read_header() {
   fi
 }
 read_header
+reclaim_authorized=false
 if [[ "$header" == JB-DEV-SPACE-1 ]]; then
+  reclaim_authorized=true
   (cd "$repo" && python3 scripts/reclaim-dev-images.py)
   read_header
 fi
@@ -30,6 +32,9 @@ if [[ -n "$release" ]]; then
     done
     echo "Imágenes de la API y de la web de DEV verificadas e importadas para $release."
   )
+  if [[ "$reclaim_authorized" == true ]]; then
+    (cd "$repo" && python3 scripts/reclaim-dev-images.py)
+  fi
   read_header
 fi
 [[ -n "$header" ]] || exit 0
