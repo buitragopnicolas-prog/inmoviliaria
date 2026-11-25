@@ -7,7 +7,7 @@ import { StatusNotice } from './StatusNotice';
 import styles from './PropertyLocation.module.css';
 
 const MapCanvas = dynamic(() => import('./PropertyMapCanvas'), {
-  ssr: false, loading: () => <p role="status">Cargando mapa…</p>,
+  ssr: false, loading: () => <output>Cargando mapa…</output>,
 });
 
 export function PropertyLocationField({ location = {} }: Readonly<{ location?: PropertyLocation }>) {
@@ -50,25 +50,21 @@ export function PropertyLocationField({ location = {} }: Readonly<{ location?: P
 
 export function PublicPropertyLocation(location: Readonly<PropertyLocation & { addressText: string }>) {
   const point = savedPoint(location);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(Boolean(point));
   const panel = useId();
-  if (!point) return <section className={styles.publicMap} aria-label="Ubicación del inmueble">
-    <h2>Ubicación del inmueble</h2>
-    <p>El anunciante aún no ha marcado el pin.</p>
-    {location.addressText && <a className="textLink" target="_blank" rel="noopener noreferrer"
-      href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(location.addressText + ', Colombia')}>
-      Buscar {location.addressText} en Google Maps ↗</a>}
-  </section>;
-  const coordinates = point.join(', ');
+  const coordinates = point?.join(', ');
+  const query = coordinates || (location.addressText && location.addressText + ', Colombia');
+  const mapLabel = point ? 'Ver mapa' : 'Ver mapa de Colombia';
   return <section className={styles.publicMap} aria-label="Ubicación del inmueble">
     <h2>Ubicación del inmueble</h2>
+    {!point && <p>El anunciante aún no ha marcado el pin.</p>}
     <div className={styles.actions}>
       <button type="button" className="button secondary" aria-expanded={open} aria-controls={panel}
-        onClick={() => setOpen(!open)}>{open ? 'Cerrar mapa' : 'Ver mapa'}</button>
-      <a className="textLink" href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(coordinates)}
-        target="_blank" rel="noopener noreferrer">Abrir en Google Maps ↗</a>
+        onClick={() => setOpen(!open)}>{open ? 'Cerrar mapa' : mapLabel}</button>
+      {query && <a className="textLink" href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query)}
+        target="_blank" rel="noopener noreferrer">{point ? 'Abrir en Google Maps' : 'Buscar ' + location.addressText + ' en Google Maps'} ↗</a>}
     </div>
     <div id={panel}>{open && <MapCanvas point={point} />}</div>
-    <small>Coordenadas: {coordinates}</small>
+    {coordinates && <small>Coordenadas: {coordinates}</small>}
   </section>;
 }

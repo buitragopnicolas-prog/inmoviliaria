@@ -48,6 +48,6 @@ export default function PropertyMapCanvas({ point, onPick }: CanvasProps) {
       const center = map.getCenter().wrap();
       onPick([center.lat, center.lng]);
     }}>Marcar el centro del mapa</button>}
-    {tileError && <p role="status">No se pudo cargar parte del mapa. Las coordenadas siguen disponibles.</p>}
+    {tileError && <output>No se pudo cargar parte del mapa. Las coordenadas siguen disponibles.</output>}
   </div>;
 }

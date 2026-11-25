@@ -8,6 +8,11 @@ export async function verifyPropertyMaps({ page, visit, session, admin, request,
   await visit(rentalPath);
   await region.getByText('El anunciante aún no ha marcado el pin.').waitFor();
   assert.ok((await region.getByRole('link').getAttribute('href')).includes('Colombia'));
+  await region.getByRole('button', { name:'Ver mapa de Colombia' }).click();
+  await region.locator('.leaflet-container').waitFor();
+  assert.equal(await region.locator('.leaflet-marker-icon').count(), 0);
+  await region.getByRole('button', { name:'Cerrar mapa' }).click();
+  await region.locator('.leaflet-container').waitFor({state:'detached'});
   await visit(salePath);
   assert.ok(await region.count(), 'La ficha debe contener el mapa: '+(await page.locator('main').innerText()).slice(0,260));
   const google = new URL(await region.getByRole('link', { name:'Abrir en Google Maps' }).getAttribute('href'));
