@@ -98,7 +98,7 @@ jobs:
         run: |
           python3 -m venv /tmp/inmo-python-ci
           /tmp/inmo-python-ci/bin/pip install coverage==7.10.7
-          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py,scripts/backup-production.py,scripts/reclaim-dev-images.py' -m unittest discover -s scripts -p 'test_*.py'
+          /tmp/inmo-python-ci/bin/coverage run --branch --include='scripts/smoke-dev-vps.py,scripts/backup-production.py,scripts/reclaim-dev-images.py,scripts/verify-dev-application.py' -m unittest discover -s scripts -p 'test_*.py'
           /tmp/inmo-python-ci/bin/coverage xml -o coverage/python.xml
       - run: npm run test:web-errors
       - run: npm audit --audit-level=high
@@ -278,6 +278,7 @@ jobs:
     needs: validate
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     environment:
       name: development
       url: https://dev.asesoriainmobiliariajb.com
@@ -289,6 +290,31 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
           persist-credentials: false
+      - name: Build DEV application images on the runner
+        id: images
+        if: hashFiles('scripts/verify-dev-application.py') != ''
+        env:
+          DEPLOY_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+        run: |
+          [[ "$(git rev-parse HEAD)" == "$DEPLOY_SHA" ]]
+          api="asesoria-inmobiliaria-api:dev-$DEPLOY_SHA"
+          web="asesoria-inmobiliaria-web:dev-$DEPLOY_SHA"
+          docker build --provenance=false -t "$api" -f apps/api/Dockerfile .
+          docker build --provenance=false -t "$web" -f apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_URL=https://dev.asesoriainmobiliariajb.com .
+          package="$RUNNER_TEMP/jb-dev-application.tar.gz"
+          docker save "$api" "$web" | gzip -1 > "$package"
+          digest="$(sha256sum "$package" | cut -d' ' -f1)"
+          printf '%s\n' "$digest" > "$RUNNER_TEMP/jb-dev-images.sha256"
+          echo "receipt=jb-dev-images-$DEPLOY_SHA-$GITHUB_RUN_ATTEMPT-$digest" >> "$GITHUB_OUTPUT"
+      - name: Publish the application image checksum
+        if: steps.images.outputs.receipt != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.images.outputs.receipt }}
+          path: ${{ runner.temp }}/jb-dev-images.sha256
+          if-no-files-found: error
+          retention-days: 2
       - name: Receive approved DEV storage images
         env:
           JB_DEV_MINIO_TRANSFER: ${{ secrets.JB_DEV_MINIO_TRANSFER }}
@@ -310,16 +336,22 @@ jobs:
           umask 077
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/inmo-deploy-key
           archive="$RUNNER_TEMP/jb-dev-minio.oci.tar"
-          trap 'rm -f -- "$archive" ~/.ssh/inmo-deploy-key' EXIT
+          package="$RUNNER_TEMP/jb-dev-application.tar.gz"
+          trap 'rm -f -- "$archive" "$package" ~/.ssh/inmo-deploy-key' EXIT
           {
             if [[ "$DEPLOY_SHA" == "${JB_DEV_RECLAIM_SHA:-}" ]]; then
               printf 'JB-DEV-SPACE-1\n'
+            fi
+            if [[ -f "$package" ]]; then
+              printf 'JB-DEV-APP-1\n%s %s %s %s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" \
+                "$(cat "$RUNNER_TEMP/jb-dev-images.sha256")" "$(stat -c%s "$package")"
+              cat "$package"
             fi
             if [[ -f "$archive" ]]; then
               printf 'JB-DEV-MINIO-1\n'
               cat "$archive"
             fi
-          } | ssh -T -i ~/.ssh/inmo-deploy-key -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+          } | ssh -T -i ~/.ssh/inmo-deploy-key -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" "$DEPLOY_SHA"
 
   deploy-prod:
