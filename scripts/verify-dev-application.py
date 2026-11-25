@@ -9,7 +9,7 @@ from pathlib import Path
 REPOSITORY = "buitragopnicolas-prog/inmoviliaria"
 RUNS = f"https://api.github.com/repos/{REPOSITORY}/actions/runs"
 MAX_ARCHIVE = 2 * 1024**3
-HEADER = re.compile(rb"([1-9][0-9]{0,17}) ([1-9][0-9]{0,6}) ([0-9a-f]{64}) ([1-9][0-9]{0,9})\n")
+HEADER = re.compile(rb"([1-9]\d{0,17}) ([1-9]\d{0,6}) ([0-9a-f]{64}) ([1-9]\d{0,9})\n")
 
 
 def github(url):
