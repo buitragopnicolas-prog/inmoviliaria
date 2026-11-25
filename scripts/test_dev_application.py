@@ -52,5 +52,8 @@ class DevApplicationTests(unittest.TestCase):
                              (f"1 2 {DIGEST} 8\n".encode(), b"short"),
                              (f"1 2 {DIGEST} 7\n".encode(), b"altered")):
             with self.subTest(header=header), tempfile.TemporaryDirectory() as folder, \
-                    patch.object(application, "check_receipt"), self.assertRaises(ValueError):
-                application.receive(SHA, io.BytesIO(header + data), Path(folder, "images"))
+                    patch.object(application, "check_receipt"):
+                stream = io.BytesIO(header + data)
+                destination = Path(folder, "images")
+                with self.assertRaises(ValueError):
+                    application.receive(SHA, stream, destination)
