@@ -1,3 +1,4 @@
+import Form from 'next/form';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { HomeHero } from '@/components/home/HomeSections';
@@ -28,7 +29,7 @@ export default async function MotionLabPage({ searchParams }: Readonly<{
 
   return <>
     <div className={`container ${styles.controls}`}>
-      <form className="filters" method="get" aria-label="Comparar la portada local">
+      <Form className="filters" action="/laboratorio/motion" aria-label="Comparar la portada local">
         <label>Diseño de portada<select name="diseno" defaultValue={direction}>
           {directions.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}
         </select></label>
@@ -36,7 +37,7 @@ export default async function MotionLabPage({ searchParams }: Readonly<{
           {intensities.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}
         </select></label>
         <button className="button" type="submit">Ver variante</button>
-      </form>
+      </Form>
     </div>
     <div className={`${home.home} ${styles.preview}`} data-direction={direction} data-intensity={intensity}>
       <HomeHero featuredHref="/#inmuebles-destacados" />

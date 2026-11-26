@@ -96,11 +96,9 @@ try {
   await page('/noticias', 200, ['No pudimos cargar'], ['Aún no hay noticias']);
 
   if (localDesign) {
-    await page('/?estilo=orbita', 200, ['la galería de inmuebles', 'Volver a intentar'], ['Explorar fotos']);
-  } else if (publishedDesign) {
-    await page('/?estilo=orbita', 200, ['data-portada="editorial-jb"', 'id="portafolio"', 'id="busqueda"', 'id="recorridos"', 'la galería de inmuebles'], ['Comparar portadas']);
+    await page('/?estilo=orbita', 200, ['los inmuebles destacados', 'Volver a intentar'], ['Explorar fotos']);
   } else {
-    await page('/?estilo=orbita', 200, ['Tu inmueble.'], ['Comparar portadas', 'la galería de inmuebles', 'data-portada="editorial-jb"']);
+    await page('/?estilo=orbita', 200, ['data-portada="editorial-jb"', 'id="portafolio"', 'id="busqueda"', 'id="recorridos"', 'los inmuebles destacados'], ['Comparar portadas']);
   }
 
   const beforeInvalidQuery = apiCalls;
@@ -113,7 +111,7 @@ try {
 
   mode = 'healthy';
   if (localDesign) {
-    await page('/?estilo=orbita', 200, ['Consulta el catálogo para conocer los inmuebles disponibles.', 'Comparar portadas'], ['Explorar fotos', 'la galería de inmuebles', 'No pudimos cargar']);
+    await page('/?estilo=orbita', 200, ['Consulta el catálogo para conocer los inmuebles disponibles.', 'Comparar portadas'], ['Explorar fotos', 'los inmuebles destacados', 'No pudimos cargar']);
   }
   await page('/', 200, ['Consulta el catálogo', 'Pronto publicaremos novedades'], ['No pudimos cargar']);
   await page('/inmuebles?vista=completa', 200, ['No hay inmuebles que coincidan'], ['No pudimos cargar']);

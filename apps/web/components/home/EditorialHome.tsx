@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import type { SiteCopy } from '@/lib/site-content';
-import { InventoryWheel } from './Directions';
+import { FeaturedRentals } from './FeaturedRentals';
 import { HomeSearch } from './HomeSections';
-import { LightSurface } from './LightSurface';
 import styles from './EditorialHome.module.css';
 
 type Cover = SiteCopy['portada'];
@@ -33,6 +32,8 @@ export function EditorialHome({ copy }: Readonly<{ copy: Cover }>) {
   return (
     <div className={styles.editorial} data-portada="editorial-jb">
       <div className="container">
+        <section id="busqueda" className="homeSearchBar" aria-label={copy.searchTitle}><HomeSearch copy={copy}/></section>
+        <div className="marketHero">
         <header className={styles.intro}>
           <p className={styles.label}>{copy.kicker}</p>
           <h1 id="home-title">{copy.first} <em>{copy.second}</em></h1>
@@ -43,30 +44,12 @@ export function EditorialHome({ copy }: Readonly<{ copy: Cover }>) {
             <a href="#recorridos">{copy.journeyTitle}</a>
           </nav>
         </header>
-        <section id="portafolio" aria-labelledby="portafolio-title" className={styles.portfolio}>
-          <div>
-            <p className={styles.label}>{copy.portfolioLabel}</p>
-            <h2 id="portafolio-title">{copy.portfolioTitle}</h2>
-            <p>{copy.featuredIntro}</p>
-            <div className={styles.shortcuts}>
-              <Link href="/inmuebles">{copy.featuredLink} <span aria-hidden="true">↗</span></Link>
-              <Link href="/comprar">{copy.buy} <span aria-hidden="true">↗</span></Link>
-            </div>
-          </div>
-          <Suspense fallback={<output>Cargando galería…</output>}>
-            <InventoryWheel copy={copy} portfolio />
-          </Suspense>
+        <section id="portafolio" className="rentalPortfolio" aria-labelledby="portafolio-title">
+          <h2 id="portafolio-title">{copy.portfolioLabel}</h2>
+          <Suspense fallback={<output>Cargando inmuebles destacados…</output>}><FeaturedRentals copy={copy}/></Suspense>
         </section>
-        <section id="busqueda" aria-labelledby="busqueda-title" className={styles.search}>
-          <LightSurface image={copy.photo} alt={copy.photoAlt} caption={copy.caption}>
-            <div className={styles.searchContent}>
-              <p className={styles.label}>{copy.rent}</p>
-              <h2 id="busqueda-title">{copy.lightTitle}</h2>
-              <HomeSearch copy={copy} />
-            </div>
-          </LightSurface>
-        </section>
-        <section id="recorridos" aria-labelledby="recorridos-title" className={styles.journeys}>
+        </div>
+        <section id="recorridos" aria-labelledby="recorridos-title" className={styles.journeys+' glass-panel'}>
           <h2 id="recorridos-title">{copy.journeyTitle}</h2>
           <JourneyDirectory copy={copy} />
         </section>

@@ -3,27 +3,30 @@ import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const mark = JSON.parse(readFileSync(resolve(root, 'apps/web/lib/brand-mark.json'), 'utf8'));
-const lettering = JSON.parse(readFileSync(resolve(root, 'apps/web/lib/brand-wordmark.json'), 'utf8'));
+const read = name => JSON.parse(readFileSync(resolve(root, 'apps/web/lib/' + name + '.json'), 'utf8'));
+const mark = read('brand-mark');
+const lettering = read('brand-wordmark');
+const icons = read('brand-icons');
 const out = resolve(root, 'apps/web/public/brand');
 mkdirSync(out, { recursive: true });
 
-const symbol = (ink, accent, foundation = true) => `<g fill="${ink}"><path d="${mark.j}"/><path d="${mark.b}" fill-rule="evenodd"/>${foundation ? `<path d="${mark.foundation}" fill="${accent}"/>` : ''}</g>`;
-const svg = (width, height, content, label = mark.name) => `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${label}"><title>${label}</title>${content}</svg>\n`;
-const wordmark = (ink) => `<g fill="${ink}"><path d="${lettering.namePath}"/><path d="${lettering.descriptorPath}"/></g>`;
-
-for (const [name, ink, accent] of [
-  ['light', mark.ink, mark.accent],
-  ['dark', mark.inverse, '#CFB670'],
-  ['mono', mark.ink, mark.ink],
-  ['mono-white', mark.inverse, mark.inverse],
+const svg = (box, content, label) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box}" role="img" aria-label="${label}"><title>${label}</title>${content}</svg>\n`;
+const path = (part, fill, x=0, y=0) => `<path fill="${fill}" fill-rule="evenodd" transform="translate(${x} ${y})" d="${part.path}"/>`;
+for (const [variant, symbolColor, ruleColor, textColor] of [
+  ['dark', mark.accent, mark.accent, mark.inverse],
+  ['light', mark.ink, mark.accent, mark.ink],
+  ['mono-white', mark.inverse, mark.inverse, mark.inverse],
+  ['mono', mark.ink, mark.ink, mark.ink],
 ]) {
-  writeFileSync(resolve(out, `isotype-${name}.svg`), svg(96, 96, symbol(ink, accent)));
-  writeFileSync(resolve(out, `logo-${name}.svg`), svg(310, 110, `<g transform="translate(6 5)">${symbol(ink, accent)}</g>${wordmark(ink)}`));
+  // Keep the spacing between the three traced bands of the full signature.
+  const signature = path(mark.symbol,symbolColor,147,0) + path(mark.skyline,ruleColor,56,385) + path(lettering,textColor,0,485);
+  writeFileSync(resolve(out, `logo-${variant}.svg`), svg('0 0 700 524', signature, mark.name));
+  writeFileSync(resolve(out, `isotype-${variant}.svg`), svg(mark.symbol.viewBox,path(mark.symbol,symbolColor), 'JB'));
 }
-
-// A one-colour micro mark keeps the letter counters readable at 16–32 px.
-const favicon = svg(96, 96, `<rect width="96" height="96" rx="16" fill="${mark.ink}"/><g transform="translate(3 7) scale(.9)">${symbol(mark.inverse, mark.inverse, false)}</g>`);
-writeFileSync(resolve(out, 'favicon.svg'), favicon);
-writeFileSync(resolve(root, 'apps/web/app/icon.svg'), favicon);
-console.log('Generated 9 brand SVGs and the Next.js app icon from brand-mark.json.');
+const favicon = svg('0 0 440 440', `<rect width="440" height="440" rx="48" fill="${mark.ink}"/><g stroke="${mark.accent}" stroke-width="3">${path(mark.symbol,mark.accent,27,52)}</g>`, 'JB');
+writeFileSync(resolve(out,'favicon.svg'), favicon);
+writeFileSync(resolve(root,'apps/web/app/icon.svg'), favicon);
+mkdirSync(resolve(out,'icons'), { recursive: true });
+for (const [name,icon] of Object.entries(icons)) {
+  writeFileSync(resolve(out,'icons',name+'.svg'), svg(icon.viewBox,path(icon,mark.accent),name));
+}

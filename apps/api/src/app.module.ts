@@ -1,3 +1,4 @@
+import { LegalController } from './legal/legal.controller.js';
 import { Module } from '@nestjs/common';
 import { HealthController } from './health.controller.js';
 import { ConfigModule } from '@nestjs/config';
@@ -19,7 +20,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
-  controllers: [HealthController],
+  controllers: [HealthController, LegalController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{

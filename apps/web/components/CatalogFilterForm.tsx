@@ -19,7 +19,7 @@ export function CatalogFilterForm({ values, children }: Readonly<{
   }, [valuesInUrl]);
 
   return <Form ref={form} action="/inmuebles" scroll={false} prefetch={false}
-    className="filters" aria-label="Filtrar inmuebles en arriendo" onSubmit={(event) => {
+    className="filters glass-panel" aria-label="Filtrar inmuebles en arriendo" onSubmit={(event) => {
       const data = new FormData(event.currentTarget);
       lastSubmission.current = JSON.stringify([data.get('search'), data.get('city'), data.get('maxRent')]);
     }}>

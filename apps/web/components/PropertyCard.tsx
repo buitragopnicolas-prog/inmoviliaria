@@ -12,7 +12,7 @@ export function PropertyCard({ property }: Readonly<{ property: CatalogProperty 
   const statusLabel = { AVAILABLE: 'Disponible', RENTED: 'Arrendado', ARCHIVED: 'No disponible' }[property.status];
 
   return (
-    <article className={styles.card}>
+    <article className={styles.card+' glass-panel-total glass-panel-jb'} data-property-card={property.slug} data-heat-panel="" data-lat={property.latitude??undefined} data-lng={property.longitude??undefined}>
       <Link className={styles.link} href={`/inmuebles/${property.slug}`} aria-label={`Ver inmueble: ${property.title}`}>
         <div className={styles.image}>
           <Image

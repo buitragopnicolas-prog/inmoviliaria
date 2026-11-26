@@ -1,0 +1,17 @@
+.bubble {position:fixed;z-index:9;inset-inline-end:max(1rem,env(safe-area-inset-right));bottom:calc(max(1rem,env(safe-area-inset-bottom)) + 3.8rem);display:flex;align-items:center;gap:.5rem;min-height:46px;padding:.7rem .95rem;border:1px solid #c9a77b;border-radius:2rem;background:#0a1a2c;color:#f3ddbd;font:600 .94rem var(--font-sans),sans-serif;cursor:pointer}
+.bubble svg {width:22px;height:22px}
+.dialog {inset:auto max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) auto;margin:0;width:min(390px,calc(100vw - 2rem));max-height:82svh;overflow:auto;padding:26px;border:1px solid #c9a77b;border-radius:16px;background:#0a1a2c;color:white;box-shadow:0 12px 44px #030b13aa}
+.dialog::backdrop {background:rgb(3 12 22 / 47%)}
+.dialog h2 {font:500 1.8rem/1.1 var(--font-display),serif;color:#efd4ae;margin:12px 28px 12px 0}
+.dialog p,.page p {line-height:1.6}
+.close {float:right;width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:50%;background:#26384b;color:white;cursor:pointer}
+.close svg {width:18px;height:18px}
+.actions,.external {display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-block:20px 8px}
+.actions a:not(:first-child),.external a,.page>p a,.answer a {text-decoration:underline;text-underline-offset:.18em}
+.page {max-width:760px}
+.answer {margin-block:22px;padding:18px;border-inline-start:2px solid #c9a77b}
+.answer p {white-space:pre-wrap;overflow-wrap:anywhere}
+.external {align-items:start;flex-direction:column;gap:4px}
+.external p {font-size:.88rem}
+@media(max-width:600px){.bubble {font-size:.8rem;padding:.6rem;gap:.25rem}}
+@media(prefers-reduced-motion:no-preference){.bubble {transition:transform 160ms ease}.bubble:hover{transform:translateY(-2px)}}

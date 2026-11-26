@@ -25,20 +25,7 @@ export function AiTools() {
 
   useEffect(() => {
     mounted.current = true;
-    // A full navigation restores the destination's stricter CSP. Next's client
-    // navigation would otherwise keep this document's model-download permissions.
-    function navigate(event: MouseEvent) {
-      if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-      const link = event.target instanceof Element ? event.target.closest('a') : null;
-      if (!link || link.target || link.hasAttribute('download')) return;
-      const destination = new URL(link.href);
-      if (destination.origin === location.origin && destination.pathname !== location.pathname) {
-        event.preventDefault();
-        location.assign(destination.href);
-      }
-    }
-    document.addEventListener('click', navigate, true);
-    return () => { mounted.current = false; document.removeEventListener('click', navigate, true); };
+    return () => { mounted.current = false; };
   }, []);
   useEffect(() => {
     if (!result?.blob) { setUrl(''); setCaptionUrl(''); return; }

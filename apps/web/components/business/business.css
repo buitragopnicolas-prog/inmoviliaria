@@ -1,0 +1,48 @@
+.businessBand {position:relative;background:rgb(10 26 44 / 93%);color:#fff;border-block-start:1px solid rgb(201 167 123 / 32%);font:500 .78rem/1.45 var(--font-sans),sans-serif;z-index:2}
+.businessRow {display:flex;align-items:center;gap:14px;min-height:38px;position:relative}
+.presence {display:flex;align-items:center;gap:6px;color:#ead1af;min-width:0;flex:0 1 auto}
+.presence svg {width:15px;height:15px;flex:none}
+.placeNames {display:grid;align-items:center;max-width:22ch}
+.placeNames>span {grid-area:1/1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.placeNames>span:not(:first-child) {opacity:0}
+.businessSr {position:absolute;clip-path:inset(50%);height:1px;width:1px;overflow:hidden;white-space:nowrap}
+.quoteWindow {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:2ch;flex:1;border-inline-start:1px solid #806f59;padding-inline-start:12px}
+.quoteTrack,.quoteGroup,.quoteItem,.quotePanel li>div {display:flex;align-items:center;width:max-content}
+.quoteGroup {gap:28px;padding-inline-end:28px}
+.quoteItem,.quotePanel li>div {gap:7px;font-variant-numeric:tabular-nums}
+.quoteItem strong {font-weight:550}
+.quoteItem b,.quotePanel b {color:#edd1ab}
+.businessBand [data-trend="1"] {color:#98e2bc}
+.businessBand [data-trend="-1"] {color:#ffadb0}
+.businessBand [data-trend="0"] {color:#d6deea}
+.bandPause,.quoteDetails>summary {display:grid;place-items:center;min-width:34px;min-height:36px;margin:0;background:transparent;color:inherit;border:0;font:inherit;cursor:pointer}
+.quoteDetails>summary {display:flex;gap:5px;list-style:none;font-weight:650;color:#edd1ab}
+.quoteDetails>summary::-webkit-details-marker {display:none}
+.businessBand :is(button,summary,a):focus-visible {outline:2px solid #f9dcb3;outline-offset:2px}
+.quotePanel {position:absolute;inset-inline-end:0;top:100%;width:min(440px,100%);max-height:60svh;overflow:auto;background:#0c2033;color:white;padding:18px 22px;border:1px solid #7c6950;border-radius:0 0 10px 10px;box-shadow:0 15px 35px #02101f70}
+.quotePanel h2 {font:500 1.45rem var(--font-display),serif;color:#edd1ab;margin:0}
+.quotePanel p {margin:6px 0 12px;color:#d5dee8}
+.quotePanel ul {list-style:none;margin:0;padding:0}
+.quotePanel li {padding:7px 0;border-top:1px solid #344658}
+.quotePanel a {color:#fff;text-decoration:underline}
+.quotePanel time {color:#c8d3de}
+.worldClocks {width:min(1280px,calc(100% - 48px));margin-inline:auto;border:1px solid #8b785f;border-radius:10px;background:rgb(10 26 44 / 91%);padding:17px clamp(16px,2.4vw,36px);color:white}
+.worldClocks h2 {font:500 1.28rem var(--font-display),serif;margin:0 0 12px;color:#f1dcc1}
+.worldClockGrid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.worldClockGrid>div {border-inline-start:1px solid #80715c;padding-left:12px;display:grid;gap:3px}
+.worldClockGrid h3,.worldClockGrid small {margin:0;font:500 .8rem var(--font-sans),sans-serif;color:#e4e8ef}
+.worldClockGrid time {font:550 clamp(1.1rem,2.2vw,1.6rem) var(--font-sans),sans-serif;font-variant-numeric:tabular-nums;color:#e7c79f}
+@media(max-width:650px){.businessRow {gap:6px}.placeNames{max-width:13ch}.worldClockGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.worldClocks{width:calc(100% - 32px)}}
+@media(prefers-reduced-motion:reduce){.bandPause,.quoteGroup:nth-child(2){display:none}}
+@media print {.businessBand{display:none}}
+
+.portalCover,.allianceCard {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.95fr);align-items:center;gap:clamp(20px,4vw,62px)}
+.portalCover {margin-block-end:clamp(22px,4vw,56px)}
+.portalCover .pageHeading {margin:0 0 20px}
+.portalPhoto,.allianceCard>img {display:block;width:100%;height:auto;aspect-ratio:1.78;object-fit:cover;border-radius:10px}
+.digitalCopy .portalPhoto,[aria-labelledby="digital-title"] .portalPhoto {margin:0 0 20px;max-height:280px}
+.allianceSection {padding-block:clamp(28px,5vw,80px)}
+.allianceCard {padding:clamp(16px,2vw,30px);background:rgb(10 26 44 / 92%);color:white;border:1px solid #79664e;border-radius:12px}
+.allianceCard h2 {font:500 clamp(2rem,4.5vw,3.7rem)/1.08 var(--font-display),serif;color:#f2ddbd;margin:0}
+.allianceCard p {margin:16px 0 22px;line-height:1.6;max-width:46ch;color:#edf0f5}
+@media(max-width:720px){.portalCover,.allianceCard{grid-template-columns:1fr}.portalPhoto,.allianceCard>img{max-height:340px}}

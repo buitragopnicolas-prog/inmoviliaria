@@ -5,7 +5,7 @@ import { chromium } from 'playwright-core';
 
 const dev = process.argv.includes('--dev');
 const localOrigin = process.argv.includes('--ci') ? 'http://localhost:13613' : 'http://localhost:3000';
-const origin = dev ? 'https://dev.asesoriainmobiliariajb.com' : localOrigin;
+const origin = dev ? 'https://dev.asesoriainmobiliariajb.com' : (process.env.LOCAL_PREVIEW_URL || localOrigin);
 const out = '.local/portada-editorial/' + (dev ? 'dev' : 'local');
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chrome' });
@@ -19,53 +19,35 @@ try {
   const home = page.locator('[data-portada="editorial-jb"]');
   await home.waitFor();
   assert.deepEqual(await home.locator('section[id]').evaluateAll(nodes => nodes.map(n => n.id)),
-    ['portafolio', 'busqueda', 'recorridos']);
+    ['busqueda', 'portafolio', 'recorridos']);
   assert.equal(await page.locator('h1').count(), 1);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: out + '/portada.png' });
 
-  const gallery = home.locator('#portafolio');
-  const mode = gallery.getByRole('button', { name: 'Tambor' });
-  await gallery.getByRole('status').filter({ hasText: 'Cargando galería' }).waitFor({ state: 'hidden' });
-  if (await mode.count()) {
-    await mode.click();
-    await gallery.getByRole('button', { name: 'Ver foto 2', exact: true }).click();
-    await gallery.getByText(/^Foto 2 de/).waitFor();
-    const enlarge = gallery.getByRole('link', {name:'Ampliar foto'});
-    await enlarge.click();
-    const viewer = page.getByRole('dialog', {name:'Galería de arriendos'});
-    await viewer.getByText(/^Foto 2 de/).waitFor();
-    await viewer.locator('img').evaluate(img => img.decode());
-    assert.ok(await viewer.locator('img').evaluate(img => img.naturalWidth > 0));
-    await viewer.getByRole('button',{name:'Foto anterior'}).click();
-    await viewer.getByText(/^Foto 1 de/).waitFor();
-    await viewer.locator('img').evaluate(img => img.decode());
-    await viewer.getByRole('button',{name:'Cerrar galería'}).click();
-    assert.ok(await enlarge.evaluate(el => el === document.activeElement));
-    const card = gallery.locator('a[href^="/inmuebles/"]').first();
-    const detail = await card.getAttribute('href');
-    assert.equal((await page.request.get(origin + detail)).status(), 200);
-    await gallery.getByRole('button', { name: 'Anillo', exact: true }).click();
-    assert.equal(await gallery.getByRole('button', { name: 'Anillo', exact: true }).getAttribute('aria-pressed'), 'true');
-  } else {
-    assert.ok(await gallery.locator('a[href^="/inmuebles"]').count() > 0);
-    console.log('El inventario del entorno ofrece una foto o una salida al catálogo.');
+  const portfolio=home.locator('#portafolio');
+  await portfolio.getByText('Cargando', {exact:false}).waitFor({state:'hidden'});
+  const cards=portfolio.locator('a.assetCard');
+  const count=await cards.count();
+  if(count){
+    const canvas=await page.locator('.jbSkylineFrame canvas').elementHandle();
+    await cards.first().focus();
+    if(count>1){
+      await page.keyboard.press('End');
+      await page.waitForFunction(()=>document.activeElement===document.querySelector('#portafolio .assetSlide:last-child a'));
+      await portfolio.getByRole('button',{name:'Anterior'}).click();
+      await page.waitForFunction(n=>document.querySelector('#portafolio .railControls output').textContent.startsWith((n-1)+' de'),count);
+    }
+    const active=portfolio.locator('[data-side="center"] a');
+    await active.hover();
+    await portfolio.locator('[data-heated]').waitFor();
+    const href=await active.getAttribute('href');
+    await active.click();
+    await page.waitForURL('**'+href);
+    await page.locator('h1').waitFor();
+    assert.ok(await canvas.evaluate(n=>n===document.querySelector('.jbSkylineFrame canvas')));
+    await page.goBack();
+    await portfolio.locator('[data-side="center"] a[href="'+href+'"]').waitFor();
   }
-
-  const light = home.getByRole('button', { name: 'Orientar luz' });
-  await light.focus();
-  await page.keyboard.press('ArrowRight');
-  await home.getByRole('button', {name:'Mapa de calor'}).click();
-  const trace = home.locator('canvas[aria-label="Huella temporal sobre la fotografía"]');
-  await trace.scrollIntoViewIfNeeded();
-  const bounds = await trace.boundingBox();
-  assert.ok(bounds?.width && bounds.height);
-  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
-  const hasInk = canvas => canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data.some(value => value > 0);
-  assert.ok(await trace.evaluate(hasInk));
-  await home.getByRole('button', {name:'Borrar huella'}).click();
-  assert.equal(await trace.evaluate(hasInk), false);
-  await home.getByRole('button', {name:'Mapa de calor'}).click();
   await home.locator('#home-search').fill('Centro');
   await home.locator('#home-city').fill('Bogotá');
   await home.locator('#home-max-rent').fill('1800000');
@@ -85,6 +67,10 @@ try {
   await mobile.locator('[data-portada="editorial-jb"]').waitFor();
   assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth), 390);
   await mobile.getByRole('button', { name: 'Tambor' }).waitFor({ state: 'hidden' });
+  if(await mobile.locator('#portafolio .assetSlide').count()>1){
+    await mobile.locator('#portafolio .railControls button:enabled').first().tap();
+    assert.equal(await mobile.locator('[data-heated]').count(),0);
+  }
   await mobile.locator('a[href="#home-search"]').tap();
   assert.equal(await mobile.evaluate(() => document.activeElement.id), 'home-search');
   await mobile.locator('#recorridos summary').nth(1).tap();

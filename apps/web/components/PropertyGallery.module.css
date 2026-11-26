@@ -3,6 +3,7 @@
   height: clamp(240px, 40vw, 465px); border-radius: var(--radius);
 }
 summary.cover, a.cover { cursor: zoom-in; }
+@media screen { :global(body[data-jb-ui]) :is(.expand,.stage) {background:var(--glass-deep);color:var(--ink);} }
 summary.cover::-webkit-details-marker { display: none; }
 .cover:focus-visible { outline: 3px solid var(--gold-deep); outline-offset: 3px; }
 .cover img { object-fit: cover; }

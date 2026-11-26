@@ -1,0 +1,2 @@
+const context='Quiero orientación general en español sobre derecho inmobiliario colombiano. Pregúntame si se trata de arriendo, compraventa o propiedad horizontal. Consulta y cita fuentes oficiales colombianas vigentes con enlaces y fechas. Distingue orientación general de la revisión individual por un abogado. No solicites datos personales.';
+export const chatGptUrl='https://chatgpt.com/?'+new URLSearchParams({q:context});

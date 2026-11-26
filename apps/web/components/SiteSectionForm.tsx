@@ -2,6 +2,7 @@
 import { useActionState, useRef, useState, useTransition } from 'react';
 import { saveSection, type PublicationState } from '@/app/admin/publishing-actions';
 import { sections, type SectionId } from '@/lib/site-content';
+import { EditorialImageField } from './EditorialImageField';
 import { StatusNotice } from './StatusNotice';
 
 export function SiteSectionForm({id,values,revision}:Readonly<{id:SectionId;values:Record<string,string>;revision:number}>) {
@@ -18,7 +19,7 @@ export function SiteSectionForm({id,values,revision}:Readonly<{id:SectionId;valu
   },{});
   const [busy,start]=useTransition();
   const [draft,setDraft]=useState(values);
-  return <form className="form adminForm" ref={formRef} onSubmit={event=>{
+  return <form className="form adminForm" ref={formRef} action={action} onSubmit={event=>{
     event.preventDefault();
     const data=new FormData(event.currentTarget);
     start(()=>action(data));
@@ -27,10 +28,10 @@ export function SiteSectionForm({id,values,revision}:Readonly<{id:SectionId;valu
     {Object.entries(sections[id].fields).map(([key,field])=>{
       const input={name:key,value:draft[key]??'',onChange:(e:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>setDraft({...draft,[key]:e.target.value})};
       let control;
-      if (['long','links'].includes(field.kind)) {
-        control = <textarea {...input} rows={field.kind==='links'?7:3}/>;
+      if (['long','links','cityList'].includes(field.kind)) {
+        control = <textarea {...input} rows={field.kind==='long'?3:7} required={field.kind==='cityList'}/>;
       } else if (field.kind === 'image') {
-        control = <><img className="editorPreview" src={draft[key]} alt="Imagen publicada"/><input type="hidden" name={key} value={draft[key]}/><input type="file" name={'photo-'+key} accept="image/jpeg,image/png,image/webp"/></>;
+        control = <EditorialImageField key={version} name={key} value={draft[key] || field.value} label={field.label}/>;
       } else {
         control = <input {...input} type={field.kind==='email'?'email':'text'} required={!['optionalLink','optionalText'].includes(field.kind)}/>;
       }

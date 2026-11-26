@@ -18,6 +18,14 @@ if [[ "$header" == JB-DEV-SPACE-1 ]]; then
   (cd "$repo" && python3 scripts/reclaim-dev-images.py)
   read_header
 fi
+if [[ "$header" == JB-DEV-QA-1 ]]; then
+  [[ -n "$release" && -n "${2:-}" ]] || exit 2
+  IFS= read -r -n 1025 payload
+  [[ ${#payload} -le 1024 ]] || exit 2
+  (umask 077; printf '%s' "$payload" > "$2")
+  unset payload
+  read_header
+fi
 if [[ -n "$release" ]]; then
   [[ "$header" == JB-DEV-APP-1 ]] || { echo 'Falta el paquete de aplicación de DEV.' >&2; exit 2; }
   (

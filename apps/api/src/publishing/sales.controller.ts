@@ -9,6 +9,8 @@ import { LocationInput, locationFields } from '../common/property-location.js';
 
 const catalogs = ['comprar', 'vehiculos-y-bienes'];
 class OfferInput extends LocationInput {
+  @IsOptional() @IsIn(['premium','new-project']) promotion?: string | null;
+  @IsOptional() @Matches(/^[1-9]\d{0,13}$/) estimatedMonthlyRent?: string | null;
   @IsIn(catalogs) catalog!: string;
   @IsString() @Length(2,150) title!: string;
   @IsString() @Length(2,80) category!: string;
@@ -54,7 +56,7 @@ export class SalesAdminController {
     if (data.published && !data.images.length) throw new BadRequestException('Añade al menos una foto para publicar.');
     const count = await this.prisma.storedFile.count({where:{publicPath:{in:data.images},purpose:'PROPERTY_IMAGE',scanStatus:'CLEAN'}});
     if (count !== data.images.length) throw new BadRequestException('Fotografía no disponible.');
-    return {...data, ...(data.catalog === 'comprar' ? location : {latitude:null, longitude:null}), city:data.catalog==='comprar' ? data.city : ''};
+    return {...data, ...(data.catalog === 'comprar' ? location : {latitude:null, longitude:null,promotion:null,estimatedMonthlyRent:null}), city:data.catalog==='comprar' ? data.city : ''};
   }
   @Post() async create(@Body() body: OfferInput) {
     return this.prisma.saleOffer.create({data:await this.fields(body)});

@@ -7,6 +7,8 @@ import type { Property } from '@/lib/types';
 import { ContactForm } from '@/components/ContactForm';
 import { PropertyGallery } from '@/components/PropertyGallery';
 import { PropertyTour360Viewer } from '@/components/PropertyTour360Viewer';
+import { Suspense } from 'react';
+import { InvestmentPanel } from '@/components/market/Merchandising';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +47,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             <div className="detailSpecs"><div><strong>{property.areaM2}</strong><span>m²</span></div><div><strong>{property.bedrooms}</strong><span>habitaciones</span></div><div><strong>{property.bathrooms}</strong><span>baños</span></div><div><strong>{property.parking}</strong><span>parqueaderos</span></div></div>
             <h2>Descripción</h2><p className="longText">{property.description}</p>
             <h2>Características</h2><div className="features">{property.features.map((feature) => <span key={feature}>✓ {feature}</span>)}</div>
-            <PublicPropertyLocation addressText={[property.address,property.neighborhood,property.city].filter(Boolean).join(', ')} latitude={property.latitude} longitude={property.longitude} />
+            <div id="ubicacion-publicada"><PublicPropertyLocation addressText={[property.address,property.neighborhood,property.city].filter(Boolean).join(', ')} latitude={property.latitude} longitude={property.longitude} /></div>
             {property.tour360Url && (
               <>
                 <h2>Recorrido 360</h2>
@@ -75,11 +77,11 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               </>
             )}
           </div>
-          <aside className="card inquiry">
+          <div className="inquiryColumn"><aside className="card inquiry">
             <h2 id="solicitar-visita" tabIndex={-1}>Me interesa este inmueble</h2>
             <p>Déjanos tus datos y coordinaremos la visita.</p>
             <ContactForm key={property.id} propertyTitle={property.title} />
-          </aside>
+          </aside><Suspense fallback={<output>Cargando oportunidades…</output>}><InvestmentPanel/></Suspense></div>
         </div>
       </div>
     </section>

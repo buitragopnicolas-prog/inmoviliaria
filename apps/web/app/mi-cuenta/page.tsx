@@ -1,4 +1,6 @@
-import { portalDescriptions, portalNames } from '@/lib/portals';
+import { readSite } from '@/lib/read-site';
+import { portalKey, PortalPhoto } from '@/components/business/PortalPhoto';
+import { portalNames } from '@/lib/portals';
 import type { DocumentFile } from '@/lib/documents';
 import { DocumentLinks } from '@/components/DocumentLinks';
 import Link from 'next/link';
@@ -16,10 +18,11 @@ export const dynamic = 'force-dynamic';
 export default async function MyAccountPage({ searchParams }: Readonly<{ searchParams: Promise<{ referencia?: string | string[] }> }>) {
   const user = await requireUser('USER');
   const tenant=user.portal==='TENANT';
-  const [invoices, leases, documents] = await Promise.all([
+  const [invoices, leases, documents, {portales:copy, catalogos}] = await Promise.all([
     apiFetch<Invoice[]>('/invoices/me', {}, true),
     tenant ? apiFetch<UserLease[]>('/leases/me', {}, true) : [],
     tenant ? [] : apiFetch<DocumentFile[]>('/documents/mine',{},true),
+    readSite(),
   ]);
   const { referencia } = await searchParams;
   const pending = invoices.reduce((sum, invoice) => sum + invoice.balance, 0);
@@ -28,7 +31,7 @@ export default async function MyAccountPage({ searchParams }: Readonly<{ searchP
   return (
     <section className="section pageTop accountPage">
       <div className="container">
-        <div className="pageHeading"><span className="eyebrow">{portalNames[user.portal]}</span><h1>Bienvenido, {user.name}</h1><p>{portalDescriptions[user.portal]}</p>{user.portal==='OWNER' && <Link className="button" href="/propietarios/publicaciones">Mis publicaciones</Link>} <Link className="button outline" href="/mi-cuenta/documentos">Mis documentos PDF</Link></div>
+        <div className="portalCover"><div className="pageHeading"><span className="eyebrow">{catalogos[`${portalKey[user.portal]}Title`] || portalNames[user.portal]}</span><h1>{copy.welcome} {user.name}</h1><p>{copy[`${portalKey[user.portal]}Intro`]}</p>{user.portal==='OWNER' && <Link className="button" href="/propietarios/publicaciones">{copy.publications}</Link>} <Link className="button outline" href="/mi-cuenta/documentos">{copy.documents}</Link></div><PortalPhoto portal={user.portal} copy={copy}/></div>
         {typeof referencia === 'string' && referencia && <AccountPaymentNotice invoices={invoices} reference={referencia} />}
         <div className="metricGrid userMetrics">
           <div className="metric"><span>Saldo pendiente</span><strong>{pesos(pending)}</strong></div>

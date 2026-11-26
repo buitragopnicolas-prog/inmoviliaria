@@ -1,12 +1,12 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { apiFetch, ApiError } from './api';
+import { apiBaseUrl, apiFetch, ApiError } from './api';
 import { resolveCopy, type SiteSection } from './site-content';
 
 // All sections returned by this endpoint are public. Private session data is never cached here.
 const publishedSections = unstable_cache(
   () => apiFetch<SiteSection[]>('/site-content'),
-  ['jb-published-sections'],
+  ['jb-published-sections', apiBaseUrl()],
   { tags: ['site-content'], revalidate: 30 },
 );
 

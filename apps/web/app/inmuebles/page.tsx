@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { InvestmentPanel } from '@/components/market/Merchandising';
 import { readSite } from '@/lib/read-site';
 import type { Metadata } from 'next';
 import { CatalogFilterForm } from '@/components/CatalogFilterForm';
@@ -33,7 +35,7 @@ export default async function PropertiesPage({ searchParams }: Readonly<{ search
     <section className="section pageTop">
       <div className="container">
         <div className="pageHeading"><span className="eyebrow">Catálogo</span><h1>{catalogos.rentTitle}</h1><p>{catalogos.rentIntro}</p></div>
-        <nav className="pdfActions rentalNav" aria-label="Arriendos"><a aria-current="page" href="/inmuebles">Inmuebles en arriendo</a><Link href="/solicitud-de-arrendamiento">Solicitud de arrendamiento</Link></nav>
+        <nav className="pdfActions rentalNav" aria-label="Arriendos"><Link aria-current="page" href="/inmuebles">Inmuebles en arriendo</Link><Link href="/solicitud-de-arrendamiento">Solicitud de arrendamiento</Link></nav>
         <CatalogFilterForm values={filters}>
           <noscript><input type="hidden" name="vista" value="completa" /></noscript>
           <label>Barrio o inmueble<input name="search" defaultValue={filters.search} placeholder="Ej. Chapinero" aria-invalid={!!errors.search} aria-describedby={errors.search ? 'search-error' : undefined} />{errors.search && <span className="alert error" id="search-error">{errors.search}</span>}</label>
@@ -41,7 +43,7 @@ export default async function PropertiesPage({ searchParams }: Readonly<{ search
           <label>Canon máximo (COP)<input name="maxRent" defaultValue={filters.maxRent} type="number" min={1} step="any" placeholder="Ej. 2500000" aria-invalid={!!errors.maxRent} aria-describedby={errors.maxRent ? 'max-rent-error' : undefined} />{errors.maxRent && <span className="alert error" id="max-rent-error">{errors.maxRent}</span>}</label>
           <button className="button" type="submit">Buscar</button>
         </CatalogFilterForm>
-        {results}
+        <div className={invalid ? undefined : 'rentalWall'}><div>{results}</div>{!invalid && <Suspense fallback={<output>Cargando oportunidades…</output>}><InvestmentPanel/></Suspense>}</div>
       </div>
     </section>
   );
