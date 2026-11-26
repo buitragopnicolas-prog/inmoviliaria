@@ -97,6 +97,7 @@ try {
   await edit.locator('textarea[name=cities]').fill('Bogotá, Colombia\nManizales');
   await edit.getByRole('button',{name:'Publicar cambios'}).click();
   await page.getByText('Cambios publicados.').waitFor();
+  assert.equal(rows.get('presencia')?.values.cities,'Bogotá, Colombia\nManizales');
   await page.goto(origin+'/arrendatarios');
   assert.equal(await page.locator('.placeNames span').last().innerText(),'Manizales');
   await page.locator('.quoteDetails summary').click();

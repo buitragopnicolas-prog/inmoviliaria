@@ -26,7 +26,7 @@ export function SiteSectionForm({id,values,revision}:Readonly<{id:SectionId;valu
   }}>
     <input type="hidden" name="revision" value={version}/>
     {Object.entries(sections[id].fields).map(([key,field])=>{
-      const input={name:key,value:draft[key]??'',onChange:(e:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>setDraft({...draft,[key]:e.target.value})};
+      const input={name:key,defaultValue:draft[key]??''};
       let control;
       if (['long','links','cityList'].includes(field.kind)) {
         control = <textarea {...input} rows={field.kind==='long'?3:7} required={field.kind==='cityList'}/>;

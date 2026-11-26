@@ -30,7 +30,7 @@ export async function saveSection(id: SectionId, previous: PublicationState, for
     const revision = Number(form.get('revision'));
     const saved=await apiFetch<{revision:number}>('/admin/publishing/sections/'+id,{method:'PUT',body:JSON.stringify({values,revision})},true);
     updateTag('site-content');
-    revalidatePath('/admin/contenido');
+    revalidatePath('/','layout');
     return {...saved,values,success:'Cambios publicados.'};
   } catch(error){return message(error);}
 }
