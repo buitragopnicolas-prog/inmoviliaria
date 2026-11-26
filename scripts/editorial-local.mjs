@@ -178,7 +178,7 @@ try {
     await visitor.locator('[name=q]').fill(stamp);
     await visitor.locator('[name=category]').fill(category);
     await visitor.getByRole('button',{name:'Buscar',exact:true}).click();
-    const card=visitor.locator('.saleCard').filter({hasText:title});
+    const card=visitor.getByRole('main').getByRole('link').filter({hasText:title});
     assert.match((await card.innerText()).replace(/\s/g,''),/2\.500\.000/);
     await card.click();
     await visitor.waitForURL(web+'/'+catalog+'/'+row.id);

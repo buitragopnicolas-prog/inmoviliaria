@@ -72,8 +72,13 @@ try {
   assert.deepEqual(await json('/owner/listings',second.accessToken),[]);
   assert.equal((await request('/owner/listings/'+sale.id,second.accessToken,'PUT',form('sale',{created:false,published:false,revision:1}))).status,404);
   await json('/admin/sales',admin,'POST',{catalog:'vehiculos-y-bienes',title:stamp+' vehículo',category:'Carro',city:'',description:'Vehículo de ensayo',price:'2000000',published:true,images:lease.images});
-  await visit('/comprar?q='+encodeURIComponent(stamp));await page.locator('a.saleCard').first().waitFor();assert.equal(await page.locator('a.saleCard').count(),2);
-  assert.ok((await page.locator('a.saleCard').evaluateAll(rows=>rows.map(a=>a.pathname))).some(p=>p.startsWith('/vehiculos-y-bienes/')));
+  await visit('/comprar?q='+encodeURIComponent(stamp));
+  const results=page.getByRole('main').getByRole('link').filter({hasText:stamp});
+  await results.first().waitFor();
+  assert.equal(await results.count(),2);
+  const destinations=await results.evaluateAll(links=>links.map(link=>link.pathname));
+  assert.ok(destinations.includes('/comprar/'+sale.id));
+  assert.ok(destinations.some(path=>path.startsWith('/vehiculos-y-bienes/')));
   await session(owner.accessToken);await visit('/propietarios/publicaciones?editar='+sale.id);
   await page.getByRole('button',{name:'Elegir en el mapa'}).click();
   await page.getByRole('button',{name:'Marcar el centro del mapa'}).click();
