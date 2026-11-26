@@ -31,7 +31,6 @@ export function FinancialTicker({copy,places}:Readonly<{copy:SiteCopy['mercados'
   const animation = useRef<gsap.core.Tween | null>(null);
   const disclosure=useRef<HTMLDetailsElement>(null);
   useEffect(()=>{
-    if (!details) return;
     function closeOnEscape(event:KeyboardEvent) {
       if (event.key !== 'Escape' || !disclosure.current?.open) return;
       disclosure.current.open=false;
@@ -39,7 +38,7 @@ export function FinancialTicker({copy,places}:Readonly<{copy:SiteCopy['mercados'
     }
     document.addEventListener('keydown',closeOnEscape);
     return ()=>document.removeEventListener('keydown',closeOnEscape);
-  },[details]);
+  },[]);
   const hold = paused || details || hover;
   const holding = useRef(hold);
   useEffect(()=>{
