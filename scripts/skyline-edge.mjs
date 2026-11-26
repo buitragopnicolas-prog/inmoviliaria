@@ -84,6 +84,7 @@ try {
   assert.equal(await brand.evaluate(node=>getComputedStyle(node).color),'rgb(201, 167, 123)');
   assert.equal(await page.locator('.footerBrand img').getAttribute('src'),'/brand/logo-mono-white.svg');
   const cards=page.locator('#portafolio .assetCard');
+  await cards.first().waitFor();
   assert.equal(await cards.count(),3);
   await cards.first().focus();
   await page.waitForFunction(()=>document.body.dataset.cityFocused!==undefined);
@@ -247,9 +248,11 @@ try {
     HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};
   });
   await fallback.goto(origin);
-  assert.equal(await fallback.locator('#portafolio .assetCard').count(),3);
-  await fallback.locator('#portafolio .assetCard').first().focus();
-  assert.equal(await fallback.locator('#portafolio .assetCard').first().getAttribute('href'),'/inmuebles/panorama');
+  const fallbackCards=fallback.locator('#portafolio .assetCard');
+  await fallbackCards.first().waitFor();
+  assert.equal(await fallbackCards.count(),3);
+  await fallbackCards.first().focus();
+  assert.equal(await fallbackCards.first().getAttribute('href'),'/inmuebles/panorama');
   await publicLink(fallback,'/inmuebles').click();
   await fallback.getByLabel('Barrio o inmueble').fill('Centro');
   assert.equal(await fallback.locator(rendered).count(),0);
