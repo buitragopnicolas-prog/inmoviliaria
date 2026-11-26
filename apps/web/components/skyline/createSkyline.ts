@@ -93,8 +93,8 @@ export async function createSkyline(frame: HTMLElement, canvas: HTMLCanvasElemen
     previousX = x;
     uniforms.uPhase.value = (performance.now()/52000)%1;
     store.getState().advance(performance.now()/1000,false);
-    if (!frame.hasAttribute('data-rendered')) {
-      frame.setAttribute('data-rendered','');
+    if (frame.dataset.rendered===undefined) {
+      frame.dataset.rendered='';
       fade = fadeIn(canvas);
     }
   }
@@ -172,7 +172,7 @@ export async function createSkyline(frame: HTMLElement, canvas: HTMLCanvasElemen
       invalidate();
     }
   }
-  function lost(event: Event) { event.preventDefault(); frame.removeAttribute('data-rendered'); }
+  function lost(event: Event) { event.preventDefault(); delete frame.dataset.rendered; }
   window.addEventListener('pointermove',pointer,{passive:true});
   document.documentElement.addEventListener('pointerleave',leave);
   window.addEventListener('blur',leave);
@@ -196,7 +196,7 @@ export async function createSkyline(frame: HTMLElement, canvas: HTMLCanvasElemen
         input.disable(); trigger.disable();
         toScroll.tween.pause(); toStreet.tween.pause(); initialScroll=true;
         timeline.pause(); fade?.(); lit=false; heat.tween.pause(); uniforms.uHeat.value=0;
-        frame.removeAttribute('data-rendered');
+        delete frame.dataset.rendered;
       }
       Object.assign(state.camera,viewpoint(state.path));
       scheduleColors();
@@ -210,7 +210,7 @@ export async function createSkyline(frame: HTMLElement, canvas: HTMLCanvasElemen
       observer.disconnect(); context.revert(); timeline.kill(); heat.tween.kill(); toScroll.tween.kill(); toStreet.tween.kill(); fade?.();
       window.removeEventListener('jb:scene-focus',onFocus);gsap.killTweensOf(focus);
       root.unmount(); geometry.dispose(); material.dispose(); freeTextures(); renderer.dispose();
-      frame.removeAttribute('data-rendered');
+      delete frame.dataset.rendered;
     },
   };
 }

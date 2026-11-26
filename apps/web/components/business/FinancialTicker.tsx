@@ -9,11 +9,16 @@ import { LocationRotator } from './LocationRotator';
 const numbers = new Intl.NumberFormat('es-CO', {maximumFractionDigits: 2, minimumFractionDigits: 2});
 const dates = new Intl.DateTimeFormat('es-CO', {dateStyle:'short', timeStyle:'short', timeZone:'America/Bogota'});
 
+function trend(change:number) {
+  if (change===0) return '→';
+  return change>0 ? '↑' : '↓';
+}
+
 function QuoteValue({quote,unit,copy}:Readonly<{quote?: MarketQuote;unit:string;copy:SiteCopy['mercados']}>) {
   if (!quote) return <span>{copy.unavailable}</span>;
   const change = quote.change;
   return <><b>{numbers.format(quote.value)} {unit}</b>
-    {change !== null && <span data-trend={Math.sign(change)}>{change > 0 ? '↑' : change < 0 ? '↓' : '→'} {numbers.format(Math.abs(change))}%</span>}
+    {change !== null && <span data-trend={Math.sign(change)}>{trend(change)} {numbers.format(Math.abs(change))}%</span>}
     {quote.retained && <small>{copy.retained}</small>}</>;
 }
 
@@ -24,6 +29,17 @@ export function FinancialTicker({copy,places}:Readonly<{copy:SiteCopy['mercados'
   const [hover,setHover] = useState(false);
   const track = useRef<HTMLDivElement>(null);
   const animation = useRef<gsap.core.Tween | null>(null);
+  const disclosure=useRef<HTMLDetailsElement>(null);
+  useEffect(()=>{
+    if (!details) return;
+    function closeOnEscape(event:KeyboardEvent) {
+      if (event.key !== 'Escape' || !disclosure.current?.open) return;
+      disclosure.current.open=false;
+      disclosure.current.querySelector('summary')?.focus();
+    }
+    document.addEventListener('keydown',closeOnEscape);
+    return ()=>document.removeEventListener('keydown',closeOnEscape);
+  },[details]);
   const hold = paused || details || hover;
   const holding = useRef(hold);
   useEffect(()=>{
@@ -41,7 +57,7 @@ export function FinancialTicker({copy,places}:Readonly<{copy:SiteCopy['mercados'
       active = true;
       try {
         const response = await fetch('/api/mercados',{signal:controller.signal,cache:'no-store'});
-        if (!response.ok) throw Error();
+        if (!response.ok) throw new Error('Cotizaciones no disponibles');
         const data:MarketSnapshot = await response.json();
         if (!controller.signal.aborted) setSnapshot(data);
       } catch {
@@ -92,9 +108,7 @@ export function FinancialTicker({copy,places}:Readonly<{copy:SiteCopy['mercados'
         </div>)}</div> : <span>{copy.pending}…</span>}
       </div>
       <button type="button" className="bandPause" aria-label={copy.pause} aria-pressed={paused} onClick={()=>setPaused(!paused)}>{paused?'▷':'Ⅱ'}</button>
-      <details className="quoteDetails" onToggle={event=>setDetails(event.currentTarget.open)} onKeyDown={event=>{
-        if(event.key==='Escape'){event.currentTarget.open=false;event.currentTarget.querySelector('summary')?.focus();}
-      }}>
+      <details className="quoteDetails" ref={disclosure} onToggle={event=>setDetails(event.currentTarget.open)}>
         <summary aria-label={copy.details}>{copy.title} <span aria-hidden="true">⌄</span></summary>
         <div className="quotePanel"><h2>{copy.details}</h2><p>{copy.note}</p>
           <ul>{instruments.map(({id,symbol,unit})=>{

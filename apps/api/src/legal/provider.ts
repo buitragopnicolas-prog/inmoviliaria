@@ -21,9 +21,9 @@ export async function consultColombianLaw(key:string,question:string) {
     body:JSON.stringify({model:process.env.OPENAI_MODEL?.trim() || 'gpt-5-mini',store:false,instructions,input:question,
       max_output_tokens:2800,tools:[{type:'web_search',filters:{allowed_domains:domains}}],tool_choice:'required'}),
   });
-  if (!response.ok) throw Error('Proveedor no disponible');
+  if (!response.ok) throw new Error('Proveedor no disponible');
   const body=await response.json() as {status:string;output:Item[]};
-  if (body.status!=='completed') throw Error('Respuesta incompleta');
+  if (body.status!=='completed') throw new Error('Respuesta incompleta');
   const paragraphs=body.output.filter(item=>item.type==='message').flatMap(item=>item.content??[]).filter(block=>block.type==='output_text');
   const answer=paragraphs.map(block=>block.text?.trim()).filter(Boolean).join('\n\n');
   const citations=new Map<string,{url:string;title:string}>();
@@ -31,6 +31,6 @@ export async function consultColombianLaw(key:string,question:string) {
     const link=source(annotation);
     if(link) citations.set(link.url,link);
   }
-  if (!answer || !citations.size) throw Error('Faltan fuentes verificables');
+  if (!answer || !citations.size) throw new Error('Faltan fuentes verificables');
   return {answer,sources:[...citations.values()]};
 }

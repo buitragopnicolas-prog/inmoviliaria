@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { pesos, propertyPhotoUrl } from '@/lib/format';
 import { usePropertySelection } from '@/components/skyline/PropertySelection';
 
@@ -14,7 +14,8 @@ type Props = { items:DisplayAsset[]; label:string; kind:'rent'|'sale'|'goods' };
 export function AssetRail({items,label,kind}:Readonly<Props>) {
   const {slug,select}=usePropertySelection();
   const start=kind==='rent' ? items.findIndex(item=>item.id===slug) : -1;
-  const [active,setActive]=useState(start>=0 ? start : items.length>=3 ? 1 : 0);
+  const first=items.length>=3 ? 1 : 0;
+  const [active,setActive]=useState(start>=0 ? start : first);
   const track=useRef<HTMLDivElement>(null);
   const current=useRef(active);
   const previous=useRef(active);
@@ -72,16 +73,24 @@ export function AssetRail({items,label,kind}:Readonly<Props>) {
     el.addEventListener('scroll',onScroll,{passive:true});
     return ()=>{el.removeEventListener('scroll',onScroll);observer.disconnect();cancelAnimationFrame(frame);};
   },[items]);
-  return <div className={'assetRail rail-'+kind} role="region" aria-roledescription="carrusel" aria-label={label}>
-    <div className="assetRailTrack" ref={track} data-single={items.length===1 || undefined}
-      onKeyDown={e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){
-        e.preventDefault();
-        const next=e.key==='Home'?0:e.key==='End'?items.length-1:Math.max(0,Math.min(items.length-1,active+(e.key==='ArrowRight'?1:-1)));
-        (track.current?.children[next]?.querySelector('a') as HTMLElement)?.focus({preventScroll:true});center(next,true);
-      }}}>
-      {items.map((item,i)=><div className="assetSlide" key={item.id} data-side={i===active?'center':i<active?'left':'right'}>
+  function moveFocus(event:KeyboardEvent<HTMLAnchorElement>,index:number) {
+    const last=items.length-1;
+    const positions:Record<string,number>={Home:0,End:last,ArrowLeft:Math.max(0,index-1),ArrowRight:Math.min(last,index+1)};
+    if (!Object.hasOwn(positions,event.key)) return;
+    event.preventDefault();
+    const next=positions[event.key];
+    track.current?.children[next]?.querySelector('a')?.focus({preventScroll:true});
+    center(next,true);
+  }
+  function side(index:number) {
+    if (index===active) return 'center';
+    return index<active?'left':'right';
+  }
+  return <section className={'assetRail rail-'+kind} aria-roledescription="carrusel" aria-label={label}>
+    <div className="assetRailTrack" ref={track} data-single={items.length===1 || undefined}>
+      {items.map((item,i)=><div className="assetSlide" key={item.id} data-side={side(i)}>
         <Link href={item.href} className="assetCard glass-panel-total glass-panel-jb" data-heat-panel="" data-lat={item.latitude??undefined} data-lng={item.longitude??undefined}
-          onFocus={()=>center(i,false)} onClick={()=>{if(kind==='rent')select(item.id);}}>
+          onKeyDown={event=>moveFocus(event,i)} onFocus={()=>center(i,false)} onClick={()=>{if(kind==='rent')select(item.id);}}>
           <div className="assetPhoto"><img src={propertyPhotoUrl(item.image)} alt={item.image?item.title:'Sin fotografía publicada'} loading={i<3?'eager':'lazy'}/>
             {item.badge && <small>{item.badge}</small>}
           </div>
@@ -95,5 +104,5 @@ export function AssetRail({items,label,kind}:Readonly<Props>) {
       <output aria-live="polite">{active+1} de {items.length}</output>
       <button type="button" aria-label="Siguiente" disabled={active===items.length-1} onClick={()=>center(active+1,true)}>→</button>
     </div>}
-  </div>;
+  </section>;
 }

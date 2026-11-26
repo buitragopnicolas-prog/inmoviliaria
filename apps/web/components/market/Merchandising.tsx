@@ -16,7 +16,8 @@ function asset(offer:SaleOffer):DisplayAsset {
 export function SaleShowcase({offers,goods=false,copy=defaultCopy.catalogos}:Readonly<{copy?:typeof defaultCopy.catalogos;offers:SaleOffer[];goods?:boolean}>) {
   if(!offers.length)return null;
   const sorted=goods ? offers : [...offers.filter(o=>o.promotion),...offers.filter(o=>!o.promotion)];
-  const heading=goods?copy.goodsHeading:offers.some(o=>o.promotion)?copy.featuredSalesHeading:copy.saleHeading;
+  const saleHeading=offers.some(o=>o.promotion)?copy.featuredSalesHeading:copy.saleHeading;
+  const heading=goods?copy.goodsHeading:saleHeading;
   return <section className="marketShowcase"><h2>{heading}</h2>
     <AssetRail key={sorted.map(o=>o.id).join('/')} items={sorted.map(asset)} label={heading} kind={goods?'goods':'sale'}/>
   </section>;
@@ -26,7 +27,7 @@ export async function InvestmentPanel() {
   const [offers,{catalogos:copy}]=await Promise.all([loadPublicData<SaleOffer[]>('/sales/comprar'),readSite()]);
   if(offers===null)return <aside className="investment glass-panel-total glass-panel-jb"><DataUnavailable label="las oportunidades de inversión" retryHref="/comprar"/></aside>;
   const candidates=offers.map(o=>({offer:o,monthly:Number(o.estimatedMonthlyRent),price:Number(o.price)}));
-  const rows=[...candidates.filter(c=>c.monthly>0),...candidates.filter(c=>!(c.monthly>0))].slice(0,3)
+  const rows=[...candidates.filter(c=>c.monthly>0),...candidates.filter(c=>c.monthly<=0)].slice(0,3)
     .map(c=>({...c,yield:c.price>0 && c.monthly>0 ? 1200*c.monthly/c.price : null}));
   const max=Math.max(1,...rows.map(r=>r.yield??0));
   return <aside className="investment glass-panel-total glass-panel-jb" data-heat-panel="" aria-label={copy.investmentTitle}>

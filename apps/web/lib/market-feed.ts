@@ -10,7 +10,7 @@ type Instrument = typeof instruments[number];
 export function parseQuote(instrument:Instrument, chart:Chart):MarketQuote {
   const {meta,timestamp,indicators} = chart;
   if (meta.symbol !== instrument.symbol || !Number.isFinite(meta.regularMarketPrice) ||
-      !Number.isFinite(meta.regularMarketTime) || meta.regularMarketTime <= 0) throw Error('Cotización incompleta');
+      !Number.isFinite(meta.regularMarketTime) || meta.regularMarketTime <= 0) throw new Error('Cotización incompleta');
   const time = new Date(meta.regularMarketTime * 1000);
   const day = new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:meta.exchangeTimezoneName});
   const session = day.format(time);
@@ -38,7 +38,7 @@ async function refresh():Promise<MarketSnapshot> {
       const symbol = encodeURIComponent(instrument.symbol);
       const response = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/'+symbol+'?range=5d&interval=1d',
         {cache:'no-store',signal:AbortSignal.timeout(5500)});
-      if (!response.ok) throw Error('Fuente indisponible');
+      if (!response.ok) throw new Error('Fuente indisponible');
       const body = await response.json();
       quotes[instrument.id] = parseQuote(instrument,body.chart.result[0]);
     } catch {

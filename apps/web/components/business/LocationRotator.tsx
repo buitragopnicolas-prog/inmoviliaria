@@ -6,7 +6,7 @@ import type {SiteCopy} from '@/lib/site-content';
 import {UiIcon} from '../UiIcon';
 
 export function LocationRotator({copy,paused}:Readonly<{copy:SiteCopy['presencia'];paused:boolean}>) {
-  const cities=copy.cities.split(/\r?\n/).map(city=>city.trim()).filter(Boolean);
+  const cities=[...new Set(copy.cities.split(/\r?\n/).map(city=>city.trim()).filter(Boolean))];
   const list=useRef<HTMLSpanElement>(null);
   const motion=useRef<gsap.core.Timeline | null>(null);
   const held=useRef(paused);
@@ -34,6 +34,6 @@ export function LocationRotator({copy,paused}:Readonly<{copy:SiteCopy['presencia
     return ()=>media.revert();
   },[copy.cities]);
   return <div className="presence"><UiIcon name="pin"/><span className="placeNames" ref={list} aria-hidden="true">
-    {cities.map((city,index)=><span key={index}>{city}</span>)}</span>
+    {cities.map(city=><span key={city}>{city}</span>)}</span>
     <span className="businessSr">{copy.title}: {cities.join(', ')}</span></div>;
 }

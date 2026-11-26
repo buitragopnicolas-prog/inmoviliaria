@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-const directory = fileURLToPath(new URL('../apps/web/public/images/bogota/', import.meta.url));
+const directory = process.argv[2] || fileURLToPath(new URL('../apps/web/public/images/bogota/', import.meta.url));
 await mkdir(directory, { recursive: true });
 let seed = 9413;
 function random() {
@@ -50,9 +50,9 @@ for(let tier=0;tier<3;tier++){
 const chapelX=1400, chapelY=ridge(chapelX,0);
 sky.push(`<g transform="translate(${chapelX} ${chapelY})" fill="#eadac5">
   <path d="M-15 0v-5l6-5 6 5v-8l3-5 3 5v8l6-4 8 6v3z"/><path d="M0-17v-6m-2 2h4" fill="none" stroke="#f3dbc3" stroke-width="1.2"/>
-  <path d="M-10 0v-3m12 3v-4m5 4v-3" stroke="#545464"/></g>`);
-// The second summit carries the small pale silhouette of the statue on Guadalupe.
-sky.push(`<g transform="translate(1700 ${ridge(1700,0)})" fill="#cec1ae"><path d="M-5 0h10v-2H2L1-10h-2l-1 8h-3z"/><circle cy="-11" r="1.4"/></g>`);
+  <path d="M-10 0v-3m12 3v-4m5 4v-3" stroke="#545464"/></g>`,
+  // The second summit carries the small pale silhouette of the statue on Guadalupe.
+  `<g transform="translate(1700 ${ridge(1700,0)})" fill="#cec1ae"><path d="M-5 0h10v-2H2L1-10h-2l-1 8h-3z"/><circle cy="-11" r="1.4"/></g>`);
 for(let i=0;i<1000;i++){
   const x=random()*width, y=ridge(x,2)+random()*135;
   sky.push(rect(x,y,1+random()*2,.8,random()<.35?'#e5aa77':'#7d9d9b'));
@@ -63,6 +63,21 @@ const city=[`<defs>
   <linearGradient id="facade" x2="0" y2="1"><stop stop-color="#b87a72" stop-opacity=".45"/><stop offset=".75" stop-color="#1c2439" stop-opacity=".52"/></linearGradient>
   <pattern id="courses" width="13" height="7" patternUnits="userSpaceOnUse"><path d="M0 .4h13m-13 3.5h13M3 0v3.5m7 .1v3.4" stroke="#dcb092" stroke-width=".6" opacity=".32"/></pattern>
 </defs>`];
+function windowColor(){
+  if(random()<.24)return '#dba97c';
+  return random()<.32?'#79a5a7':'#25384a';
+}
+function windows(x,top,base,w,side,rise,glass){
+  const step=glass?11:14;
+  const pitch=glass?8:12, windowWidth=glass?4:6, windowHeight=glass?3:5;
+  for(let y=top+7;y<base-3;y+=step){
+    city.push(line(`${x},${y+3} ${x+w},${y+3} ${x+w+side},${y+3-rise}`,glass?'#53808b':'#bb7771',.9,.58));
+    for(let offset=4;offset<w-5;offset+=pitch){
+      city.push(rect(x+offset,y,windowWidth,windowHeight,windowColor()));
+    }
+    for(let s=4;s<side-2;s+=8) city.push(rect(x+w+s,y-s*.42,3,3,random()<.2?'#ad8c74':'#4c6471'));
+  }
+}
 function building(x, base, w, h, side, style = 'brick') {
   const top=base-h, rise=side*.42;
   const glass=style==='glass';
@@ -77,14 +92,7 @@ function building(x, base, w, h, side, style = 'brick') {
     const tank=x+w*.51;
     city.push(rect(tank,top-rise-6,9,7,'#435366'),line(`${tank-2},${top-rise-6} ${tank+10},${top-rise-6}`,'#9babac',1.2));
   }
-  const step=glass?11:14;
-  for(let y=top+7;y<base-3;y+=step){
-    city.push(line(`${x},${y+3} ${x+w},${y+3} ${x+w+side},${y+3-rise}`,glass?'#53808b':'#bb7771',.9,.58));
-    for(let offset=4;offset<w-5;offset+=glass?8:12){
-      city.push(rect(x+offset,y,glass?4:6,glass?3:5,random()<.24?'#dba97c':random()<.32?'#79a5a7':'#25384a'));
-    }
-    for(let s=4;s<side-2;s+=8) city.push(rect(x+w+s,y-s*.42,3,3,random()<.2?'#ad8c74':'#4c6471'));
-  }
+  windows(x,top,base,w,side,rise,glass);
   const outline=`${x},${base} ${x},${top} ${x+side},${top-rise} ${x+w+side},${top-rise}`;
   city.push(line(outline,'#c9a77b',6,.13),line(outline,'#eed5ae',1.7,.94),
     line(`${x},${top} ${x+w},${top} ${x+w+side},${top-rise}`,'#d9bc92',1.2,.82),

@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
 import { UiIcon } from '../UiIcon';
 import { fadeIn } from '@/lib/motion';
 import type { SiteCopy } from '@/lib/site-content';
@@ -20,7 +19,7 @@ export function LegalCloud({copy}:Readonly<{copy:SiteCopy['consultaLegal']}>) {
     onClick={()=>dialog.current?.showModal()}><UiIcon name="cloud"/><span>{copy.bubble}</span></button>
     <dialog ref={dialog} className={styles.dialog} aria-labelledby="jb-legal-title" onClose={()=>trigger.current?.focus({preventScroll:true})}
       onToggle={event=>{if(event.currentTarget.open)fadeIn(event.currentTarget);}}>
-      <form method="dialog"><button className={styles.close} aria-label="Cerrar consulta"><UiIcon name="close"/></button></form>
+      <form method="dialog"><button type="submit" className={styles.close} aria-label="Cerrar consulta"><UiIcon name="close"/></button></form>
       <h2 id="jb-legal-title">{copy.title}</h2><p>{copy.intro}</p>
       <div className={styles.actions}><Link href="/consulta-juridica" className="button" onClick={()=>dialog.current?.close()}>{copy.internal}</Link>
       <a href={chatGptUrl} target="_blank" rel="noopener noreferrer">{copy.external} ↗</a></div>

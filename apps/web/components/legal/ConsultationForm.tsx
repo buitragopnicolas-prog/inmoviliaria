@@ -12,12 +12,12 @@ export function ConsultationForm({copy,topics}:Readonly<{copy:SiteCopy['consulta
   const [question,setQuestion]=useState('');
   const policy=usePublishedPolicy();
   return <><form className="form" action={action}><label>Consultar un tema de ejemplo<select name="topic">{topics.map(topic=><option value={topic.id} key={topic.id}>{topic.label}</option>)}</select></label>
-    <button className="button outline" disabled={pending}>Consultar ejemplo</button></form>
+    <button type="submit" className="button outline" disabled={pending}>Consultar ejemplo</button></form>
     {policy.version && <form className="form" action={action}>
     <label>{copy.question}<textarea name="question" rows={4} minLength={12} maxLength={1800} required value={question}
       onChange={e=>setQuestion(e.target.value)} readOnly={pending} placeholder={copy.example}/></label>
     <p>{copy.privacy}</p><ConsentField purpose="procesar mi consulta a través de OpenAI"/>
-    <button className="button" disabled={pending || !policy.version} aria-busy={pending}>{pending?'Consultando fuentes oficiales…':copy.submit}</button>
+    <button type="submit" className="button" disabled={pending || !policy.version} aria-busy={pending}>{pending?'Consultando fuentes oficiales…':copy.submit}</button>
   </form>}{!policy.version && <p>Las preguntas libres se habilitan cuando la inmobiliaria publica su política de datos.</p>}
   {pending && <StatusNotice message="Consultando fuentes oficiales…"/>}{state.error && !pending && <StatusNotice tone="error" message={state.error}/>}
   {state.result && !pending && <section className={styles.answer} aria-label="Respuesta de la IA"><h2>Orientación</h2>

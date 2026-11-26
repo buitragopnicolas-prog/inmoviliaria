@@ -64,7 +64,7 @@ async function checkIdentity(page,previous) {
 function publicLink(page,path) { return page.locator('nav[aria-label="Navegación principal"] a[href="'+path+'"]'); }
 try {
   for(let i=0;i<60;i++){
-    if (web.exitCode !== null) throw Error('El servidor local terminó antes de responder');
+    if (web.exitCode !== null) throw new Error('El servidor local terminó antes de responder');
     try { if((await fetch(origin)).ok) break; } catch {}
     await delay(250);
   }
@@ -86,7 +86,7 @@ try {
   const cards=page.locator('#portafolio .assetCard');
   assert.equal(await cards.count(),3);
   await cards.first().focus();
-  await page.waitForFunction(()=>document.body.hasAttribute('data-city-focused'));
+  await page.waitForFunction(()=>document.body.dataset.cityFocused!==undefined);
   await page.waitForFunction(()=>getComputedStyle(document.querySelector('.jbSkylineFrame')).filter.includes('blur(0px)'));
   await page.waitForFunction(()=>{
     const gl=document.querySelector('.jbSkylineFrame canvas').getContext('webgl2');
@@ -95,7 +95,7 @@ try {
   await cards.nth(1).focus();
   assert.equal(await cards.nth(1).getAttribute('data-lat'),null);
   await page.locator('#home-search').focus();
-  await page.waitForFunction(()=>!document.body.hasAttribute('data-city-focused') &&
+  await page.waitForFunction(()=>document.body.dataset.cityFocused===undefined &&
     getComputedStyle(document.querySelector('.jbSkylineFrame')).filter.includes('blur(0.55px)'));
   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
   const canvas = await page.locator(rendered).elementHandle();

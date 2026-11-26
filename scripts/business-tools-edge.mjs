@@ -13,6 +13,26 @@ let consultations=0;
 const coverage=browserCoverage();
 const roles={editor:'ADMIN',tenant:'USER'};
 function json(res,body,status=200){res.writeHead(status,{'content-type':'application/json'}).end(JSON.stringify(body));}
+function consultation(res,role,path,body){
+  if(!role)return json(res,{},401);
+  const data=JSON.parse(body);
+  if(path==='/api/consulta-ia' && !(data.authorized && data.question && data.policyVersion))return json(res,{},400);
+  if(++consultations===1)return json(res,{message:'Fuente temporalmente no disponible'},503);
+  return json(res,{answer:'Orientación sintética para la prueba.',sources:[{title:'Fuente oficial de prueba',url:'https://www.suin-juriscol.gov.co/'}]});
+}
+async function receivePhoto(req,res,body){
+  const form=await new Response(body,{headers:{'content-type':req.headers['content-type']}}).formData();
+  const photo=form.get('photos');
+  const id='/api/files/prueba-'+(photos.size+1)+'/content';
+  photos.set(id,Buffer.from(await photo.arrayBuffer()));
+  return json(res,[id]);
+}
+function publishSection(res,path,body){
+  const id=path.split('/').pop(),{revision,values}=JSON.parse(body);
+  if((rows.get(id)?.revision??0)!==revision)return json(res,{message:'Conflicto de revisión'},409);
+  rows.set(id,{id,revision:revision+1,values});
+  return json(res,{revision:revision+1});
+}
 const api=createServer(async(req,res)=>{
   const path=new URL(req.url,'http://localhost').pathname;
   const role=roles[req.headers.authorization?.replace('Bearer ','')];
@@ -22,26 +42,15 @@ const api=createServer(async(req,res)=>{
   if(path==='/api/auth/me')return json(res,{name:'Persona de prueba',role,portal:'TENANT'},role?200:401);
   if(path==='/api/consulta-ia/estado')return json(res,{available:true,topics:[{id:'arriendo',label:'Reajuste del canon'}]});
   if(path==='/api/consulta-ia' || path==='/api/consulta-ia/ejemplo'){
-    if(!role)return json(res,{},401);
-    const data=JSON.parse(body);
-    if(path==='/api/consulta-ia' && !(data.authorized && data.question && data.policyVersion))return json(res,{},400);
-    if(++consultations===1)return json(res,{message:'Fuente temporalmente no disponible'},503);
-    return json(res,{answer:'Orientación sintética para la prueba.',sources:[{title:'Fuente oficial de prueba',url:'https://www.suin-juriscol.gov.co/'}]});
+    return consultation(res,role,path,body);
   }
   if(path==='/api/site-content')return json(res,[...rows.values()]);
   if(path.startsWith('/api/admin/publishing/') && role!=='ADMIN')return json(res,{},403);
   if(path==='/api/admin/publishing/images' && req.method==='POST'){
-    const form=await new Response(body,{headers:{'content-type':req.headers['content-type']}}).formData();
-    const photo=form.get('photos');
-    const id='/api/files/prueba-'+(photos.size+1)+'/content';
-    photos.set(id,Buffer.from(await photo.arrayBuffer()));
-    return json(res,[id]);
+    return receivePhoto(req,res,body);
   }
   if(path.startsWith('/api/admin/publishing/sections/') && req.method==='PUT'){
-    const id=path.split('/').pop(),{revision,values}=JSON.parse(body);
-    if((rows.get(id)?.revision??0)!==revision)return json(res,{message:'Conflicto de revisión'},409);
-    rows.set(id,{id,revision:revision+1,values});
-    return json(res,{revision:revision+1});
+    return publishSection(res,path,body);
   }
   if(photos.has(path))return res.writeHead(200,{'content-type':'image/webp'}).end(photos.get(path));
   return json(res,[]);
