@@ -1,4 +1,5 @@
 // Run after the web build. Both the web server and the read-only fixture use loopback.
+import { browserCoverage } from './e2e-browser-coverage.mjs';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -54,6 +55,7 @@ const web = spawn(process.execPath,['node_modules/next/dist/bin/next','start','a
 });
 const browser = await chromium.launch({channel:process.platform === 'win32' ? 'msedge' : 'chrome'});
 const errors = [];
+const coverage=browserCoverage();
 const rendered = '.jbSkylineFrame[data-rendered] canvas';
 async function checkIdentity(page,previous) {
   await page.locator(rendered).waitFor();
@@ -66,7 +68,7 @@ try {
     try { if((await fetch(origin)).ok) break; } catch {}
     await delay(250);
   }
-  const page=await browser.newPage({viewport:{width:1440,height:900}});
+  const page=await coverage.watch(await browser.newPage({viewport:{width:1440,height:900}}));
   await page.addInitScript(()=>{
     const link=WebGL2RenderingContext.prototype.linkProgram;
     WebGL2RenderingContext.prototype.linkProgram=function(program){
@@ -217,7 +219,7 @@ try {
     }
     await checkIdentity(page,before);
   }
-  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+  const mobile=await coverage.watch(await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true,reducedMotion:'reduce'}));
   await mobile.goto(origin);
   await mobile.getByRole('heading',{level:1}).waitFor();
   const mobileBrand=mobile.locator('.header .brand [role="img"]');
@@ -239,7 +241,7 @@ try {
   await mobile.getByRole('contentinfo').scrollIntoViewIfNeeded();
   assert.match(await mobile.getByRole('contentinfo').evaluate(n=>getComputedStyle(n).backgroundImage),/calle\.webp/);
   await mobile.screenshot({path:out+'/calle-movil-reducida.png'});
-  const fallback=await browser.newPage();
+  const fallback=await coverage.watch(await browser.newPage());
   await fallback.addInitScript(()=>{
     const original=HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext=function(type,...args){return type==='webgl2'?null:original.call(this,type,...args);};
@@ -254,8 +256,7 @@ try {
   assert.deepEqual(errors,[]);
   console.log(`Edge ${browser.version()}: luz roja media ${cold.toFixed(1)} → ${warm.toFixed(1)}. Lienzo persistente, cámara, scroll, historial, IA, acceso, portales de prueba, móvil, movimiento reducido y alternativa sin WebGL verificados.`);
 } finally {
-  await browser.close();
-  web.kill();
+  try {await coverage.save();} finally {await browser.close();web.kill();}
   fixture.closeAllConnections();
   await new Promise(resolve=>fixture.close(resolve));
 }

@@ -1,4 +1,5 @@
 // Run after the web build. A disposable API holds the test publication in memory.
+import { browserCoverage } from './e2e-browser-coverage.mjs';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -7,7 +8,9 @@ import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { chromium } from 'playwright-core';
 
-const rows=new Map(), photos=new Map();
+const rows=new Map([['contacto',{id:'contacto',revision:1,values:{policyHref:'/politica-de-datos',policyText:'Política sintética de pruebas'}}]]), photos=new Map();
+let consultations=0;
+const coverage=browserCoverage();
 const roles={editor:'ADMIN',tenant:'USER'};
 function json(res,body,status=200){res.writeHead(status,{'content-type':'application/json'}).end(JSON.stringify(body));}
 const api=createServer(async(req,res)=>{
@@ -17,6 +20,14 @@ const api=createServer(async(req,res)=>{
   for await(const chunk of req)chunks.push(chunk);
   const body=Buffer.concat(chunks);
   if(path==='/api/auth/me')return json(res,{name:'Persona de prueba',role,portal:'TENANT'},role?200:401);
+  if(path==='/api/consulta-ia/estado')return json(res,{available:true,topics:[{id:'arriendo',label:'Reajuste del canon'}]});
+  if(path==='/api/consulta-ia' || path==='/api/consulta-ia/ejemplo'){
+    if(!role)return json(res,{},401);
+    const data=JSON.parse(body);
+    if(path==='/api/consulta-ia' && !(data.authorized && data.question && data.policyVersion))return json(res,{},400);
+    if(++consultations===1)return json(res,{message:'Fuente temporalmente no disponible'},503);
+    return json(res,{answer:'Orientación sintética para la prueba.',sources:[{title:'Fuente oficial de prueba',url:'https://www.suin-juriscol.gov.co/'}]});
+  }
   if(path==='/api/site-content')return json(res,[...rows.values()]);
   if(path.startsWith('/api/admin/publishing/') && role!=='ADMIN')return json(res,{},403);
   if(path==='/api/admin/publishing/images' && req.method==='POST'){
@@ -44,7 +55,7 @@ let browser;
 try {
   for(let i=0;i<100;i++){try{if((await fetch(origin+'/arrendatarios')).ok)break;}catch{}await delay(250);}
   browser=await chromium.launch({channel:process.platform==='win32'?'msedge':'chrome'});
-  const page=await browser.newPage({reducedMotion:'reduce',viewport:{width:1280,height:820}});
+  const page=await coverage.watch(await browser.newPage({reducedMotion:'reduce',viewport:{width:1280,height:820}}));
   page.setDefaultTimeout(20000);
   const errors=[];
   page.on('pageerror',error=>errors.push(error.message));
@@ -116,6 +127,18 @@ try {
   await page.locator('.allianceCard img').evaluate(img=>img.decode());
   await page.locator('.allianceCard a').click();
   assert.equal(await page.locator('[name=subject]').inputValue(),'Proponer una alianza');
+  await page.goto(origin+'/consulta-juridica');
+  await page.getByRole('button',{name:'Consultar ejemplo'}).click();
+  await page.getByRole('alert').filter({hasText:'Fuente temporalmente no disponible'}).waitFor();
+  await page.getByRole('button',{name:'Consultar ejemplo'}).click();
+  await page.getByRole('link',{name:/Fuente oficial de prueba/}).waitFor();
+  await page.locator('textarea[name=question]').fill('Pregunta sintética sobre arriendo de vivienda');
+  await page.locator('input[name=authorized]').check();
+  await page.getByRole('button',{name:'Consultar fuentes oficiales'}).click();
+  await page.waitForFunction(()=>!document.querySelector('button[aria-busy="true"]'));
+  assert.equal(consultations,3);
   assert.deepEqual(errors,[]);
   console.log('Ciudades editables, reloj por segundo, pausa, movimiento reducido, 320/390/1440 px y contacto de alianzas.');
-} finally {await browser?.close();web.kill();api.closeAllConnections();await new Promise(resolve=>api.close(resolve));}
+ } finally {
+  try {await coverage.save();} finally {await browser?.close();web.kill();api.closeAllConnections();await new Promise(resolve=>api.close(resolve));}
+}

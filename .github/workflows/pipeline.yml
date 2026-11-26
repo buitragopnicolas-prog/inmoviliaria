@@ -212,6 +212,8 @@ jobs:
           fi
           JB_TEST_COVERAGE=1 node scripts/e2e-portals-ci.mjs
           NODE_V8_COVERAGE="$GITHUB_WORKSPACE/coverage/tmp" npm run test:catalog-edge
+          JB_TEST_COVERAGE=1 NODE_V8_COVERAGE="$GITHUB_WORKSPACE/coverage/tmp" node scripts/business-tools-edge.mjs
+          JB_TEST_COVERAGE=1 NODE_V8_COVERAGE="$GITHUB_WORKSPACE/coverage/tmp" node scripts/skyline-edge.mjs
           npx --no-install c8 report --merge-async
           node scripts/normalize-lcov.mjs
       - name: Save manual payment E2E evidence
