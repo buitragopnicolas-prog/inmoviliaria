@@ -4,6 +4,7 @@ set -euo pipefail
 # Only the development deployment invokes this receiver, after the SHA gate.
 release="${1:-}"
 repo="$(cd "$(dirname "$0")/.." && pwd)"
+source "$repo/scripts/dev-application-images.sh"
 if [[ -t 0 ]]; then [[ -z "$release" ]] && exit 0; exit 2; fi
 read_header() {
   header=''
@@ -28,20 +29,21 @@ if [[ "$header" == JB-DEV-QA-1 ]]; then
 fi
 if [[ -n "$release" ]]; then
   [[ "$header" == JB-DEV-APP-1 ]] || { echo 'Falta el paquete de aplicación de DEV.' >&2; exit 2; }
-  (
-    umask 077
-    archive="$(mktemp)"
-    trap 'rm -f -- "$archive"' EXIT
-    timeout 900 python3 "$repo/scripts/verify-dev-application.py" "$release" "$archive"
-    gzip -dc "$archive" | ctr -n k8s.io images import -
-    registry="$(ctr -n k8s.io images ls -q)"
-    for component in api web; do
-      grep -Fxq "docker.io/library/asesoria-inmobiliaria-$component:dev-$release" <<< "$registry"
-    done
-    echo "Imágenes de la API y de la web de DEV verificadas e importadas para $release."
-  )
-  if [[ "$reclaim_authorized" == true ]]; then
-    (cd "$repo" && python3 scripts/reclaim-dev-images.py)
+  if [[ -n "${3:-}" ]]; then
+    # Retain the verified bytes in the release's private temporary directory until the node is ready.
+    (umask 077; timeout 900 python3 "$repo/scripts/verify-dev-application.py" "$release" "$3/application.tar.gz")
+    if [[ "$reclaim_authorized" == true ]]; then touch "$3/reclaim-authorized"; fi
+  else
+    (
+      umask 077
+      archive="$(mktemp)"
+      trap 'rm -f -- "$archive"' EXIT
+      timeout 900 python3 "$repo/scripts/verify-dev-application.py" "$release" "$archive"
+      import_dev_images "$archive" "$release"
+    )
+    if [[ "$reclaim_authorized" == true ]]; then
+      (cd "$repo" && python3 scripts/reclaim-dev-images.py)
+    fi
   fi
   read_header
 fi

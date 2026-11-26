@@ -1,9 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { defaultCopy } from './site-content';
+import { defaultCopy, resolveCopy } from './site-content';
 import { pinlauDirectory, pinlauSubject } from './pinlau';
 import { teamFromForm } from './pinlau-team-form';
 import { readTeam } from '../../../shared/pinlau-team.mjs';
+
+test('PINLAW actualiza los antiguos textos predeterminados y conserva el contenido editorial', () => {
+  const copy = resolveCopy([{id:'pinlau',revision:2,values:{title:'Pinlau Asesoría Jurídica',general:'Hablemos con la firma',people:'[]'}},
+    {id:'identidad',revision:3,values:{navPinlau:'Pinlau'}}]);
+  assert.equal(copy.identidad.navPinlau,'PINLAW');
+  assert.equal(copy.pinlau.title,'PINLAW Asesoría Jurídica');
+  assert.equal(copy.pinlau.general,'Hablemos con la firma');
+});
 
 test('cada servicio publicado llega al asunto correcto incluso tras cambiar el título', () => {
   const copy = structuredClone(defaultCopy);
@@ -13,7 +21,7 @@ test('cada servicio publicado llega al asunto correcto incluso tras cambiar el t
   assert.equal(new Set(services.map(item => item.key)).size, 23);
   for (const service of services) {
     assert.ok(service.description.length > 60);
-    assert.equal(pinlauSubject(copy, service.key), 'Pinlau · ' + service.title);
+    assert.equal(pinlauSubject(copy, service.key), 'PINLAW · ' + service.title);
   }
   assert.equal(pinlauSubject(copy, 'general'), copy.pinlau.title);
   for (const invalid of [undefined, ['redam'], '__proto__', 'desconocido']) assert.equal(pinlauSubject(copy, invalid), '');

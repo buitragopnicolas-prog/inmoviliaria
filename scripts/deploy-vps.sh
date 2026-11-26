@@ -40,7 +40,13 @@ web_image="asesoria-inmobiliaria-web:$tag"
 manifest="$(mktemp)"
 job_file="$(mktemp)"
 payment_overlay="$(mktemp -d)"
-trap 'rm -f "$manifest" "$job_file"; rm -rf "$payment_overlay"' EXIT
+source "$repo/scripts/dev-application-images.sh"
+cleanup_release() {
+  if [[ "$stage" == dev ]]; then release_dev_image_pins "$payment_overlay/image-pins"; fi
+  rm -f "$manifest" "$job_file"
+  rm -rf "$payment_overlay"
+}
+trap cleanup_release EXIT
 
 payment_config=/etc/asesoria-inmobiliaria/manual-payments.json
 qr_asset=/opt/asesoria-inmobiliaria/payments/bancolombia-breb.jpeg
@@ -74,7 +80,7 @@ payment_fingerprint="$(sha256sum "$payment_config" "$qr_asset" | sha256sum | cut
 kubectl -n "$namespace" get secret asesoria-secrets >/dev/null
 kubectl -n "$namespace" get service postgres-service minio-service >/dev/null
 if [[ "$stage" == dev ]]; then
-  bash "$repo/scripts/import-dev-storage-images.sh" "$release" "$payment_overlay/test-accounts.json"
+  bash "$repo/scripts/import-dev-storage-images.sh" "$release" "$payment_overlay/test-accounts.json" "$payment_overlay"
   python3 "$repo/scripts/wait-dev-node.py"
   bash "$repo/scripts/prepare-dev-security.sh"
   odoo_secret="$(kubectl -n "$namespace" get secret odoo-secrets --ignore-not-found -o name)"
@@ -125,6 +131,14 @@ if [[ "$stage" == prod ]]; then
 fi
 
 kubectl apply -f "$manifest" -l deployment-phase=config
+pull_policy=IfNotPresent
+if [[ "$stage" == dev ]]; then
+  import_dev_images "$payment_overlay/application.tar.gz" "$release" "$payment_overlay/image-pins"
+  rm -f "$payment_overlay/application.tar.gz"
+  if [[ -f "$payment_overlay/reclaim-authorized" ]]; then python3 "$repo/scripts/reclaim-dev-images.py"; fi
+  python3 "$repo/scripts/wait-dev-node.py"
+  pull_policy=Never
+fi
 job_name="asesoria-migrate-$(date +%s)"
 cat > "$job_file" <<EOF
 apiVersion: batch/v1
@@ -145,7 +159,7 @@ spec:
       containers:
         - name: migrate
           image: $api_image
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: $pull_policy
           command: ["npm", "run", "db:migrate", "-w", "@inmobiliaria/api"]
           envFrom:
             - configMapRef: { name: asesoria-config }
@@ -153,6 +167,7 @@ spec:
 EOF
 kubectl apply -f "$job_file"
 if ! kubectl -n "$namespace" wait --for=condition=complete "job/$job_name" --timeout=600s; then
+  if [[ "$stage" == dev ]]; then bash "$repo/scripts/dev-release-status.sh" "$job_name" || true; fi
   kubectl -n "$namespace" logs "job/$job_name" --tail=100 || true
   exit 1
 fi

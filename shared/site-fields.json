@@ -35,7 +35,7 @@
       "navPinlau": {
         "label": "Menú · Colaboración jurídica",
         "kind": "text",
-        "value": "Pinlau"
+        "value": "PINLAW"
       },
       "navAbout": {
         "label": "Menú · Nosotros",
@@ -1245,7 +1245,7 @@
     }
   },
   "pinlau": {
-    "title": "Pinlau · Presentación y equipo",
+    "title": "PINLAW · Presentación y equipo",
     "fields": {
       "kicker": {
         "label": "Colaboración",
@@ -1255,7 +1255,7 @@
       "title": {
         "label": "Nombre de la colaboración",
         "kind": "text",
-        "value": "Pinlau Asesoría Jurídica"
+        "value": "PINLAW Asesoría Jurídica"
       },
       "intro": {
         "label": "Presentación",
@@ -1285,7 +1285,7 @@
       "general": {
         "label": "Contacto general",
         "kind": "text",
-        "value": "Contactar con Pinlau"
+        "value": "Contactar con PINLAW"
       },
       "team": {
         "label": "Título del equipo",
@@ -1310,7 +1310,7 @@
     }
   },
   "pinlauEmpresa": {
-    "title": "Pinlau · Empresas y sociedades",
+    "title": "PINLAW · Empresas y sociedades",
     "fields": {
       "heading": {
         "label": "Nombre del área",
@@ -1370,7 +1370,7 @@
     }
   },
   "pinlauCivil": {
-    "title": "Pinlau · Derecho civil, inmuebles y patrimonio",
+    "title": "PINLAW · Derecho civil, inmuebles y patrimonio",
     "fields": {
       "heading": {
         "label": "Nombre del área",
@@ -1440,7 +1440,7 @@
     }
   },
   "pinlauFamilia": {
-    "title": "Pinlau · Familia y sucesiones",
+    "title": "PINLAW · Familia y sucesiones",
     "fields": {
       "heading": {
         "label": "Nombre del área",
@@ -1510,7 +1510,7 @@
     }
   },
   "pinlauMovilidad": {
-    "title": "Pinlau · Viajes y documentación migratoria",
+    "title": "PINLAW · Viajes y documentación migratoria",
     "fields": {
       "heading": {
         "label": "Nombre del área",
@@ -1540,7 +1540,7 @@
     }
   },
   "pinlauPublico": {
-    "title": "Pinlau · Derecho administrativo y penal",
+    "title": "PINLAW · Derecho administrativo y penal",
     "fields": {
       "heading": {
         "label": "Nombre del área",
@@ -1570,7 +1570,7 @@
     }
   },
   "pinlauTecnologia": {
-    "title": "Pinlau · Tecnología y presencia digital",
+    "title": "PINLAW · Tecnología y presencia digital",
     "fields": {
       "heading": {
         "label": "Nombre del área",

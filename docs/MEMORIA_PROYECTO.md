@@ -256,8 +256,18 @@ El [arriendo junto al Virrey](https://dev.asesoriainmobiliariajb.com/inmuebles/p
 
 **Conexión de IA.** La nube ofrece el enlace a ChatGPT. Al cierre de la prueba el endpoint de estado de la API en DEV devolvió `available: false`. El proceso no recibió `OPENAI_API_KEY`. Queda pendiente comprobar una respuesta real dentro de JB tras vincular el secreto de ese entorno.
 
-## Colaboración con Pinlau Asesoría Jurídica
+## Entrega inicial de la colaboración jurídica
 
-El enlace «Pinlau» abre un directorio de 23 servicios organizados por materia. El visitante puede acudir al equipo por un asunto de empresa, patrimonio, familia, viajes, derecho público o tecnología. Cada descripción conduce al contacto de JB con el servicio elegido. Administración → Contenido del sitio permite editar los textos por área, la presentación y las fotografías, y añadir o retirar perfiles de fundadores y socios. Los perfiles públicos se completan con datos reales de la firma.
+El enlace de la colaboración abre un directorio de 23 servicios organizados por materia. El visitante puede acudir al equipo por un asunto de empresa, patrimonio, familia, viajes, derecho público o tecnología. Cada descripción conduce al contacto de JB con el servicio elegido. Administración → Contenido del sitio permite editar los textos por área, la presentación y las fotografías, y añadir o retirar perfiles de fundadores y socios. Los perfiles públicos se completan con datos reales de la firma.
 
 Se consultaron los patrones de acordeón de shadcn/ui y de Origin UI en 21st. La implementación reutiliza la identidad, las superficies y la escena de Bogotá. El nombre del trámite REDAM y la descripción de la salida del país de menores se contrastaron con las fuentes colombianas. [Ley 2097 de 2021](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=166186) · [Código General del Proceso](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=48425) · [ICBF](https://www.icbf.gov.co/portafolio-de-servicios-icbf/permiso-de-salida-del-pais).
+
+La revisión `15fc4db206a93e933d4006e498434230d4215209` se integró y pasó CI y Sonar. En local, Edge confirmó el envío con consentimiento a la bandeja de administración y la publicación y retirada de un perfil con fotografía. En DEV, dos intentos verificaron e importaron las imágenes, pero la migración agotó los 600 segundos en `ContainerCreating`. Los eventos de Kubernetes del primer pod registraron un fallo al descargar la imagen. El segundo intento activó la recuperación limitada a imágenes antiguas de la aplicación. La versión servida continúa siendo `b24e3ca3b9bbb30e818bfa16eb4dc8a6e1dc77eb` y `/pinlau` responde 404 en DEV. Falta el mensaje detallado del evento para identificar la causa del fallo. [PR 35](https://github.com/buitragopnicolas-prog/inmoviliaria/pull/35) · [Segundo intento de despliegue](https://github.com/buitragopnicolas-prog/inmoviliaria/actions/runs/45803566399/job/139873406753).
+
+## PINLAW y estabilidad de la vista móvil
+
+La firma se llama **PINLAW Asesoría Jurídica**. El encabezado, Servicios y el contacto usan `/pinlaw`. El enlace anterior `/pinlau` redirige al directorio. Los 23 servicios, sus textos, los perfiles y los retratos conservan sus identificadores editoriales. El acceso de edición es `/admin/contenido?seccion=pinlaw`.
+
+El video de 19 segundos muestra el catálogo en un teléfono, el pie de página, el paso a una ficha y la apertura y cierre de la galería. En pantallas táctiles, los cerros, la ciudad y los tejados se componen en capas CSS en el layout persistente. El contenido conserva su opacidad al navegar. Los navegadores compatibles desplazan ligeramente las capas con el scroll. La preferencia de movimiento reducido deja la composición estática.
+
+La validación de DEV abarca la migración, la disponibilidad de la API y la web y la prueba pública de PINLAW. El proyecto sigue abierto. La política de datos y la conexión con el proveedor de IA mantienen sus estados documentados por entorno.

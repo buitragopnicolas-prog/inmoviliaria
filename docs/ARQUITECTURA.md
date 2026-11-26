@@ -139,10 +139,18 @@ La nube usa un diálogo nativo y Motion; `/consulta-juridica` comparte el contex
 
 La edición de texto se habilita tras inicializar el formulario. Al guardar una revisión correcta, la acción invalida la etiqueta de contenido y el layout raíz para actualizar el encabezado y las demás rutas. El canal de despliegue de DEV puede recibir un lote de tres hashes de contraseña. Después de la verificación de la API y del almacenamiento, la aplicación da de alta las tres identidades en una transacción. Una repetición comprueba el lote existente. Los datos de acceso se entregan en el perfil local del operador.
 
-## Pinlau Asesoría Jurídica
+## PINLAW Asesoría Jurídica
 
-`/pinlau` es una colaboración pública de JB. El encabezado y `/servicios` llevan al directorio. Next renderiza los títulos, las descripciones y los controles de apertura en el servidor. Los seis grupos editoriales tienen identificadores estables. El enlace `/contacto?pinlau=restitucion`, por ejemplo, resuelve el título vigente y precarga el asunto en el formulario de contacto existente. Un identificador desconocido conserva el contacto ordinario. JB recibe la solicitud en su bandeja de contactos. El correo editable de JB admite contacto directo por el mismo asunto.
+`/pinlaw` es una colaboración pública de JB. El encabezado y `/servicios` llevan al directorio. Next renderiza los títulos, las descripciones y los controles de apertura en el servidor. Los seis grupos editoriales tienen identificadores estables. El enlace `/contacto?pinlaw=restitucion`, por ejemplo, resuelve el título vigente y precarga el asunto en el formulario de contacto existente. Un identificador desconocido conserva el contacto ordinario. JB recibe la solicitud en su bandeja de contactos. El correo editable de JB admite contacto directo por el mismo asunto.
 
 El editor de contenido gestiona la presentación, los miembros del equipo y cada área por separado en SiteSection. El cliente envía los retratos seleccionados por el circuito administrativo de imágenes. La API valida el contenido y las rutas de fotografía antes de actualizar juntos los nombres, los cargos y las referencias de imagen con control de revisión. Cada sección admite hasta 24 perfiles y el equipo vacío se presenta mediante el texto editorial y el contacto. El modelo utiliza la tabla y el almacenamiento existentes.
 
-La profundidad depende del único lienzo del layout. Pinlau tiene un encuadre de cámara propio y usa una superficie de lectura translúcida sobre los cerros y la ciudad. Los controles nativos funcionan con teclado y antes de la hidratación. La preferencia de movimiento reducido conserva la escena estática y suprime la animación de apertura.
+La profundidad depende de la escena persistente del layout. PINLAW tiene un encuadre de cámara propio en escritorio y usa una superficie de lectura translúcida sobre los cerros y la ciudad. Los controles nativos funcionan con teclado y antes de la hidratación. La preferencia de movimiento reducido conserva la escena estática y suprime la animación de apertura.
+
+## PINLAW, escena táctil y promoción a DEV
+
+El layout raíz elige la composición de Bogotá según la capacidad de entrada y la preferencia de movimiento. Los dispositivos de puntero grueso o sin hover usan las tres capas CSS de `mobile-depth.css` y una altura de viewport estable. La profundidad animada en dispositivos compatibles sigue el desplazamiento nativo. Las preferencias de escritorio habilitan la cámara WebGL y las transiciones de superficie existentes.
+
+El nombre público y las direcciones canónicas de PINLAW son independientes de las claves almacenadas en `SiteSection`. La resolución editorial actualiza los antiguos textos predeterminados y conserva el contenido personalizado, las revisiones y los enlaces de los retratos.
+
+DEV recibe el archivo de imágenes acreditado por GitHub en el directorio privado del lanzamiento. Tras preparar PostgreSQL y MinIO, containerd importa las imágenes Linux amd64 del SHA y las protege temporalmente durante la migración y el despliegue. El job usa la imagen local con `imagePullPolicy: Never`. Al terminar o fallar, el proceso libera únicamente las protecciones que añadió. La salida de diagnóstico identifica el job, el pod y la categoría del evento.
