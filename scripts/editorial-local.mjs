@@ -107,7 +107,7 @@ try {
   await saved('Cambios publicados.');
   await visit(visitor,'/contacto');
   await visitor.locator('footer').getByRole('link',{name:stamp,exact:true}).click();
-  assert.equal(new URL(visitor.url()).pathname,'/politica-de-datos');
+  await visitor.waitForURL(web+'/politica-de-datos');
   assert.equal(await visitor.locator('h1').innerText(),stamp);
   await remember('nosotros','caption',stamp);
   await visit(page,'/admin/contenido?seccion=nosotros');
