@@ -42,7 +42,7 @@ names.push('PropertyGallery', 'CatalogResults', 'PortalEntry');
 const entry = "export { PolicyProvider } from './apps/web/components/ConsentField.tsx';\n"+names.map((name) => `export { ${name} } from './apps/web/components/${name}.tsx';`).join('\n') +
   "\nexport { ManualPaymentReviewQueue } from './apps/web/components/ManualPaymentReviewForm.tsx';" +
   "\nexport { default as ContactPage } from './apps/web/app/contacto/page.tsx';" +
-  "\nexport { default as Pinlau, generateMetadata as pinlauMetadata } from './apps/web/app/pinlau/page.tsx';" +
+  "\nexport { default as Pinlau, generateMetadata as pinlauMetadata } from './apps/web/app/pinlaw/page.tsx';" +
   "\nexport { default as MyAccountPage } from './apps/web/app/mi-cuenta/page.tsx';" +
   "\nexport { reportManualPaymentAction, contactAction, loginAction } from './apps/web/app/actions.ts';" +
   "\nexport { HomeHero } from './apps/web/components/home/HomeSections.tsx';\nexport { default as PayInvoicePage } from './apps/web/app/mi-cuenta/facturas/[id]/pagar/page.tsx';\nexport { default as AdminNewsPage } from './apps/web/app/admin/noticias/page.tsx';" +
@@ -282,7 +282,7 @@ test('menú móvil: enlaces por rol, navegación con teclado, Escape y salida de
     assert.equal(toggle.getAttribute('aria-expanded'), 'true');
     const links = within(mobile).getAllByRole('link');
     assert.equal(links.length, role ? 8 : 7);
-    assert.equal(within(mobile).getByRole('link', { name: 'Pinlau' }).getAttribute('href'), '/pinlau');
+    assert.equal(within(mobile).getByRole('link', { name: 'PINLAW' }).getAttribute('href'), '/pinlaw');
     assert.equal(within(mobile).getByRole('link', { name: 'Compra y vende' }).getAttribute('href'), '/comprar');
     fireEvent.keyDown(links[0], { key: 'Tab' });
     assert.equal(mobile.hidden, false);
@@ -736,10 +736,10 @@ test('Pinlau ofrece los 23 asuntos desde el primer HTML y publica exclusivamente
   assert.equal(doc.querySelector('h1').textContent, 'Firma de prueba');
   assert.equal(doc.querySelector('#equipo li img').getAttribute('src'),people[0].photo);
   assert.match(doc.querySelector('#equipo li').textContent, /Persona de ensayoSocia/);
-  const service = doc.querySelector('a[href="/contacto?pinlau=divisorio"]').closest('details');
+  const service = doc.querySelector('a[href="/contacto?pinlaw=divisorio"]').closest('details');
   assert.match(service.textContent, /División de bienesDescripción editorial/);
   const contact = await serverPage('ContactPage',{}, {pinlau:'divisorio'});
-  assert.equal(contact.querySelector('[name="subject"]').value,'Pinlau · División de bienes');
+  assert.equal(contact.querySelector('[name="subject"]').value,'PINLAW · División de bienes');
   assert.ok(contact.querySelector('a[href^="mailto:"][href*="subject="]'));
 });
 

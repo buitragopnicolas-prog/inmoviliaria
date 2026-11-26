@@ -15,5 +15,5 @@ export function pinlauSubject(copy: SiteCopy, selection?: string | string[]) {
   if (selection === 'general') return copy.pinlau.title.slice(0, 160);
   if (typeof selection !== 'string') return '';
   const service = pinlauDirectory(copy).flatMap(area => area.services).find(item => item.key === selection);
-  return service ? 'Pinlau · ' + service.title : '';
+  return service ? 'PINLAW · ' + service.title : '';
 }

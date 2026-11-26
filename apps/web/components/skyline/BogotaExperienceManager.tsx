@@ -9,9 +9,11 @@ import './skyline.css';
 import '../market/home-market.css';
 import './immersive.css';
 import './brand.css';
+import './mobile-depth.css';
 
 const Experience = createContext<ExperienceState | null>(null);
 const subscribeFrame=()=>()=>{};
+const desktopMotion = '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)';
 
 export function BogotaExperienceManager({children}: Readonly<{children: ReactNode}>) {
   const path = usePathname();
@@ -20,13 +22,13 @@ export function BogotaExperienceManager({children}: Readonly<{children: ReactNod
   useEffect(()=>{
     const main=document.getElementById('contenido');
     if(!main)return;
-    const pref=matchMedia('(prefers-reduced-motion: reduce)');
+    const pref=matchMedia(desktopMotion);
     let disposed=false,cleanup:(()=>void)|undefined;
     async function setup(){
       cleanup?.();cleanup=undefined;
-      if(pref.matches)return;
+      if(!pref.matches)return;
       const {animateSurfaces}=await import('./surfaceMotion');
-      if(!disposed && !pref.matches && !cleanup)cleanup=animateSurfaces(main!);
+      if(!disposed && pref.matches && !cleanup)cleanup=animateSurfaces(main!);
     }
     void setup();pref.addEventListener('change',setup);
     return ()=>{disposed=true;cleanup?.();pref.removeEventListener('change',setup);};
@@ -54,21 +56,21 @@ function CityViewport({path}: Readonly<{path:string}>) {
   useEffect(() => {
     const element = frame.current!;
     const surface = canvas.current!;
-    const preference = matchMedia('(prefers-reduced-motion: reduce)');
+    const preference = matchMedia(desktopMotion);
     const life = new AbortController();
     let loading = false;
     async function updatePreference() {
       if (engine.current) {
-        engine.current.setMotion(!preference.matches);
-      } else if (!loading && !preference.matches) {
+        engine.current.setMotion(preference.matches);
+      } else if (!loading && preference.matches) {
         loading = true;
         try {
           const {createSkyline} = await import('./createSkyline');
-          if (life.signal.aborted || preference.matches) return;
+          if (life.signal.aborted || !preference.matches) return;
           const next = await createSkyline(element,surface,experience,life.signal);
           if (life.signal.aborted) { next?.dispose(); return; }
           engine.current = next;
-          next?.setMotion(!preference.matches);
+          next?.setMotion(preference.matches);
         } catch {
           // CSS supplies the complete city and the street illustration independently.
         } finally { loading = false; }
@@ -87,7 +89,7 @@ function CityViewport({path}: Readonly<{path:string}>) {
   useEffect(() => {
     const main = document.getElementById('contenido');
     if (!main) return;
-    const preference = matchMedia('(prefers-reduced-motion: reduce)');
+    const preference = matchMedia(desktopMotion);
     let animation: ReturnType<typeof animate> | undefined;
     let reset: ReturnType<typeof setTimeout> | undefined;
     function cancel() {
@@ -98,14 +100,14 @@ function CityViewport({path}: Readonly<{path:string}>) {
     function arrive() {
       const opacity = Number(getComputedStyle(main!).opacity);
       cancel();
-      if (!preference.matches) {
+      if (preference.matches) {
         animation = animate(main!,{opacity:[Math.min(.82,opacity),1]},{duration:.24});
         animation.then(()=>main!.style.removeProperty('opacity'),()=>{});
       }
     }
     function depart() {
       cancel();
-      if (preference.matches) return;
+      if (!preference.matches) return;
       animation = animate(main!,{opacity:[1,.60]},{duration:.12});
       // A cancelled navigation or a slow response must leave the current page usable.
       reset = setTimeout(arrive,450);

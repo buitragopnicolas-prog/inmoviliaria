@@ -1,0 +1,32 @@
+/* The large viewport remains stable when mobile browser chrome expands or collapses. */
+@media screen and (hover: none), screen and (pointer: coarse) {
+  .jbSkyline { bottom: auto; height: 100vh; height: 100lvh; }
+  body[data-jb-ui] .jbSkylineFrame,
+  body[data-jb-ui][data-city-focused] .jbSkylineFrame {
+    filter: none;
+    background: var(--jb-night) url('/images/bogota/cerros.webp') 59% 68% / cover no-repeat;
+  }
+  .jbSkylineFrame::before, .jbSkylineFrame::after {
+    content: ''; position: absolute; inset: -14px 0; background: 59% 68% / cover no-repeat;
+  }
+  .jbSkylineFrame::before { background-image: url('/images/bogota/ciudad.webp'); }
+  .jbSkylineFrame::after { background-image: url('/images/bogota/tejados.webp'); }
+  .jbSkylineFrame canvas, .jbCityEdges { display: none; }
+  body[data-jb-ui]:has(.jbSkyline) #contenido.glass-panel-total,
+  body[data-jb-ui]:has(.jbSkyline) #contenido.glass-panel-total:not(:has([data-city-home])),
+  body[data-jb-ui]:has(.jbSkyline) :is(.header,.glass-panel-jb,.card,.metric,.filters,.investment,.footerGrid>div,.mobileLinks,dialog) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .jbSkylineFrame::before, .jbSkylineFrame::after {
+        animation: jb-mobile-depth 1s linear both;
+        animation-timeline: scroll(root block);
+      }
+      .jbSkylineFrame::before { --jb-mobile-travel: -5px; }
+      .jbSkylineFrame::after { --jb-mobile-travel: -12px; }
+      @keyframes jb-mobile-depth { from { transform: translateY(0); } to { transform: translateY(var(--jb-mobile-travel)); } }
+    }
+  }
+}

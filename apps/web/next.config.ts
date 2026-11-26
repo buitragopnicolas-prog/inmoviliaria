@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
-    return Object.entries({'/inicio':'/', '/arriendos':'/inmuebles', '/herramientas':'/consulta-juridica',
+    return Object.entries({'/pinlau':'/pinlaw', '/inicio':'/', '/arriendos':'/inmuebles', '/herramientas':'/consulta-juridica',
       '/ingreso':'/login', '/boletin':'/noticias', '/bolet%C3%ADn':'/noticias'})
       .map(([source,destination])=>({source,destination,permanent:false}));
   },

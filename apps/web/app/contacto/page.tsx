@@ -9,11 +9,11 @@ import { pinlauSubject } from '@/lib/pinlau';
 export const metadata: Metadata = { title: 'Contacto' };
 
 export default async function ContactPage({ searchParams }: Readonly<{
-  searchParams: Promise<{ interes?: string | string[]; servicio?: string; pinlau?: string | string[] }>;
+  searchParams: Promise<{ interes?: string | string[]; servicio?: string; pinlaw?: string | string[]; pinlau?: string | string[] }>;
 }>) {
   const [params, site] = await Promise.all([searchParams, readSite()]);
   const {contacto, servicios, alianzas, formularios} = site;
-  const collaboration = pinlauSubject(site, params.pinlau);
+  const collaboration = pinlauSubject(site, params.pinlaw ?? params.pinlau);
   const subjects: Record<string,string> = Object.fromEntries(serviceMenu(servicios).map(item=>[item.key,item.name]));
   subjects.alianzas = alianzas.cta;
   const previousSubject = params.servicio && Object.hasOwn(subjects, params.servicio) ? subjects[params.servicio] : contactSubject(params.interes);

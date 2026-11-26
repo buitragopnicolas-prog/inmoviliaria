@@ -7,19 +7,19 @@ import { pinlauDirectory } from '@/lib/pinlau';
 import { readSite } from '@/lib/read-site';
 import { defaultCopy } from '@/lib/site-content';
 import { readTeam } from '../../../../shared/pinlau-team.mjs';
-import styles from './pinlau.module.css';
+import styles from './pinlaw.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const {pinlau} = await readSite();
   return {title: pinlau.title, description: pinlau.intro};
 }
 
-export default async function PinlauPage() {
+export default async function PinlawPage() {
   const site = await readSite();
   const copy = site.pinlau;
   const areas = pinlauDirectory(site);
   const people = readTeam(copy.people) ?? [];
-  const contact = <Link className="button" href="/contacto?pinlau=general">{copy.general}</Link>;
+  const contact = <Link className="button" href="/contacto?pinlaw=general">{copy.general}</Link>;
   return <div className={'container ' + styles.page}>
     <header className={styles.hero}>
       <div className="pageHeading"><span className="eyebrow">{copy.kicker}</span>
@@ -36,7 +36,7 @@ export default async function PinlauPage() {
         {area.services.map(service => <details className={styles.service} key={service.key}>
           <summary>{service.title}</summary>
           <div><p className="formattedCopy">{service.description}</p>
-            <Link prefetch={false} className="textLink" aria-label={copy.contact + ' · ' + service.title} href={'/contacto?pinlau=' + service.key}>{copy.contact} →</Link>
+            <Link prefetch={false} className="textLink" aria-label={copy.contact + ' · ' + service.title} href={'/contacto?pinlaw=' + service.key}>{copy.contact} →</Link>
           </div>
         </details>)}
       </section>)}</div>

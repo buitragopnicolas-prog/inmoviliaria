@@ -3,22 +3,27 @@ import { browserCoverage } from './e2e-browser-coverage.mjs';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
 
 const property = { id:'panorama', slug:'panorama', title:'Apartamento de prueba visual', status:'AVAILABLE',
-  address:'Centro', city:'Bogotá', neighborhood:'Centro', features:[], images:[], description:'Ficha local de prueba',
+  address:'Centro', city:'Bogotá', neighborhood:'Centro', features:[], description:'Ficha local de prueba',
+  images:[{id:'sala',url:'/api/files/sala/content',alt:'Sala del inmueble'},{id:'vista',url:'/api/files/vista/content',alt:'Vista exterior'}],
   monthlyRent:1000000, administrationFee:0, bedrooms:2, bathrooms:1, parking:0, areaM2:50 };
 const premium={id:'torre',catalog:'comprar',title:'Torre de prueba',category:'Apartamento',city:'Bogotá',
   promotion:'premium',price:'300000000',estimatedMonthlyRent:'2000000',images:[],published:true};
 const project={...premium,id:'parque',title:'Proyecto de prueba',promotion:'new-project',estimatedMonthlyRent:null};
 const goods={...premium,id:'carro',title:'Vehículo de prueba',catalog:'vehiculos-y-bienes',promotion:null,estimatedMonthlyRent:null};
+const photos=new Map(await Promise.all([['sala','jb-interior-1200.webp'],['vista','jb-architecture-hero-960.webp']].map(async ([id,file])=>[
+  '/api/files/'+id+'/content', await readFile('apps/web/public/images/'+file),
+])));
 const fixture = createServer((req,res) => {
   if (req.method !== 'GET') { res.writeHead(405).end(); return; }
   const path = new URL(req.url,'http://localhost').pathname;
+  if (photos.has(path)) {res.writeHead(200,{'Content-Type':'image/webp'}).end(photos.get(path));return;}
   let data = [];
   if (path === '/api/properties' || path === '/api/properties/featured') data = [property];
   if (path === '/api/properties/featured') data = [
@@ -235,8 +240,38 @@ try {
   assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await mobile.screenshot({path:out+'/movil-reducido.png'});
   await mobile.emulateMedia({reducedMotion:'no-preference'});
-  await mobile.locator(rendered).waitFor();
+  const mobileFrame=mobile.locator('.jbSkylineFrame');
+  assert.equal(await mobile.locator(rendered).count(),0);
+  assert.equal(await mobileFrame.evaluate(e=>getComputedStyle(e).filter),'none');
+  assert.match(await mobileFrame.evaluate(e=>getComputedStyle(e,'::after').backgroundImage),/tejados\.webp/);
+  const mobileCity=await mobileFrame.elementHandle();
+  await mobile.locator('.cityFooter').scrollIntoViewIfNeeded();
+  await mobile.waitForFunction(()=>{
+    const city=document.querySelector('.jbSkylineFrame');
+    return !CSS.supports('animation-timeline: scroll()') || new DOMMatrix(getComputedStyle(city,'::after').transform).m42 < -1;
+  });
+  await mobile.locator('.header .brand').click();
+  await mobile.getByRole('button',{name:'Abrir menú'}).tap();
+  await mobile.locator('#mobile-navigation a[href="/inmuebles"]').tap();
+  await mobile.locator('main a[href="/inmuebles/panorama"]').first().tap();
+  const cover=mobile.locator('.gallery summary');
+  await cover.tap();
+  const gallery=mobile.getByRole('dialog');
+  await gallery.getByRole('button',{name:'Foto siguiente'}).tap();
+  await mobile.waitForFunction(()=>document.querySelector('dialog[open] img[alt="Vista exterior"]')?.naturalWidth>0);
+  await gallery.getByRole('button',{name:'Cerrar galería'}).tap();
+  await mobile.waitForFunction(()=>document.activeElement===document.querySelector('.gallery summary'));
+  await mobile.setViewportSize({width:844,height:390});
+  assert.ok(await mobileCity.evaluate(n=>n===document.querySelector('.jbSkylineFrame')));
+  assert.equal(await mobile.locator(rendered).count(),0);
+  await mobile.setViewportSize({width:390,height:844});
+  await mobile.getByRole('button',{name:'Abrir menú'}).click();
+  await mobile.locator('#mobile-navigation a[href="/pinlaw"]').click();
+  await mobile.getByRole('heading',{name:'PINLAW Asesoría Jurídica'}).waitFor();
+  assert.ok(await mobileCity.evaluate(n=>n===document.querySelector('.jbSkylineFrame')));
+  assert.equal(await mobile.locator('#contenido').evaluate(e=>getComputedStyle(e).opacity),'1');
   await mobile.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await mobileFrame.evaluate(e=>getComputedStyle(e,'::after').animationName),'none');
   await mobile.locator(rendered).waitFor({state:'detached'});
   assert.ok(await mobileCanvas.evaluate(n=>n===document.querySelector('.jbSkylineFrame canvas')));
   await mobile.getByRole('contentinfo').scrollIntoViewIfNeeded();

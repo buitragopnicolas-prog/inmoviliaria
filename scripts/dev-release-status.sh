@@ -3,7 +3,7 @@ set -euo pipefail
 
 namespace=asesoria-inmobiliaria-dev
 job="${1:-}"
-[[ -z "$job" || "$job" =~ ^(postgres-app-role|minio-app-policy)-[0-9]+$ ]] || exit 2
+[[ -z "$job" || "$job" =~ ^(postgres-app-role|minio-app-policy|asesoria-migrate)-[0-9]+$ ]] || exit 2
 kubectl -n "$namespace" get deployment api web minio -o 'custom-columns=NAME:.metadata.name,READY:.status.readyReplicas,IMAGE:.spec.template.spec.containers[0].image'
 if [[ -r /var/lib/asesoria-inmobiliaria-dev/verified-sha ]]; then
   read -r receipt < /var/lib/asesoria-inmobiliaria-dev/verified-sha
@@ -23,6 +23,9 @@ kubectl -n "$namespace" get events --field-selector type=Warning --sort-by=.last
     if (line ~ /disk-pressure|diskpressure|ephemeral-storage|no space left/) cause="disco"
     else if (line ~ /memorypressure|memory-pressure|insufficient memory|out of memory|low on resource: memory/) cause="memoria"
     else if (line ~ /insufficient cpu/) cause="cpu"
+    else if (line ~ /neverpull|pull policy of never/) cause="imagen local ausente en el runtime"
+    else if (line ~ /extract layer|unpack|snapshotter|snapshot /) cause="preparación de capas de imagen"
+    else if (line ~ /createsandbox|create pod sandbox/) cause="creación del entorno del pod"
     else if (line ~ /pull image|pulling image|imagepull/) cause="descarga de imagen"
     else if (line ~ /taint/) cause="restricción del nodo"
     print $1, $2, cause
