@@ -85,6 +85,10 @@ export function animateSurfaces(main: HTMLElement) {
 
   reveal(main);
   observer.observe(main, { subtree: true, childList: true });
+  // The motion module can arrive after the first hover or keyboard focus.
+  const focused=main.contains(document.activeElement) ? target(document.activeElement) : null;
+  activate(focused ?? main.querySelector<HTMLElement>('[data-heat-panel]:hover'));
+  main.addEventListener('pointerover', pointer, { passive: true });
   main.addEventListener('pointermove', pointer, { passive: true });
   main.addEventListener('pointerdown', pointer, { passive: true });
   main.addEventListener('pointerleave', leave);
@@ -96,6 +100,7 @@ export function animateSurfaces(main: HTMLElement) {
     activate(null);
     sharpness?.kill();
     frame?.style.removeProperty('filter');
+    main.removeEventListener('pointerover', pointer);
     main.removeEventListener('pointermove', pointer);
     main.removeEventListener('pointerdown', pointer);
     main.removeEventListener('pointerleave', leave);

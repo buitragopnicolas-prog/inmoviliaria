@@ -38,6 +38,12 @@ try {
       await page.waitForFunction(n=>document.querySelector('#portafolio .railControls output').textContent.startsWith((n-1)+' de'),count);
     }
     const active=portfolio.locator('[data-side="center"] a');
+    await active.scrollIntoViewIfNeeded();
+    await page.waitForFunction(()=>{
+      const rail=document.querySelector('#portafolio .assetRailTrack');
+      const centered=rail?.querySelector('[data-side="center"]');
+      return centered && (rail.scrollWidth<=rail.clientWidth || Math.abs(centered.offsetLeft+(centered.offsetWidth-rail.clientWidth)/2-rail.scrollLeft)<3);
+    });
     await active.hover();
     await portfolio.locator('[data-heated]').waitFor();
     const href=await active.getAttribute('href');
