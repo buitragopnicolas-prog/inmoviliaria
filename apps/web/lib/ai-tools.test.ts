@@ -41,7 +41,7 @@ test('IA limita tamaño de archivos y mantiene un catálogo sin duplicados', () 
 test('los permisos de modelos y WASM se limitan a herramientas IA', async () => {
   const rules = await nextConfig.headers!();
   const global = rules.find((rule) => rule.source === '/(.*)')!;
-  const ai = rules.find((rule) => rule.source === '/herramientas-ia')!;
+  const ai = rules.find((rule) => rule.source === '/herramientas-ia/panel')!;
   const policy = (rule: typeof global) => rule.headers.find((header) => header.key === 'Content-Security-Policy')!.value;
   assert.match(policy(global), /connect-src 'self';/);
   assert.doesNotMatch(policy(global), /wasm-unsafe-eval|huggingface/);
@@ -49,5 +49,7 @@ test('los permisos de modelos y WASM se limitan a herramientas IA', async () => 
   assert.match(policy(ai), /worker-src 'self' blob:/);
   assert.match(policy(ai), /https:\/\/huggingface.co/);
   assert.match(policy(ai), /object-src 'none'/);
-  assert.match(policy(ai), /frame-ancestors 'none'/);
+  assert.match(policy(global), /frame-ancestors 'none'/);
+  assert.match(policy(ai), /frame-ancestors 'self';/);
+  assert.equal(ai.headers.find(header => header.key === 'X-Frame-Options')?.value, 'SAMEORIGIN');
 });

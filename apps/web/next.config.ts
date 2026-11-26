@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**', pathname: '/**' },
     ],
   },
+  async redirects() {
+    return Object.entries({'/inicio':'/', '/arriendos':'/inmuebles', '/herramientas':'/consulta-juridica',
+      '/ingreso':'/login', '/boletin':'/noticias', '/bolet%C3%ADn':'/noticias'})
+      .map(([source,destination])=>({source,destination,permanent:false}));
+  },
   async headers() {
     const scriptPolicy = process.env.NODE_ENV === 'development' ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
     const imagePolicy = process.env.NODE_ENV === 'development' ? "'self' data: blob: https: http:" : "'self' data: blob: https:";
@@ -40,13 +45,14 @@ const nextConfig: NextConfig = {
       .replace(`script-src ${scriptPolicy}`, `script-src ${scriptPolicy} 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net`)
       .replace("connect-src 'self'", "connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net")
       .replace("media-src 'self' https:", "media-src 'self' https: blob:")
+      .replace("frame-ancestors 'none'", "frame-ancestors 'self'")
       .concat("; worker-src 'self' blob:");
     return [{
       source: '/(.*)',
       headers: securityHeaders,
     }, {
-      source: '/herramientas-ia',
-      headers: [{ key: 'Content-Security-Policy', value: aiContentPolicy }],
+      source: '/herramientas-ia/panel',
+      headers: [{ key: 'Content-Security-Policy', value: aiContentPolicy }, {key:'X-Frame-Options',value:'SAMEORIGIN'}],
     }];
   },
 };

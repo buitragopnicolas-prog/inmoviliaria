@@ -1,4 +1,6 @@
 .root { display: grid; gap: 24px; }
+@media screen { :global(body[data-jb-ui]) .tool[aria-pressed="true"] {background:rgb(36 76 86 / .8);border-color:var(--ice);color:var(--ink);}
+  :global(body[data-jb-ui]) .tool[aria-pressed="true"] small {color:var(--subtle);} }
 .privacy { padding: 20px 24px; background: var(--mint); border-left: 3px solid var(--accent); border-radius: var(--radius-control); color: var(--text-secondary); }
 .workspace { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px; align-items: start; }
 .tools { display: grid; gap: 6px; }

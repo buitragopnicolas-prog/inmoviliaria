@@ -37,7 +37,7 @@ export function CatalogResults({ query, initial, retryHref }: CatalogSource & {r
       ? 'Buscando inmuebles…'
       : `${properties.length} ${resultLabel}`}</output>
     {properties?.length === 0 && <div className="empty">No hay inmuebles que coincidan con los filtros seleccionados.</div>}
-    {!!properties?.length && <div className="cardsGrid">{properties.map((property) =>
+    {!!properties?.length && <div className="rentalRows">{properties.map(property=>
       <PropertyCard property={property} key={property.id} />)}</div>}
   </>;
 }

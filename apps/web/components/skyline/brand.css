@@ -1,0 +1,70 @@
+/* Screen tokens shared by the public site, portals, administration and static scene. */
+:root {
+  --jb-navy: #0A1A2C;
+  --jb-gold: #C9A77B;
+  --jb-white: #FFFFFF;
+  --jb-beige: #F0E5D6;
+  --jb-warm-tint: #F6E90B;
+  --jb-charcoal: #2E2E2E;
+}
+@media screen {
+  body[data-jb-ui] {
+    --jb-night: var(--jb-navy);
+    --jb-sky-gold: var(--jb-gold);
+    --jb-sky-ink: var(--jb-white);
+    --gold: var(--jb-gold);
+    --accent: var(--jb-gold);
+    --ink: var(--jb-white);
+    --subtle: var(--jb-beige);
+    --ice: var(--jb-gold);
+    --honey: var(--jb-gold);
+    --rose: var(--jb-beige);
+    --glass-line: rgb(201 167 123 / .43);
+    --glass-deep: rgb(10 26 44 / .94);
+    --glass-fill: color-mix(in srgb, rgb(10 26 44 / .86) 95%, var(--jb-white));
+    --geo-ink: var(--ink);
+    --geo-muted: var(--subtle);
+    --geo-ice: var(--jb-gold);
+    --geo-border: var(--glass-line);
+    --mint: rgb(201 167 123 / .12);
+    --sand: color-mix(in srgb, var(--jb-warm-tint) 5%, transparent);
+  }
+  .glass-panel-jb {
+    color: var(--ink);
+    background-color: var(--glass-fill);
+    border: 1px solid var(--glass-line);
+    border-radius: 16px;
+    backdrop-filter: blur(30px) saturate(150%);
+  }
+  body[data-jb-ui]:has(.jbSkyline) .header {
+    background: rgb(10 26 44 / .96);
+    border-bottom: 1px solid var(--glass-line);
+    backdrop-filter: blur(22px);
+    border-radius: 0;
+  }
+  body[data-jb-ui] .header .brand { min-width: 0; flex: none; }
+  body[data-jb-ui] .header .nav { flex-wrap: nowrap; }
+  body[data-jb-ui] .header .mobileLinks { background: var(--glass-deep); }
+  body[data-jb-ui] :is(h1,h2,h3,.hero-title) { font-family: var(--font-display), Georgia, serif; }
+  body[data-jb-ui] :is(button,input,select,textarea) { font-family: var(--font-sans), Montserrat, sans-serif; }
+  body[data-jb-ui] .button:not(.outline,.ghost,.danger,.menuToggle),
+  body[data-jb-ui] #buscar-inmueble button {
+    color: var(--jb-navy); background: var(--jb-gold); border-color: var(--jb-gold);
+    font-weight: 650;
+  }
+  body[data-jb-ui] .button:not(.outline,.ghost,.danger,.menuToggle):is(:hover,:focus-visible),
+  body[data-jb-ui] #buscar-inmueble button:is(:hover,:focus-visible) { background: var(--jb-beige); }
+  body[data-jb-ui] #buscar-inmueble button svg { color: inherit; }
+  body[data-jb-ui] .assetCopy strong, body[data-jb-ui] .investment strong {
+    font-family: var(--font-display), Georgia, serif; color: var(--jb-gold);
+  }
+  body[data-jb-ui] .assetCopy b { color: var(--jb-navy); background: var(--jb-gold); border-radius: 4px; width: fit-content; padding: 6px 10px; }
+  body[data-jb-ui] .assetCard:focus-visible { outline-offset: -3px; }
+  body[data-jb-ui] .cityFooter .footerGrid>div { background: var(--glass-deep); border-color: var(--glass-line); }
+  body[data-jb-ui] .cityFooter address a { overflow-wrap: anywhere; }
+  .jbBrandIcon { width: 36px; height: 36px; flex: none; display: block; color: var(--jb-gold); }
+  .serviceCard .jbBrandIcon { margin-bottom: 14px; }
+  .values article:has(.jbBrandIcon) { display: grid; grid-template-columns: 36px 1fr; gap: 0 16px; align-items: center; }
+  .values article .jbBrandIcon { grid-row: span 2; }
+  .values article p { grid-column: 2; }
+}

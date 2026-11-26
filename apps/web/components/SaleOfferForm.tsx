@@ -3,7 +3,7 @@ import { PropertyLocationField } from './PropertyLocation';
 import { useActionState, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { saveOffer } from '@/app/admin/publishing-actions';
-import { saleCatalogs, type SaleOffer } from '@/lib/sale-offers';
+import { promotionNames, saleCatalogs, type SaleOffer } from '@/lib/sale-offers';
 import { StatusNotice } from './StatusNotice';
 export function SaleOfferForm({offer}:Readonly<{offer?:SaleOffer}>){
   const [state,action,pending]=useActionState(saveOffer,{});
@@ -19,6 +19,12 @@ export function SaleOfferForm({offer}:Readonly<{offer?:SaleOffer}>){
     <label>Precio de venta (COP)<input name="price" type="number" min="1" max="99999999999999" step="1" required defaultValue={offer?.price}/></label></div>
     {catalog==='comprar'&&<label>Ciudad<input name="city" maxLength={100} defaultValue={offer?.city}/></label>}
     {catalog==='comprar' && <PropertyLocationField location={offer} />}
+    {catalog==='comprar' && <fieldset className="form"><legend>Publicidad del inmueble</legend>
+      <label>Distintivo de la oferta<select name="promotion" defaultValue={offer?.promotion ?? ''}><option value="">Sin distintivo</option>
+        {Object.entries(promotionNames).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+      <label>Canon mensual estimado (COP, opcional)<input type="number" name="estimatedMonthlyRent" min="1" max="99999999999999" step="1" defaultValue={offer?.estimatedMonthlyRent ?? ''}/></label>
+      <p className="hint">Se usa para proyectar la rentabilidad bruta anual que verá el visitante.</p>
+    </fieldset>}
     <label>Descripción<textarea name="description" rows={5} required minLength={5} maxLength={12000} defaultValue={offer?.description}/></label>
     {!!offer?.images.length && <fieldset><legend>Fotografías que deseas conservar</legend>{offer.images.map((url,i)=><label key={url}><img className="editorPreview" src={'/fotos'+url} alt={'Foto '+(i+1)}/><input type="checkbox" name="keep" value={url} defaultChecked/>Conservar foto {i+1}</label>)}</fieldset>}
     <label>Añadir fotografías<input name="photos" type="file" multiple accept="image/jpeg,image/png,image/webp"/><span className="hint">Hasta 10 fotos JPG, PNG o WebP de 5 MB. La primera será la portada.</span></label>

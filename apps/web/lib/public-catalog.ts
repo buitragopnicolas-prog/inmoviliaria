@@ -3,15 +3,15 @@ import type { Property, PropertyImage } from './types';
 
 export type CatalogProperty = Pick<Property,
   'id' | 'slug' | 'title' | 'status' | 'city' | 'neighborhood' | 'monthlyRent' | 'administrationFee' |
-  'areaM2' | 'bedrooms' | 'bathrooms' | 'parking' | 'tour360Url'
+  'areaM2' | 'bedrooms' | 'bathrooms' | 'parking' | 'tour360Url' | 'latitude' | 'longitude'
 > & { images: Pick<PropertyImage, 'url' | 'alt'>[] };
 
-function catalogCard(property: Property): CatalogProperty {
+export function catalogCard(property: Property): CatalogProperty {
   const { id, slug, title, status, city, neighborhood, monthlyRent, administrationFee,
     areaM2, bedrooms, bathrooms, parking, tour360Url, images } = property;
   return {
     id, slug, title, status, city, neighborhood, monthlyRent, administrationFee,
-    areaM2, bedrooms, bathrooms, parking, tour360Url, images: images.map(({ url, alt }) => ({ url, alt })),
+    areaM2, bedrooms, bathrooms, parking, tour360Url, latitude:property.latitude,longitude:property.longitude, images: images.map(({ url, alt }) => ({ url, alt })),
   };
 }
 

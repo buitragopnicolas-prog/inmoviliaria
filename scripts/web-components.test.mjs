@@ -32,7 +32,7 @@ const stubs = {
   auth: 'export async function requireUser(role) { globalThis.__ui.roles.push(role); return globalThis.__ui.user ?? { name: "Admin JB", portal:"TENANT" }; }',
   cache: 'export function updateTag(tag) {globalThis.__ui.revalidated.push(tag);} export function revalidatePath(path) { globalThis.__ui.revalidated.push(path); }',
   headers: 'export async function headers(){return new Headers();} export function cookies() { throw new Error("Cookies are unavailable in this test"); }',
-  navigation: 'export function notFound(){ throw new Error("Not found"); } export function usePathname() { return globalThis.__ui.pathname; } export function redirect() { throw new Error("Unexpected redirect"); }',
+  navigation: 'export function notFound(){ throw new Error("Not found"); } export function usePathname() { return globalThis.__ui.pathname; } export function useRouter() { return globalThis.__ui.router; } export function redirect() { throw new Error("Unexpected redirect"); }',
   link: 'import React from "react"; export default function Link({ children, onClick, prefetch, ...props }) { return React.createElement("a", { ...props, onClick: event => { onClick?.(event); event.preventDefault(); } }, children); }',
   image: 'import React from "react"; export default function Image({ fill, priority, ...props }) { return React.createElement("img", props); }',
 };
@@ -65,6 +65,7 @@ await build({
   tsconfig: 'apps/web/tsconfig.json', sourcemap: 'inline', sourcesContent: true,
   plugins: [{ name: 'server-boundary', setup(builder) {
     builder.onResolve({ filter: /^next\/dynamic$/ }, () => ({ path: 'next/dynamic.js', external: true }));
+    builder.onResolve({ filter: /^next\/form$/ }, () => ({ path: 'next/form.js', external: true }));
     builder.onResolve({ filter: /^\.\/api$/ }, ({ importer }) => importer.endsWith('public-data.ts') ? {path:'api',namespace:'ui-stub'} : undefined);
     builder.onResolve({ filter: /^@\/lib\/run-ai-tool$/ }, () => ({ path: 'ai', namespace: 'ui-stub' }));
     builder.onResolve({ filter: /^(@\/app\/actions|@\/lib\/api|@\/lib\/auth|@\/lib\/read-site|next\/(link|navigation|image|cache|headers))$/ }, ({ path }) => {
@@ -280,7 +281,7 @@ test('menú móvil: enlaces por rol, navegación con teclado, Escape y salida de
     assert.equal(toggle.getAttribute('aria-expanded'), 'true');
     const links = within(mobile).getAllByRole('link');
     assert.equal(links.length, role ? 7 : 6);
-    assert.equal(within(mobile).getByRole('link', { name: 'Herramientas IA' }).getAttribute('href'), '/herramientas-ia');
+    assert.equal(within(mobile).getByRole('link', { name: 'Compra y vende' }).getAttribute('href'), '/comprar');
     fireEvent.keyDown(links[0], { key: 'Tab' });
     assert.equal(mobile.hidden, false);
     fireEvent.keyDown(links[0], { key: 'Escape' });
@@ -719,14 +720,14 @@ async function serverPage(name, params = {}, searchParams = {}) {
   return new JSDOM(await new Response(prelude).text()).window.document;
 }
 
-test('la portada de DEV publica los tres recorridos, las siete salidas y las fotos reales en HTML', async (t) => {
+test('la portada de DEV ofrece búsqueda, portafolio y siete destinos desde el primer HTML', async (t) => {
   const before = process.env.APP_ENV;
   process.env.APP_ENV = 'development';
   t.after(() => { if (before === undefined) delete process.env.APP_ENV; else process.env.APP_ENV = before; });
   const home = {...property, slug:'casa-centro', images:[{id:'sala', url:'/uploads/sala.webp', alt:'Sala con ventana'}]};
-  globalThis.__ui.apiResponses = {'/properties':[home], '/properties/featured':[], '/news/featured':[]};
+  globalThis.__ui.apiResponses = {'/properties':[home], '/properties/featured':[home], '/news/featured':[]};
   const doc = await serverPage('Home', {}, {estilo:'original'});
-  assert.deepEqual([...doc.querySelectorAll('[data-portada] section[id]')].map(el => el.id), ['portafolio','busqueda','recorridos']);
+  assert.deepEqual([...doc.querySelectorAll('[data-portada] section[id]')].map(el => el.id), ['busqueda','portafolio','recorridos']);
   assert.deepEqual([...doc.querySelectorAll('#recorridos a')].map(el => el.getAttribute('href')), ['/inmuebles','/comprar','/vehiculos-y-bienes','/propietarios','/arrendatarios','/clientes','/servicios']);
   assert.ok(doc.querySelector('a[href="/inmuebles/casa-centro"]'));
   assert.equal(doc.querySelector('#busqueda form').getAttribute('action'), '/inmuebles');
@@ -775,11 +776,21 @@ test('publicar una oferta y una sección conserva las revisiones y exige adminis
   const data = new FormData();
   for (const [key,value] of Object.entries({title:' Una casa ',id:'item',catalog:'comprar',revision:'2',published:'on',keep:'/uploads/original.jpg'})) data.set(key,value);
   data.set('photos',new File(['foto'],'fotografia.webp'));
+  data.set('promotion','premium');
+  data.set('estimatedMonthlyRent','1800000');
   assert.equal((await ui.saveOffer({},data)).success,'Oferta publicada.');
   const sent=JSON.parse(globalThis.__ui.requests.at(-1)[1].body);
   assert.deepEqual(sent.images,['/uploads/original.jpg','/uploads/foto.webp']);
   assert.equal(sent.title,'Una casa');
   assert.equal(sent.revision,2);
+  assert.equal(sent.promotion,'premium');
+  assert.equal(sent.estimatedMonthlyRent,'1800000');
+  data.set('promotion','');
+  data.set('estimatedMonthlyRent','');
+  assert.equal((await ui.saveOffer({},data)).success,'Oferta publicada.');
+  const cleared=JSON.parse(globalThis.__ui.requests.at(-1)[1].body);
+  assert.equal(cleared.promotion,null);
+  assert.equal(cleared.estimatedMonthlyRent,null);
   data.set('portfolioTitle','Inventario');
   assert.equal((await ui.saveSection('portada',{},data)).values.portfolioTitle,'Inventario');
   assert.ok(globalThis.__ui.revalidated.includes('site-content'));

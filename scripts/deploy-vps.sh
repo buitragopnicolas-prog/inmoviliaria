@@ -74,7 +74,7 @@ payment_fingerprint="$(sha256sum "$payment_config" "$qr_asset" | sha256sum | cut
 kubectl -n "$namespace" get secret asesoria-secrets >/dev/null
 kubectl -n "$namespace" get service postgres-service minio-service >/dev/null
 if [[ "$stage" == dev ]]; then
-  bash "$repo/scripts/import-dev-storage-images.sh" "$release"
+  bash "$repo/scripts/import-dev-storage-images.sh" "$release" "$payment_overlay/test-accounts.json"
   python3 "$repo/scripts/wait-dev-node.py"
   bash "$repo/scripts/prepare-dev-security.sh"
   odoo_secret="$(kubectl -n "$namespace" get secret odoo-secrets --ignore-not-found -o name)"
@@ -191,6 +191,9 @@ fi
 if [[ "$stage" == dev ]]; then
   kubectl -n "$namespace" rollout status deployment/odoo --timeout=300s
   python3 "$repo/scripts/smoke-dev-vps.py" --upload
+  if [[ -s "$payment_overlay/test-accounts.json" ]]; then
+    kubectl -n asesoria-inmobiliaria-dev exec -i deployment/api -- node apps/api/scripts/dev-test-accounts.mjs < "$payment_overlay/test-accounts.json"
+  fi
 fi
 
 if [[ "$stage" == dev && "$release" =~ ^[a-f0-9]{40}$ ]]; then

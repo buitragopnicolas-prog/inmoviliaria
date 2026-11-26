@@ -564,6 +564,8 @@ model SiteSection {
 }
 
 model SaleOffer {
+  promotion String?
+  estimatedMonthlyRent Decimal? @db.Decimal(14, 0)
   latitude Float?
   longitude Float?
   ownerAccountId String?

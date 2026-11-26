@@ -1,3 +1,4 @@
+import Form from 'next/form';
 import Link from 'next/link';
 import { adminListHref, type AdminQuery } from '@/lib/admin-lists';
 import styles from './AdminWorkspace.module.css';
@@ -5,12 +6,12 @@ import styles from './AdminWorkspace.module.css';
 export function AdminListControls({ path, query, placeholder, statuses = [] }: Readonly<{
   path: string; query: AdminQuery; placeholder: string; statuses?: Array<[string, string]>;
 }>) {
-  return <form key={`${query.buscar}:${query.estado}`} className={styles.listControls} action={path} method="get" role="search" aria-label="Filtrar registros">
+  return <Form key={`${query.buscar}:${query.estado}`} className={styles.listControls} action={path} role="search" aria-label="Filtrar registros">
     <label className={styles.searchField}>Buscar registros<input type="search" name="buscar" defaultValue={query.buscar} placeholder={placeholder} /></label>
     {statuses.length > 0 && <label>Estado<select name="estado" defaultValue={query.estado}><option value="">Todos los estados</option>{statuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
     <button className="button small" type="submit">Filtrar</button>
     {(query.buscar || query.estado) && <Link className="button ghost small" href={path}>Limpiar filtros</Link>}
-  </form>;
+  </Form>;
 }
 
 export function AdminPagination({ path, query, page, pages, total, pageSize }: Readonly<{

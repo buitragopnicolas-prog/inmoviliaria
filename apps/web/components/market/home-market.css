@@ -1,0 +1,40 @@
+:root {
+  --geo-ink:#f5f6ef; --geo-muted:#c5d5db; --geo-ice:#88eef0; --geo-pink:#f59cce;
+  --geo-border:rgb(202 234 237 / .28); --geo-pane:rgb(18 35 47 / .83);
+}
+.glass-panel {
+  background:var(--geo-pane);color:var(--geo-ink);border:1px solid var(--geo-border);border-radius:12px;
+  backdrop-filter:saturate(145%) blur(16px);box-shadow:0 9px 32px rgb(4 13 22 / .15);
+}
+.header.glass-panel {border-radius:0;}
+.rentalPortfolio,.homeSearchBar {min-width:0;color:var(--geo-ink);}
+.marketHero {display:grid;grid-template-columns:minmax(0,.91fr) minmax(0,1.09fr);align-items:center;gap:clamp(20px,4vw,72px);padding:24px 0 clamp(36px,4vw,72px);}
+.marketHero>header {min-height:clamp(430px,57svh,690px);z-index:auto;}
+.marketHero>header::before {width:63vw;left:calc(-1 * max(5vw,(100vw - 1250px)/2));}
+.marketHero>header h1 {font-size:clamp(3.2rem,5.65vw,6.6rem);}
+.rentalPortfolio {position:relative;padding:20px 0 12px;}
+#portafolio.rentalPortfolio h2 {margin:0 0 12px;font:500 clamp(22px,2.35vw,37px)/1.1 var(--font-display),Georgia,serif;color:var(--geo-ink);text-shadow:0 1px 9px #081724;}
+.homeSearchBar {padding:clamp(12px,2vw,26px) 0 0;}
+#buscar-inmueble.glass-panel {min-width:0;color:var(--geo-ink);background:rgb(17 34 46 / .82);border-color:var(--geo-border);border-radius:12px;}
+.homeSearchBar #buscar-inmueble {margin:0;padding:13px 20px;}
+.homeSearchBar #buscar-inmueble>div:first-child {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+#buscar-inmueble.glass-panel h2,#buscar-inmueble.glass-panel svg {color:var(--geo-ink);}
+#buscar-inmueble.glass-panel input {background:rgb(255 255 255 / .045);border:1px solid var(--geo-border);color:var(--geo-ink);min-height:40px;padding:7px 11px;}
+#buscar-inmueble.glass-panel input::placeholder {color:var(--geo-muted);}
+#buscar-inmueble.glass-panel label {color:var(--geo-muted);gap:4px;}
+#buscar-inmueble.glass-panel button {background:var(--jb-gold);border:1px solid var(--jb-gold);color:white;min-height:42px;}
+.glass-panel :is(input,button,a):focus-visible {outline:3px solid var(--geo-ice);outline-offset:3px;}
+#recorridos.glass-panel,#recorridos.glass-panel details,#recorridos.glass-panel details[open] {background:var(--geo-pane);border-color:var(--geo-border);color:var(--geo-ink);}
+#recorridos.glass-panel :is(h2,a) {color:var(--geo-ink);}
+@media(max-width:800px) {
+  .marketHero {grid-template-columns:1fr;gap:0;padding-top:8px;}
+  .marketHero>header {min-height:0;padding:18px 0 12px;}
+  .marketHero>header h1 {font-size:clamp(2.55rem,7vw,4rem);}
+  .marketHero>header::before {width:100vw;}
+  .homeSearchBar #buscar-inmueble {padding:10px 12px;}
+  .homeSearchBar form {display:grid;grid-template-columns:1.2fr 1fr;gap:8px;}
+  .rentalPortfolio {padding-top:16px;}
+}
+@media(prefers-reduced-motion:no-preference){.glass-panel :is(a,button) {transition:color .18s,background-color .18s,border-color .18s;}}
+
+.portfolioEmpty {padding:12px;background:var(--glass-fill);border-radius:8px;}

@@ -1,5 +1,6 @@
 'use client';
 
+import { defaultCopy } from '@/lib/site-content';
 import { useActionState } from 'react';
 import { ConsentField, usePublishedPolicy } from './ConsentField';
 import { portalNames, type Portal } from '@/lib/portals';
@@ -7,15 +8,15 @@ import Link from 'next/link';
 import { loginAction, registerAction } from '@/app/actions';
 import { StatusNotice } from './StatusNotice';
 
-export function AuthForm({ mode, showRegistrationLink = false, portal = 'TENANT' }: Readonly<{ mode: 'login' | 'register'; portal?: Portal; showRegistrationLink?: boolean }>) {
+export function AuthForm({ mode, copy = defaultCopy.formularios, buttons = defaultCopy.portales, showRegistrationLink = false, portal = 'TENANT' }: Readonly<{ copy?: typeof defaultCopy.formularios; buttons?: typeof defaultCopy.portales; mode: 'login' | 'register'; portal?: Portal; showRegistrationLink?: boolean }>) {
   const [state, action, pending] = useActionState(mode === 'login' ? loginAction : registerAction, {});
   const policy=usePublishedPolicy();
   const draft = state.values;
-  const submitLabel = mode === 'login' ? 'Ingresar' : 'Crear cuenta';
+  const submitLabel = mode === 'login' ? buttons.signIn : buttons.register;
   return (
     <form className="form card authForm" action={action} onSubmit={event => { if (pending) event.preventDefault(); }}>
-      <h1>{mode === 'login' ? 'Ingresa a tu cuenta' : 'Crea tu cuenta'}</h1>
-      <p className="muted">{mode === 'login' ? 'Consulta tus facturas y pagos.' : 'Selecciona el perfil con el que usarás tu cuenta.'}</p>
+      <h1>{mode === 'login' ? copy.loginTitle : copy.registerTitle}</h1>
+      <p className="muted">{mode === 'login' ? copy.loginIntro : copy.registerIntro}</p>
       {mode === 'register' && <label>Perfil de la cuenta<select name="portal" defaultValue={state.values?.portal ?? portal}>{Object.entries(portalNames).map(([key,name])=><option key={key} value={key}>{name}</option>)}</select></label>}
       {mode === 'register' && <label>Nombre completo<input name="name" autoComplete="name" defaultValue={draft?.name ?? ''} readOnly={pending} required minLength={3} /></label>}
       <label>Correo electrónico<input type="email" name="email" autoComplete="email" placeholder="nombre@correo.com" defaultValue={draft?.email ?? ''} readOnly={pending} required /></label>

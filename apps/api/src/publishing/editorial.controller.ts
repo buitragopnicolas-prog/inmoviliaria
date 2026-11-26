@@ -56,7 +56,15 @@ function validateField(field: Field, value: unknown) {
     case 'links': return value.split(/\r?\n/).filter(line => line.trim()).every(line => {
       const [label, href, ...rest] = line.split('|'); return !!label?.trim() && !rest.length && validLink(href?.trim() || '');
     });
-    case 'image': return /^\/(?:images\/[\w.-]+\.(?:webp|png|jpe?g)|fotos\/api\/files\/[\w-]+\/content)$/i.test(value);
+    case 'cityList': {
+      const cities=value.trim().split(/\r?\n/);
+      return cities.length <= 24 && cities.every(city=>city.trim().length > 0 && city.trim().length <= 80);
+    }
+    case 'timeZone': {
+      try { new Intl.DateTimeFormat('es',{timeZone:value.trim()}); return true; }
+      catch { return false; }
+    }
+    case 'image': return (value === field.value && value.startsWith('/brand/')) || /^\/(?:images\/[\w.-]+\.(?:webp|png|jpe?g)|fotos\/api\/files\/[\w-]+\/content)$/i.test(value);
     case 'email': {
       const [local, domain, ...extra] = value.split('@');
       const dot = domain?.lastIndexOf('.') ?? -1;
@@ -81,7 +89,23 @@ export class EditorialAdminController {
   async save(@Param('id') id: string, @Body() body: SectionInput) {
     if (!Object.hasOwn(schema, id)) throw new NotFoundException('Sección desconocida.');
     const fields = schema[id].fields;
-    const values = sectionValues(id, fields, body.values);
+    // A form opened before a release can omit editorial fields introduced later.
+    // Keep their published values while the revision still matches.
+    const additive: Record<string, string[]> = {
+      contacto: ['streetAddress'],
+      identidad: ['navBuy','headerLogo','footerLogo','navAdmin','navAccount','logout','menu'],
+      catalogos: ['goodsHeading','featuredSalesHeading','saleHeading','investmentTitle','emptyInvestment','buyLink','publishLink'],
+    };
+    const missing = (additive[id] ?? []).filter(key=>!Object.hasOwn(body.values,key));
+    const submitted = {...body.values};
+    if (missing.length) {
+      const row = body.revision > 0
+        ? await this.prisma.siteSection.findUnique({ where: { id }, select: { values: true } })
+        : null;
+      const previous = row?.values as Record<string,string> | null;
+      for (const key of missing) submitted[key] = previous?.[key] ?? fields[key].value;
+    }
+    const values = sectionValues(id, fields, submitted);
     if (body.revision === 0) {
       const { count } = await this.prisma.siteSection.createMany({ data: [{ id, values }], skipDuplicates: true });
       if (count) return { revision: 1 };

@@ -42,10 +42,40 @@
         "kind": "text",
         "value": "Contacto"
       },
-      "navTools": {
-        "label": "Menú · Herramientas",
+      "navAdmin": {
+        "label": "Acceso administrativo",
+        "value": "Administración",
+        "kind": "text"
+      },
+      "navAccount": {
+        "label": "Acceso a cuenta",
+        "value": "Mi cuenta",
+        "kind": "text"
+      },
+      "logout": {
+        "label": "Cerrar sesión",
+        "value": "Salir",
+        "kind": "text"
+      },
+      "menu": {
+        "label": "Menú móvil",
+        "value": "Menú",
+        "kind": "text"
+      },
+      "headerLogo": {
+        "kind": "image",
+        "label": "Marca de la cabecera pública y administrativa",
+        "value": "/brand/logo-dark.svg"
+      },
+      "footerLogo": {
+        "kind": "image",
+        "label": "Marca del pie",
+        "value": "/brand/logo-mono-white.svg"
+      },
+      "navBuy": {
+        "label": "Menú · Compra y vende",
         "kind": "text",
-        "value": "Herramientas IA"
+        "value": "Compra y vende"
       }
     }
   },
@@ -565,7 +595,7 @@
       "links": {
         "label": "Enlaces del pie · una línea por enlace, en formato texto y barra vertical y destino",
         "kind": "links",
-        "value": "Compra y vende | /comprar\nArrendar | /inmuebles\nVehículos y bienes | /vehiculos-y-bienes\nServicios | /servicios\nBoletín jurídico y noticias | /noticias\nQuiénes somos | /nosotros\nContactar asesor | /contacto\nHerramientas IA | /herramientas-ia\nArrendatarios | /arrendatarios\nPropietarios | /propietarios\nClientes | /clientes"
+        "value": "Compra y vende | /comprar\nArrendar | /inmuebles\nVehículos y bienes | /vehiculos-y-bienes\nServicios | /servicios\nBoletín jurídico y noticias | /noticias\nQuiénes somos | /nosotros\nContactar asesor | /contacto\nConsulta jurídica IA | /consulta-juridica\nArrendatarios | /arrendatarios\nPropietarios | /propietarios\nClientes | /clientes"
       },
       "contact": {
         "label": "Título de contacto",
@@ -576,6 +606,11 @@
         "label": "Ciudad o dirección",
         "kind": "text",
         "value": "Bogotá, Colombia"
+      },
+      "streetAddress": {
+        "label": "Dirección del pie de página (opcional)",
+        "kind": "optionalText",
+        "value": ""
       },
       "phone": {
         "label": "Teléfono",
@@ -851,6 +886,431 @@
         "label": "Arrendatarios · descripción",
         "kind": "long",
         "value": "Consulta tu contrato de arrendamiento, tus documentos y tus facturas."
+      },
+      "goodsHeading": {
+        "label": "Encabezado del carrusel de bienes",
+        "value": "Vehículos y otros bienes",
+        "kind": "text"
+      },
+      "featuredSalesHeading": {
+        "label": "Encabezado de venta destacada",
+        "value": "Inmuebles destacados y en venta",
+        "kind": "text"
+      },
+      "saleHeading": {
+        "label": "Encabezado del carrusel de venta",
+        "value": "Inmuebles en venta",
+        "kind": "text"
+      },
+      "investmentTitle": {
+        "label": "Título de inversiones",
+        "value": "Oportunidades de inversión",
+        "kind": "text"
+      },
+      "emptyInvestment": {
+        "label": "Sin oportunidades",
+        "value": "Las oportunidades aparecerán aquí cuando JB publique inmuebles en venta.",
+        "kind": "text"
+      },
+      "buyLink": {
+        "label": "Acceso al catálogo de venta",
+        "value": "Ver compra y venta",
+        "kind": "text"
+      },
+      "publishLink": {
+        "label": "Botón para propietarios",
+        "value": "Publicar mi inmueble",
+        "kind": "text"
+      }
+    }
+  },
+  "mercados": {
+    "title": "Indicadores económicos",
+    "fields": {
+      "title": {
+        "label": "Título de la cinta",
+        "kind": "text",
+        "value": "Mercados"
+      },
+      "details": {
+        "label": "Enlace al detalle",
+        "kind": "text",
+        "value": "Ver cotizaciones"
+      },
+      "usd": {
+        "label": "Etiqueta del dólar",
+        "kind": "text",
+        "value": "USD/COP"
+      },
+      "brent": {
+        "label": "Etiqueta del contrato de petróleo",
+        "kind": "text",
+        "value": "Brent · futuro"
+      },
+      "sp": {
+        "label": "Etiqueta del índice",
+        "kind": "text",
+        "value": "S&P 500"
+      },
+      "cib": {
+        "label": "Etiqueta de la acción CIB",
+        "kind": "text",
+        "value": "Grupo Cibest · ADR"
+      },
+      "aval": {
+        "label": "Etiqueta de la acción AVAL",
+        "kind": "text",
+        "value": "Grupo Aval · ADR"
+      },
+      "note": {
+        "label": "Descripción de la fuente",
+        "kind": "text",
+        "value": "Última cotización disponible en Yahoo Finance. Los precios pueden tener demora. La variación se calcula frente al cierre anterior. Horas de Bogotá."
+      },
+      "pending": {
+        "label": "Estado de carga",
+        "kind": "text",
+        "value": "Consultando mercados"
+      },
+      "unavailable": {
+        "label": "Estado sin datos",
+        "kind": "text",
+        "value": "Cotización no disponible"
+      },
+      "retained": {
+        "label": "Estado al recuperar el último dato",
+        "kind": "text",
+        "value": "Último dato conservado"
+      },
+      "pause": {
+        "label": "Control de pausa del movimiento",
+        "kind": "text",
+        "value": "Pausar movimiento de la cinta y las ciudades"
+      }
+    }
+  },
+  "presencia": {
+    "title": "Ubicaciones de interés",
+    "fields": {
+      "title": {
+        "label": "Etiqueta del carrusel",
+        "kind": "text",
+        "value": "Ubicaciones de interés"
+      },
+      "cities": {
+        "label": "Ciudades, una por línea",
+        "kind": "cityList",
+        "value": "Bogotá, Colombia\nMedellín\nCartagena\nSanta Marta\nCali\nRicaurte, Cundinamarca"
+      }
+    }
+  },
+  "relojes": {
+    "title": "Relojes internacionales",
+    "fields": {
+      "title": {
+        "label": "Título",
+        "kind": "text",
+        "value": "Hora internacional"
+      },
+      "london": {
+        "label": "Ciudad · Londres",
+        "kind": "text",
+        "value": "Londres"
+      },
+      "londonZone": {
+        "label": "Zona IANA · Londres",
+        "kind": "timeZone",
+        "value": "Europe/London"
+      },
+      "newYork": {
+        "label": "Ciudad · Nueva York",
+        "kind": "text",
+        "value": "Nueva York"
+      },
+      "newYorkZone": {
+        "label": "Zona IANA · Nueva York",
+        "kind": "timeZone",
+        "value": "America/New_York"
+      },
+      "beijing": {
+        "label": "Ciudad · Beijing",
+        "kind": "text",
+        "value": "Beijing"
+      },
+      "beijingZone": {
+        "label": "Zona IANA · Beijing",
+        "kind": "timeZone",
+        "value": "Asia/Shanghai"
+      },
+      "dubai": {
+        "label": "Ciudad · Dubái",
+        "kind": "text",
+        "value": "Dubái"
+      },
+      "dubaiZone": {
+        "label": "Zona IANA · Dubái",
+        "kind": "timeZone",
+        "value": "Asia/Dubai"
+      }
+    }
+  },
+  "portales": {
+    "title": "Imágenes y contenido de los portales",
+    "fields": {
+      "welcome": {
+        "label": "Saludo de la cuenta (antes del nombre)",
+        "kind": "text",
+        "value": "Bienvenido,"
+      },
+      "documents": {
+        "label": "Botón de documentos",
+        "kind": "text",
+        "value": "Mis documentos PDF"
+      },
+      "publications": {
+        "label": "Botón de publicaciones",
+        "kind": "text",
+        "value": "Mis publicaciones"
+      },
+      "signIn": {
+        "label": "Botón de acceso",
+        "kind": "text",
+        "value": "Ingresar"
+      },
+      "switchAccount": {
+        "label": "Botón de cambio de cuenta",
+        "kind": "text",
+        "value": "Cambiar de cuenta"
+      },
+      "register": {
+        "label": "Botón de registro",
+        "kind": "text",
+        "value": "Crear cuenta"
+      },
+      "manage": {
+        "label": "Botón de gestión de inmuebles",
+        "kind": "text",
+        "value": "Administrar mis publicaciones"
+      },
+      "billing": {
+        "label": "Botón de cuenta del propietario",
+        "kind": "text",
+        "value": "Mis facturas y documentos"
+      },
+      "tenantPhoto": {
+        "label": "Fotografía · arrendatarios",
+        "kind": "image",
+        "value": "/images/jb-entrega-llaves.webp"
+      },
+      "tenantAlt": {
+        "label": "Descripción de la imagen · arrendatarios",
+        "kind": "text",
+        "value": "Una arrendataria recibe las llaves de su vivienda."
+      },
+      "tenantIntro": {
+        "label": "Introducción de la cuenta · arrendatarios",
+        "kind": "text",
+        "value": "Consulta tu contrato de arrendamiento, tus documentos y tus facturas."
+      },
+      "ownerPhoto": {
+        "label": "Fotografía · propietarios",
+        "kind": "image",
+        "value": "/images/jb-architecture-hero-960.webp"
+      },
+      "ownerAlt": {
+        "label": "Descripción de la imagen · propietarios",
+        "kind": "text",
+        "value": "Fachada de un inmueble residencial."
+      },
+      "ownerIntro": {
+        "label": "Introducción de la cuenta · propietarios",
+        "kind": "text",
+        "value": "Administra tus publicaciones y consulta tus facturas."
+      },
+      "clientPhoto": {
+        "label": "Fotografía · clientes",
+        "kind": "image",
+        "value": "/images/jb-alianzas.webp"
+      },
+      "clientAlt": {
+        "label": "Descripción de la imagen · clientes",
+        "kind": "text",
+        "value": "Un equipo de asesores revisa un proyecto inmobiliario."
+      },
+      "clientIntro": {
+        "label": "Introducción de la cuenta · clientes",
+        "kind": "text",
+        "value": "Consulta los contratos y facturas asociados a tus servicios."
+      }
+    }
+  },
+  "alianzas": {
+    "title": "Negocios y alianzas",
+    "fields": {
+      "title": {
+        "label": "Título",
+        "kind": "text",
+        "value": "Negocios y alianzas"
+      },
+      "intro": {
+        "label": "Texto",
+        "kind": "text",
+        "value": "Cuéntanos tu propuesta de colaboración inmobiliaria, jurídica o contable. Nuestro equipo la revisará contigo."
+      },
+      "photo": {
+        "label": "Fotografía",
+        "kind": "image",
+        "value": "/images/jb-alianzas.webp"
+      },
+      "alt": {
+        "label": "Descripción de la fotografía",
+        "kind": "text",
+        "value": "Profesionales reunidos alrededor de una maqueta arquitectónica."
+      },
+      "cta": {
+        "label": "Texto del enlace",
+        "kind": "text",
+        "value": "Proponer una alianza"
+      },
+      "href": {
+        "label": "Destino del enlace",
+        "kind": "link",
+        "value": "/contacto?servicio=alianzas"
+      }
+    }
+  },
+  "formularios": {
+    "title": "Acceso, documentos y sugerencias",
+    "fields": {
+      "loginTitle": {
+        "label": "Título del ingreso",
+        "value": "Ingresa a tu cuenta",
+        "kind": "text"
+      },
+      "loginIntro": {
+        "label": "Introducción al ingreso",
+        "value": "Consulta tus facturas y pagos.",
+        "kind": "text"
+      },
+      "registerTitle": {
+        "label": "Título del registro",
+        "value": "Crea tu cuenta",
+        "kind": "text"
+      },
+      "registerIntro": {
+        "label": "Introducción al registro",
+        "value": "Selecciona el perfil con el que usarás tu cuenta.",
+        "kind": "text"
+      },
+      "suggestionTitle": {
+        "label": "Título del buzón",
+        "value": "Buzón de sugerencias",
+        "kind": "text"
+      },
+      "suggestionIntro": {
+        "label": "Introducción al buzón",
+        "value": "Cuéntanos qué podríamos mejorar. Puedes enviar tu opinión de forma anónima.",
+        "kind": "text"
+      },
+      "rentalTitle": {
+        "label": "Título de los formatos",
+        "value": "Solicitud de arrendamiento",
+        "kind": "text"
+      },
+      "rentalIntro": {
+        "label": "Introducción a los formatos",
+        "value": "Consulta la solicitud y el contrato modelo de la inmobiliaria.",
+        "kind": "text"
+      },
+      "pendingFormat": {
+        "label": "Formato pendiente",
+        "value": "Este formato está pendiente de publicación.",
+        "kind": "text"
+      },
+      "documentIntro": {
+        "label": "Introducción a mis documentos",
+        "value": "Archivos que la inmobiliaria ha compartido contigo.",
+        "kind": "text"
+      },
+      "emptyDocuments": {
+        "label": "Sin documentos asignados",
+        "value": "Aún no tienes documentos asignados.",
+        "kind": "text"
+      }
+    }
+  },
+  "consultaLegal": {
+    "title": "Nube de consulta jurídica",
+    "fields": {
+      "title": {
+        "label": "Título",
+        "kind": "text",
+        "value": "Consulta jurídica inmobiliaria"
+      },
+      "bubble": {
+        "label": "Botón flotante",
+        "kind": "text",
+        "value": "IA jurídica"
+      },
+      "intro": {
+        "label": "Presentación",
+        "kind": "text",
+        "value": "Consulta sobre arriendos, compraventa y propiedad horizontal en Colombia con orientación basada en fuentes oficiales."
+      },
+      "internal": {
+        "label": "Entrada al asistente",
+        "kind": "text",
+        "value": "Consultar en JB"
+      },
+      "external": {
+        "label": "Enlace al proveedor",
+        "kind": "text",
+        "value": "Abrir en ChatGPT"
+      },
+      "externalNote": {
+        "label": "Contexto externo",
+        "kind": "text",
+        "value": "ChatGPT se abre en otra pestaña con el contexto jurídico colombiano. Escribe allí tu pregunta."
+      },
+      "login": {
+        "label": "Botón de ingreso",
+        "kind": "text",
+        "value": "Ingresar para consultar en JB"
+      },
+      "pending": {
+        "label": "Proveedor pendiente",
+        "kind": "text",
+        "value": "Puedes hacer tu consulta en ChatGPT mientras se habilita la conexión dentro de JB."
+      },
+      "question": {
+        "label": "Etiqueta de la consulta",
+        "kind": "text",
+        "value": "¿Qué quieres consultar?"
+      },
+      "example": {
+        "label": "Ejemplo",
+        "kind": "text",
+        "value": "¿Cómo se determina el reajuste del canon de una vivienda urbana?"
+      },
+      "privacy": {
+        "label": "Orientación de privacidad",
+        "kind": "text",
+        "value": "OpenAI recibirá el texto de tu pregunta. Omite nombres, cédulas y documentos privados."
+      },
+      "submit": {
+        "label": "Enviar consulta",
+        "kind": "text",
+        "value": "Consultar fuentes oficiales"
+      },
+      "review": {
+        "label": "Orientación profesional",
+        "kind": "text",
+        "value": "Si necesitas revisar un contrato o plazo concreto, consulta con un profesional."
+      },
+      "contact": {
+        "label": "Enlace a JB",
+        "kind": "text",
+        "value": "Contactar a JB"
       }
     }
   }

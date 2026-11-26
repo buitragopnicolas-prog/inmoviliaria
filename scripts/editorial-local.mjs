@@ -107,7 +107,7 @@ try {
   await saved('Cambios publicados.');
   await visit(visitor,'/contacto');
   await visitor.locator('footer').getByRole('link',{name:stamp,exact:true}).click();
-  assert.equal(new URL(visitor.url()).pathname,'/politica-de-datos');
+  await visitor.waitForURL(web+'/politica-de-datos');
   assert.equal(await visitor.locator('h1').innerText(),stamp);
   await remember('nosotros','caption',stamp);
   await visit(page,'/admin/contenido?seccion=nosotros');
@@ -178,7 +178,7 @@ try {
     await visitor.locator('[name=q]').fill(stamp);
     await visitor.locator('[name=category]').fill(category);
     await visitor.getByRole('button',{name:'Buscar',exact:true}).click();
-    const card=visitor.locator('.saleCard').filter({hasText:title});
+    const card=visitor.getByRole('main').getByRole('link').filter({hasText:title});
     assert.match((await card.innerText()).replace(/\s/g,''),/2\.500\.000/);
     await card.click();
     await visitor.waitForURL(web+'/'+catalog+'/'+row.id);

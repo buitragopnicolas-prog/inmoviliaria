@@ -1,9 +1,9 @@
+import Form from 'next/form';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { DataUnavailable } from '@/components/DataUnavailable';
-import { Reveal } from '@/components/Reveal';
-import { pesos, propertyPhotoUrl } from '@/lib/format';
+import { SaleShowcase } from '@/components/market/Merchandising';
 import { loadPublicData } from '@/lib/public-data';
 import { readSite } from '@/lib/read-site';
 import { isSaleCatalog, type SaleCatalog, type SaleOffer } from '@/lib/sale-offers';
@@ -14,10 +14,8 @@ async function Results({ catalog, query }: Readonly<{ catalog: SaleCatalog; quer
   if (offers === null) return <DataUnavailable label="las ofertas de venta" retryHref={`/${catalog}?${query}`} />;
   const { catalogos } = await readSite();
   if (!offers.length) return <output className="card empty">{query ? 'No hay ofertas que coincidan con tu búsqueda.' : catalogos.emptyOffers}</output>;
-  return <div className="cardsGrid">{offers.map(offer=><Reveal key={offer.id}><Link className="card saleCard" href={'/'+offer.catalog+'/'+offer.id}>
-    <img src={propertyPhotoUrl(offer.images[0])} alt={offer.title} loading="lazy" />
-    <div><span className="eyebrow">{[offer.category,offer.city].filter(Boolean).join(' · ')}</span><h2>{offer.title}</h2><strong>{pesos(Number(offer.price))}</strong></div>
-  </Link></Reveal>)}</div>;
+  return <><SaleShowcase copy={catalogos} offers={offers.filter(o=>o.catalog==='comprar')}/>
+    <SaleShowcase copy={catalogos} goods offers={offers.filter(o=>o.catalog==='vehiculos-y-bienes')}/></>;
 }
 
 export default async function SaleCatalogPage({params,searchParams}:Readonly<{params:Promise<{catalogo:string}>;searchParams:Promise<Filters>}>) {
@@ -31,13 +29,13 @@ export default async function SaleCatalogPage({params,searchParams}:Readonly<{pa
   }
   return <section className="section pageTop"><div className="container">
     <div className="pageHeading"><h1>{property ? catalogos.buyTitle : catalogos.goodsTitle}</h1><p>{property ? catalogos.buyIntro : catalogos.goodsIntro}</p></div>
-    {property && <div className="portalLinks"><Link className="button outline" href="/propietarios">Publicar mi inmueble</Link></div>}
-    <form className="filters" method="get" action={'/'+catalogo} aria-label="Buscar ofertas">
+    {property && <div className="portalLinks"><Link className="button outline" href="/propietarios">{catalogos.publishLink}</Link></div>}
+    <Form className="filters glass-panel" action={'/'+catalogo} aria-label="Buscar ofertas">
       <label>{property?'Buscar inmueble o bien mueble':'Buscar artículo'}<input type="search" name="q" defaultValue={query.get('q')??''} maxLength={150}/></label>
       <label>Categoría<input name="category" defaultValue={query.get('category')??''} placeholder={property?'Casa, vehículo, estufa…':'Carro, estufa…'} maxLength={150}/></label>
       {property && <label>Ciudad<input name="city" defaultValue={query.get('city')??''} maxLength={150}/></label>}
       <button className="button" type="submit">Buscar</button>
-    </form>
+    </Form>
     <Suspense key={query.toString()} fallback={<output>Cargando ofertas…</output>}><Results catalog={catalogo} query={query.toString()}/></Suspense>
   </div></section>;
 }

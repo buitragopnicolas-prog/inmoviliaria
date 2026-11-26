@@ -1,12 +1,8 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { DataUnavailable } from '../DataUnavailable';
 import { HomeSearch, destinations } from './HomeSections';
+import { FeaturedRentals } from './FeaturedRentals';
 import { LightSurface } from './LightSurface';
-import { WorksWheel, type WheelItem } from '../ui/works-wheel';
-import { loadPublicData } from '@/lib/public-data';
-import { propertyPhotoUrl, pesos } from '@/lib/format';
-import type { Property } from '@/lib/types';
 import type { SiteCopy } from '@/lib/site-content';
 import styles from './Directions.module.css';
 
@@ -31,26 +27,6 @@ function Destinations({copy}:Readonly<{copy:Cover}>) {
     <Link href={url} key={url}>{copy[key]}<span aria-hidden="true">↗</span></Link>)}</nav>;
 }
 
-export async function InventoryWheel({copy, portfolio = false}:Readonly<{copy:Cover; portfolio?:boolean}>) {
-  const published = await loadPublicData<Property[]>('/properties');
-  if (published===null) return <DataUnavailable label="la galería de inmuebles" retryHref={portfolio ? '/' : '/?estilo=orbita'}/>;
-  const items:WheelItem[]=[];
-  // Interleave homes so the first turn does not just show one property's album.
-  const homes=published.filter(p=>p.images.some(image=>image.url && image.url!=='/property-placeholder.svg'))
-    .slice(0,9).map(property=>({property,photos:property.images.filter(photo=>photo.url && photo.url!=='/property-placeholder.svg')}));
-  const maxPhotos = Math.max(0,...homes.map(home => home.photos.length));
-  for(let photoIndex=0; photoIndex<maxPhotos && items.length<9; photoIndex++) {
-    for(const {property,photos} of homes) {
-      const photo=photos[photoIndex];
-      if(!photo || items.length>=9) continue;
-      items.push({id:property.id+'/'+photo.id, title:property.title, image:propertyPhotoUrl(photo.url), alt:photo.alt || property.title,
-        href:'/inmuebles/'+encodeURIComponent(property.slug), detail:[property.city,pesos(property.monthlyRent)+'/mes'].filter(Boolean).join(' · ')});
-    }
-  }
-  if(!items.length) return <p className={styles.empty}>{copy.emptyFeatured} <Link href="/inmuebles">{copy.emptyFeaturedLink} →</Link></p>;
-  return <WorksWheel items={items} portfolio={portfolio}/>;
-}
-
 function RouteMap({copy}:Readonly<{copy:Cover}>) {
   const groups=[
     {name:'Encontrar un inmueble o un bien', entries:[['rent','/inmuebles'],['buy','/comprar'],['goods','/vehiculos-y-bienes']]},
@@ -72,8 +48,8 @@ export function DesignHero({direction,copy}:Readonly<{direction:Exclude<Directio
     </LightSurface>;
   } else if (direction === 'orbita') {
     content = <div className={'container '+styles.orbitGrid}>
-      <div className={styles.orbitCopy}><Title copy={copy}/><a className={styles.mainAction} href="/inmuebles">{copy.featuredLink} <span aria-hidden="true">↗</span></a></div>
-      <Suspense fallback={<output className={styles.empty}>Cargando galería…</output>}><InventoryWheel copy={copy}/></Suspense>
+      <div className={styles.orbitCopy}><Title copy={copy}/><Link className={styles.mainAction} href="/inmuebles">{copy.featuredLink} <span aria-hidden="true">↗</span></Link></div>
+      <Suspense fallback={<output className={styles.empty}>Cargando inmuebles destacados…</output>}><FeaturedRentals copy={copy}/></Suspense>
     </div>;
   } else {
     content = <div className={'container '+styles.flowGrid}><div className={styles.flowCopy}><Title copy={copy}/>

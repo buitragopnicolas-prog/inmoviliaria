@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { adminReturnHref, readAdminQuery, type AdminSearchParams } from '@/lib/admin-lists';
 import { AdminPropertyEditForm } from '@/components/AdminPropertyEditForm';
 import { apiFetch } from '@/lib/api';
@@ -23,7 +24,7 @@ export default async function EditPropertyPage({ params, searchParams }: Readonl
             <span className="eyebrow">Administración</span>
             <h1>Editar inmueble</h1>
             <p>Actualiza los datos, imágenes y arrendatario asignado.</p>
-            <a className="textLink" href={adminReturnHref('/admin/inmuebles', query, id)}>← Volver a inmuebles</a>
+            <Link className="textLink" href={adminReturnHref('/admin/inmuebles', query, id)}>← Volver a inmuebles</Link>
           </div>
           <AdminPropertyEditForm property={property} tenants={tenants} query={query} />
         </>

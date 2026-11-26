@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useActionState, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AdminTableRegion } from '@/components/AdminTableRegion';
 import { deleteInvoiceAction, updateInvoiceAction, type ActionState } from '@/app/actions';
 import { fechaCalendario, pesos } from '@/lib/format';
@@ -20,6 +21,7 @@ export function AdminInvoiceManager({ invoices, query }: Readonly<{ invoices: In
 }
 
 function InvoiceRows({ invoice, query }: Readonly<{ invoice: Invoice; query?: AdminQuery }>) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [updateState, updateAction, updating] = useActionState(async (previous: ActionState, data: FormData) => {
     const result = await updateInvoiceAction(previous, data);
@@ -27,8 +29,8 @@ function InvoiceRows({ invoice, query }: Readonly<{ invoice: Invoice; query?: Ad
       // La fila puede haber salido de la página durante la revalidación.
       setOpen(false);
       const href = adminReturnHref('/admin/facturas', query, invoice.id);
-      if (location.pathname + location.search + location.hash === href) location.reload();
-      else location.assign(href);
+      if (location.pathname + location.search + location.hash === href) router.refresh();
+      else router.push(href, { scroll: false });
     }
     return result;
   }, {});

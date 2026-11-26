@@ -1,0 +1,97 @@
+:root {
+  --jb-sky-header: 127px;
+  --jb-sky-hero: clamp(570px, calc(87svh - 60px), 880px);
+  --jb-sky-ink: #fcf5e7;
+  --jb-sky-gold: #edd0a0;
+  --jb-night: #101d2d;
+  --jb-clay: #754745;
+  --jb-ochre: #b58a4e;
+  --jb-paper: rgb(247 242 232 / 96%);
+}
+html { scroll-padding-top: calc(var(--jb-sky-header) + 10px); }
+body:has(.jbSkyline) {
+  isolation:isolate;
+  overflow-x:clip;
+  background:linear-gradient(180deg,var(--jb-night),var(--jb-clay) 55%,var(--jb-ochre));
+}
+.jbSkyline, .jbCityEdges {position:fixed;inset:0;pointer-events:none;overflow:hidden;}
+.jbSkyline { z-index:-1; background:var(--jb-night); }
+.jbSkylineFrame,.jbSkylineFrame canvas { position:absolute;inset:0;width:100%;height:100%;display:block; }
+.jbSkylineFrame {
+  background:url('/images/bogota/tejados.webp') 59% 68% / cover,
+             url('/images/bogota/ciudad.webp') 59% 68% / cover,
+             url('/images/bogota/cerros.webp') 59% 68% / cover;
+}
+.jbSkylineFrame canvas {visibility:hidden;}
+.jbSkylineFrame[data-rendered] canvas {visibility:visible;}
+.jbCityEdges {z-index:1;}
+.jbCityEdges::before,.jbCityEdges::after {
+  content:"";position:absolute;width:8vw;height:38vh;pointer-events:none;opacity:.22;
+  border-right:2px solid var(--jb-sky-gold);background:linear-gradient(100deg,transparent 45%,rgb(181 138 78 / 30%));
+  transform:skewY(-32deg);filter:blur(2px);
+}
+.jbCityEdges::before {left:-6.8vw;bottom:-8vh;}
+.jbCityEdges::after {right:-7vw;top:35%;rotate:180deg;border-color:#a97385;}
+@media (prefers-reduced-motion:no-preference) {
+  .jbCityEdges::before,.jbCityEdges::after {animation:jb-edge-drift 17s ease-in-out infinite alternate;}
+  .jbCityEdges::after {animation-delay:-9s;}
+  @keyframes jb-edge-drift { to {translate:0 -4vh;} }
+}
+body:has(.jbSkyline) .header {
+  background:rgb(13 24 39 / 92%);border-color:rgb(230 203 154 / 22%);
+  backdrop-filter:blur(14px);color:var(--jb-sky-ink);
+}
+.header .desktopNav {position:relative;color:var(--jb-sky-ink);}
+.header .navLinks a:hover,.header .navLinks a[aria-current="page"] {color:var(--jb-sky-gold);}
+.jbNavMarker {position:absolute;bottom:0;height:2px;border-radius:2px;background:var(--jb-sky-gold);pointer-events:none;}
+.desktopNav:has(.jbNavMarker:not([hidden])) a[aria-current="page"]::after {opacity:0;}
+.header .navAuth .button {background:var(--jb-sky-gold);color:var(--jb-night);border-color:transparent;}
+.header .menuToggle {border-color:#a58c70;color:var(--jb-sky-ink);}
+.header .mobileLinks {background:#172538;color:var(--jb-sky-ink);}
+.header .mobileLinks a[aria-current="page"] {background:#29394a;}
+.header .welcome {color:var(--jb-sky-ink);}
+.header :is(a,button):focus-visible {outline:3px solid var(--jb-sky-gold);outline-offset:3px;}
+
+/* Give long reading and operational screens an independently legible surface. */
+body:has(.jbSkyline) #contenido:not(:has([data-city-home])) {
+  width:min(1450px,calc(100% - clamp(24px,7vw,140px)));margin:clamp(46px,11svh,130px) auto;
+  border:1px solid rgb(240 218 181 / 62%);border-radius:12px;background:var(--jb-paper);
+  box-shadow:0 24px 80px rgb(8 15 23 / 22%);
+}
+body:has(.jbSkyline) #contenido .authSection {background:transparent;}
+.jbSkyline[data-workspace="admin"] ~ #contenido:not(:has([data-city-home])) {margin-block:20px;width:min(1600px,calc(100% - 24px));}
+.footer.cityFooter {
+  position:relative;isolation:isolate;display:grid;align-content:end;gap:22px;
+  margin-top:0;padding:clamp(190px,38svh,440px) 0 0;min-height:82svh;
+  background:transparent;color:var(--jb-sky-ink);border-top:1px solid rgb(241 206 146 / 48%);
+}
+body:not(:has(.jbSkylineFrame[data-rendered])) .cityFooter {
+  background:linear-gradient(0deg,rgb(39 27 23 / 45%),transparent 70%),url('/images/bogota/calle.webp') center / cover;
+}
+.cityFooter .footerGrid {grid-template-columns:minmax(0,1.1fr) minmax(0,1.25fr) minmax(0,1fr);gap:12px;padding:0;}
+.cityFooter .footerGrid>div {
+  min-width:0;padding:clamp(20px,2.3vw,38px);background:rgb(30 29 31 / 80%);
+  border:1px solid rgb(241 211 164 / 38%);border-radius:10px;backdrop-filter:blur(10px);
+}
+.cityFooter .footerGrid>div:nth-child(2) {columns:2;column-gap:18px;}
+.cityFooter .footerGrid h2 {column-span:all;color:var(--jb-sky-gold);}
+.cityFooter .footerGrid a {width:fit-content;font-size:.96rem;line-height:1.38;break-inside:avoid;margin-bottom:10px;}
+.cityFooter address {font-style:normal;}
+.cityFooter address p {margin-bottom:12px;}
+.cityFooter .copyright {width:100%;background:rgb(23 25 29 / 84%);border-color:rgb(241 211 164 / 24%);}
+@media(max-width:800px) {
+  :root {--jb-sky-header:115px;--jb-sky-hero:clamp(535px,calc(83svh - 50px),710px);}
+  .cityFooter .footerGrid {grid-template-columns:1fr 1fr;}
+  .cityFooter .footerGrid>div:first-child {grid-column:1/-1;}
+  .cityFooter .footerGrid>div:nth-child(2) {columns:1;}
+}
+@media(max-width:560px) {
+  .cityFooter .footerGrid {grid-template-columns:minmax(0,1fr);}
+  .cityFooter .footerGrid>div:nth-child(2) {columns:2;}
+  .jbCityEdges {display:none;}
+}
+@media print {
+  .jbSkyline,.jbCityEdges {display:none;}
+  body:has(.jbSkyline),body:has(.jbSkyline) #contenido,.footer.cityFooter {width:auto;margin:0;background:white;border:0;box-shadow:none;color:black;}
+  .footer.cityFooter {min-height:0;padding:1em 0;}
+}

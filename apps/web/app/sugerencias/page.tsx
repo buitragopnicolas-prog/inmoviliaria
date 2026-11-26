@@ -1,5 +1,7 @@
+import { readSite } from '@/lib/read-site';
 import { SuggestionForm } from '@/components/SuggestionForm';
 
-export default function Suggestions(){
-  return <section className="section pageTop"><div className="container"><div className="pageHeading"><h1>Buzón de sugerencias</h1><p>Cuéntanos qué podríamos mejorar. Puedes enviar tu opinión de forma anónima.</p></div><SuggestionForm/></div></section>;
+export default async function Suggestions(){
+  const {formularios:f}=await readSite();
+  return <section className="section pageTop"><div className="container"><div className="pageHeading"><h1>{f.suggestionTitle}</h1><p>{f.suggestionIntro}</p></div><SuggestionForm/></div></section>;
 }

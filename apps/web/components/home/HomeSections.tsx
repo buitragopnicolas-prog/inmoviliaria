@@ -1,5 +1,9 @@
 import Link from 'next/link';
+import { PortalPhoto } from '../business/PortalPhoto';
+import { EditorialPhoto } from '../EditorialPhoto';
+import Form from 'next/form';
 import { Reveal } from '../Reveal';
+import { BrandIcon } from '../BrandIcon';
 import { UiIcon } from '../UiIcon';
 import { defaultCopy } from '@/lib/site-content';
 import styles from './HomeSections.module.css';
@@ -29,7 +33,7 @@ export function HomeHero({ featuredHref = '#inmuebles-destacados', copy = defaul
           <div className={styles.heroImageCaption}><small>{copy.caption}</small></div>
         </div>
         <div className={styles.heroFoot}>
-          <a className={styles.discoverLink} href={featuredHref}><span aria-hidden="true">↓</span> {copy.discover}</a>
+          <Link className={styles.discoverLink} href={featuredHref}><span aria-hidden="true">↓</span> {copy.discover}</Link>
           <Link className={styles.catalogLink} href="/contacto">{copy.contact} <span aria-hidden="true">↗</span></Link>
         </div>
       </div>
@@ -43,9 +47,9 @@ export function ServiceIntroduction({ copy = defaultCopy.accesos } = {}) {
       <div className="container">
         <h2 id="approach-title">{copy.title}</h2>
         <div className={styles.serviceRows}>
-          <Reveal><Link href={copy.visitHref} className={styles.serviceLink}><div><h3>{copy.visit}</h3><p>{copy.visitText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
-          <Reveal delay={70}><Link href={copy.manageHref} className={styles.serviceLink}><div><h3>{copy.manage}</h3><p>{copy.manageText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
-          <Reveal delay={140}><Link href={copy.contractHref} className={styles.serviceLink}><div><h3>{copy.contract}</h3><p>{copy.contractText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
+          <Reveal><Link href={copy.visitHref} className={styles.serviceLink}><div><BrandIcon name="rent"/><h3>{copy.visit}</h3><p>{copy.visitText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
+          <Reveal delay={70}><Link href={copy.manageHref} className={styles.serviceLink}><div><BrandIcon name="sale"/><h3>{copy.manage}</h3><p>{copy.manageText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
+          <Reveal delay={140}><Link href={copy.contractHref} className={styles.serviceLink}><div><BrandIcon name="advice"/><h3>{copy.contract}</h3><p>{copy.contractText}</p></div><span className={styles.serviceArrow} aria-hidden="true">↗</span></Link></Reveal>
         </div>
       </div>
     </section>
@@ -58,7 +62,7 @@ export function DocumentsSection({ copy = defaultCopy.documentos } = {}) {
       <div className={`container ${styles.documentsGrid}`}>
         <Reveal className={styles.interiorFigure}>
           <figure>
-            <img src={copy.photo} width="1200" height="900" alt={copy.alt} loading="lazy" decoding="async" />
+            <EditorialPhoto fallback={defaultCopy.documentos.photo} fallbackAlt={defaultCopy.documentos.alt} src={copy.photo} width="1200" height="900" alt={copy.alt} loading="lazy" decoding="async" />
             <figcaption>{copy.caption}</figcaption>
           </figure>
           <span className={styles.figureIndex} aria-hidden="true">{copy.mark}</span>
@@ -78,11 +82,12 @@ export function DocumentsSection({ copy = defaultCopy.documentos } = {}) {
   );
 }
 
-export function DigitalSection({ copy = defaultCopy.cuenta } = {}) {
+export function DigitalSection({ copy = defaultCopy.cuenta, portals = defaultCopy.portales } = {}) {
   return (
     <section className={styles.digital} aria-labelledby="digital-title">
       <div className={`container ${styles.digitalGrid}`}>
         <Reveal className={styles.digitalCopy}>
+          <PortalPhoto portal="TENANT" copy={portals}/>
           <span className={styles.kicker}>{copy.kicker}</span>
           <h2 id="digital-title">{copy.title}</h2>
           <p>{copy.intro}</p>
@@ -107,7 +112,7 @@ export function DigitalSection({ copy = defaultCopy.cuenta } = {}) {
 export function ContactSection({ copy = defaultCopy.cuenta } = {}) {
   return (
     <section className={styles.contact} aria-labelledby="contact-title">
-      <img className={styles.contactImage} src={copy.contactPhoto} alt="" width="960" height="540" loading="lazy" decoding="async" />
+      <EditorialPhoto fallback={defaultCopy.cuenta.contactPhoto} fallbackAlt="" className={styles.contactImage} src={copy.contactPhoto} alt="" width="960" height="540" loading="lazy" decoding="async" />
       <Reveal className={`container ${styles.contactContent}`}>
         <span className={styles.heroKicker}>{copy.contactKicker}</span>
         <h2 id="contact-title">{copy.contactTitle}</h2>
@@ -119,15 +124,15 @@ export function ContactSection({ copy = defaultCopy.cuenta } = {}) {
 
 export function HomeSearch({copy}:Readonly<{copy:typeof defaultCopy.portada}>) {
   return (
-    <div className={styles.searchPanel} id="buscar-inmueble">
+    <div className={styles.searchPanel+' glass-panel'} id="buscar-inmueble">
           <div className={styles.searchHeading}><UiIcon name="search" /><h2>{copy.searchTitle}</h2></div>
-          <form action="/inmuebles" method="get" className={styles.heroSearch} aria-label="Buscar inmuebles en arriendo">
+          <Form action="/inmuebles" className={styles.heroSearch} aria-label="Buscar inmuebles en arriendo">
             <noscript><input type="hidden" name="vista" value="completa" /></noscript>
             <label htmlFor="home-search">{copy.searchLabel}<input id="home-search" name="search" type="search" placeholder="Ej. Chapinero o apartamento" /></label>
             <label htmlFor="home-city">{copy.cityLabel}<input id="home-city" name="city" placeholder="Ej. Bogotá" autoComplete="address-level2" /></label>
             <label htmlFor="home-max-rent">{copy.rentLabel}<input id="home-max-rent" name="maxRent" type="number" min="1" step="1" placeholder="Ej. 2500000" /></label>
             <button className="button" type="submit"><UiIcon name="search" />{copy.searchButton}</button>
-          </form>
+          </Form>
         </div>
   );
 }

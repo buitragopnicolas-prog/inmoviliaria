@@ -177,8 +177,9 @@ try {
   await visit(visitor,'/contacto');
   assert.equal(await visitor.getByRole('link',{name:'Abrir chat de WhatsApp con la inmobiliaria'}).getAttribute('href'),'https://wa.me/573135394406');
   await visitor.locator('main a[href="/sugerencias"]').click();
+  await visitor.waitForURL(web+'/sugerencias');
   const opinion='Sugerencia sintética del buzón '+label;
-  await visitor.locator('[name=message]').fill(opinion);
+  await visitor.getByLabel('Tu sugerencia',{exact:true}).fill(opinion);
   await visitor.getByRole('checkbox').check();
   await visitor.getByRole('button',{name:'Enviar sugerencia'}).click();
   await saved(visitor,'Tu sugerencia llegó al buzón de la inmobiliaria.');

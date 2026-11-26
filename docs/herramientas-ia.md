@@ -26,10 +26,10 @@ y textos de hasta 4000 caracteres.
 - Las imágenes generadas se presentan como conceptuales. Las salidas son
   borradores y no ejecutan decisiones administrativas ni cambian documentos.
 
-La política CSP permite los dominios de modelos, workers blob y compilación
-WASM únicamente en esta ruta. Entrar y salir utiliza navegación completa
-para cargar la política correspondiente. Las políticas de cámara y micrófono
-siguen desactivadas: la transcripción utiliza un archivo de audio.
+El panel de `/herramientas-ia/panel` se carga en un iframe del mismo origen.
+Su documento recibe los permisos de modelos, workers y WASM. La página
+principal mantiene la CSP habitual y la escena de Bogotá al entrar y salir.
+La transcripción utiliza un archivo de audio.
 
 ## Validación
 

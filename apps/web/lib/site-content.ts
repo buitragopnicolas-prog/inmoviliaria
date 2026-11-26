@@ -9,7 +9,7 @@ export function resolveCopy(rows: SiteSection[] = []): SiteCopy {
   return Object.fromEntries(Object.entries(schema).map(([id, section]) => {
     const record = rows.find(row => row.id === id);
     return [id, Object.fromEntries(Object.entries(section.fields).map(([key, field]) =>
-      [key, record?.values[key] ?? field.value]))];
+      [key, (field.kind === 'image' ? record?.values[key]?.trim() || field.value : record?.values[key] ?? field.value)]))];
   })) as SiteCopy;
 }
 export const defaultCopy = resolveCopy();

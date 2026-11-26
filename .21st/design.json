@@ -12,12 +12,24 @@
   },
   "sources": {
     "tokens": [
-      "apps/web/app/globals.css"
+      "apps/web/app/globals.css",
+      "apps/web/components/skyline/immersive.css",
+      "apps/web/components/skyline/brand.css",
+      "apps/web/components/business/business.css"
     ],
     "components": [
       "apps/web/components/PropertyCard.tsx",
       "apps/web/components/home/HomeSections.tsx",
-      "apps/web/components/UiIcon.tsx"
+      "apps/web/components/UiIcon.tsx",
+      "apps/web/components/market/AssetRail.tsx",
+      "apps/web/components/market/Merchandising.tsx",
+      "apps/web/components/BrandLogo.tsx",
+      "apps/web/components/BrandIcon.tsx",
+      "apps/web/components/business/FinancialTicker.tsx",
+      "apps/web/components/business/WorldClocks.tsx",
+      "apps/web/components/business/LocationRotator.tsx",
+      "apps/web/components/business/AllianceSection.tsx",
+      "apps/web/components/business/PortalPhoto.tsx"
     ],
     "assets": [
       "apps/web/public/images"
@@ -27,17 +39,18 @@
     ]
   },
   "design": {
-    "colorMode": "light",
+    "colorMode": "dark",
     "colors": {
-      "primary": "#102a43",
-      "gold": "#b79a48",
-      "goldDeep": "#8a7440",
-      "surface": "#ffffff",
-      "sand": "#f3ebe0"
+      "primary": "#0A1A2C",
+      "accent": "#C9A77B",
+      "beige": "#F0E5D6",
+      "white": "#FFFFFF",
+      "charcoal": "#2E2E2E",
+      "glassTint": "#F6E90B"
     },
     "typography": {
-      "display": "Cormorant Garamond",
-      "body": "Source Sans 3"
+      "display": "Playfair Display",
+      "body": "Montserrat"
     },
     "spacing": {},
     "radius": {},
@@ -71,9 +84,26 @@
     ]
   },
   "decisions": [
-    "Portada editorial aprobada para pruebas en DEV con galería en anillo o tambor, búsqueda con foco cálido y directorio de tres gestiones."
+    "El portafolio usa fotos y enlaces HTML sobre la escena persistente, y los catálogos muestran exclusivamente datos publicados. El foco geográfico requiere coordenadas guardadas.",
+    "Bogotá ocupa la ventana completa en cada ruta. El azul noche, el rojo arcilla y el ocre acompañan el descenso desde los cerros hasta una calle de ladrillo. El puntero enciende las fachadas en ámbar y el contacto se lee en paneles de vidrio oscuro.",
+    "La marca procede de las dos láminas Designer de JB. El monograma dorado y el nombre permanecen visibles en la cabecera móvil y de escritorio. El pie usa la firma completa blanca.",
+    "La cabecera integra la presencia de JB y un ticker GSAP con fechas de mercado verificables. Las ciudades, los nombres de los indicadores y las cuatro zonas horarias se administran en el CMS.",
+    "Los tres portales tienen imágenes editoriales sustituibles y la portada presenta una invitación a proponer alianzas. Los activos de muestra se sirven como WebP locales.",
+    "El acceso jurídico flota junto a WhatsApp. Compra y vende ocupa un lugar permanente en la navegación principal."
   ],
   "evidence": [
+    {
+      "fact": "MarkerTooltip orientó la relación entre marcador y tarjeta. La geometría, el material y el seguimiento de la escena son locales y comparten el lienzo de Bogotá.",
+      "source": "https://21st.dev/@mapcn/components/mapcn-marker-tooltip"
+    },
+    {
+      "fact": "Liquid Glass Footer sirvió de referencia para los tres paneles de contacto. Se adaptaron a los enlaces del CMS, la lectura con teclado y la calle ilustrada de JB.",
+      "source": "https://21st.dev/@automateflows/components/liquid-glass-wordmark-footer"
+    },
+    {
+      "fact": "Patrón de seguimiento radial del puntero consultado en el catálogo de 21st. La iluminación de las fachadas se implementa con shaders propios.",
+      "source": "https://21st.dev/@ibelick/components/spotlight"
+    },
     {
       "fact": "project.instructions",
       "source": "AGENTS.md"
@@ -85,6 +115,26 @@
     {
       "fact": "UI inspiration retrieved: Property Preview Card, adapted with actual rent, administration and status",
       "source": "https://21st.dev/@shadcnspace/components/card-02"
+    },
+    {
+      "fact": "Perspectiva y navegación de los escaparates",
+      "source": "https://21st.dev/@automateflows/components/glassy-coverflow-carousel"
+    },
+    {
+      "fact": "Comparación de estimaciones de rentabilidad",
+      "source": "https://21st.dev/@shadcnspace/components/chart-01"
+    },
+    {
+      "fact": "Consulta del catálogo público para el patrón de cinta continua. JB implementa su propia pista GSAP y un detalle estático accesible.",
+      "source": "https://21st.dev/@haydenbleasel/components/ticker"
+    },
+    {
+      "fact": "Referencia de presentación para precio y tendencia. La variación y su fecha proceden de la API de mercados.",
+      "source": "https://21st.dev/@shadcnspace/components/number-ticker-07"
+    },
+    {
+      "fact": "Referencia de catálogo para el panel de consulta. El diálogo usa la gestión nativa de teclado y foco.",
+      "source": "https://21st.dev/@ddoemonn/components/popover"
     }
   ],
   "generatedAt": "2026-10-25T01:58:23.321Z"

@@ -1,6 +1,7 @@
 import { DesignHero, StylePicker, directions, type Direction } from '@/components/home/Directions';
 import { readSite } from '@/lib/read-site';
 import Link from 'next/link';
+import { AllianceSection } from '@/components/business/AllianceSection';
 import { EditorialHome } from '@/components/home/EditorialHome';
 import { Suspense } from 'react';
 import { loadPublicData } from '@/lib/public-data';
@@ -40,15 +41,15 @@ export default async function HomePage({searchParams}:Readonly<{searchParams:Pro
   const preview=process.env.APP_ENV==='local';
   const choice=params.estilo;
   const direction = preview && typeof choice === 'string' && Object.hasOwn(directions, choice) ? choice as Direction : undefined;
-  const editorial = !direction && (preview || process.env.APP_ENV === 'development');
+  const editorial = !direction;
   return (
-    <div className={styles.home}>
+    <div className={styles.home} data-city-home="">
       {preview && direction && <StylePicker current={direction}/>}
       {editorial && <EditorialHome copy={copy.portada} />}
       {!editorial && (direction && direction !== 'original'
         ? <DesignHero direction={direction} copy={copy.portada} />
         : <HomeHero copy={copy.portada} brand={copy.identidad.name} />)}
-      <section className={styles.properties} id="inmuebles-destacados" aria-labelledby="featured-title">
+      {!editorial && <section className={styles.properties} id="inmuebles-destacados" aria-labelledby="featured-title">
         <div className="container">
           <Reveal className={styles.sectionHeading}>
             <div><h2 id="featured-title">{copy.portada.featured}</h2></div>
@@ -58,10 +59,11 @@ export default async function HomePage({searchParams}:Readonly<{searchParams:Pro
             <FeaturedProperties />
           </Suspense>
         </div>
-      </section>
+      </section>}
       <ServiceIntroduction copy={copy.accesos} />
       <DocumentsSection copy={copy.documentos} />
-      <DigitalSection copy={copy.cuenta} />
+      <DigitalSection copy={copy.cuenta} portals={copy.portales} />
+      <AllianceSection copy={copy.alianzas} />
       <section className={styles.news} aria-labelledby="news-title">
         <div className="container">
           <Reveal className={styles.sectionHeading}>
