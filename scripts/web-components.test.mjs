@@ -25,7 +25,7 @@ const { render, fireEvent, cleanup, waitFor, within, act } = await import('@test
 const actionSource = await readFile('apps/web/app/actions.ts', 'utf8');
 const actionNames = [...actionSource.matchAll(/export async function (\w+)/g)].map((match) => match[1]);
 const stubs = {
-  'read-site': 'import {defaultCopy} from "./apps/web/lib/site-content.ts"; export async function readSite(){return defaultCopy;} export async function editSite(){return globalThis.__ui.sections ?? [];}',
+  'read-site': 'import {resolveCopy} from "./apps/web/lib/site-content.ts"; export async function readSite(){return resolveCopy(globalThis.__ui.publicSections);} export async function editSite(){return globalThis.__ui.sections ?? [];}',
   ai: 'export async function runAiTool(...args) { globalThis.__ui.aiCalls.push(args); return globalThis.__ui.aiRun(...args); }',
   actions: actionNames.map((name) => `export async function ${name}(...args) { globalThis.__ui.calls.push({ name: '${name}', data: args.at(-1) }); return globalThis.__ui.result; }`).join('\n'),
   api: 'export class ApiError extends Error {} export async function getCurrentUser(){ return globalThis.__ui.user; } export async function apiFetch(path, ...args) { globalThis.__ui.requests.push([path, ...args]); const responses = globalThis.__ui.apiResponses; if (responses && Object.hasOwn(responses, path)) { if (responses[path] instanceof Error) throw responses[path]; return responses[path]; } return path.startsWith("/invoices") ? globalThis.__ui.invoice : path.includes("manual/config") ? globalThis.__ui.config : globalThis.__ui.news; }',
@@ -42,6 +42,7 @@ names.push('PropertyGallery', 'CatalogResults', 'PortalEntry');
 const entry = "export { PolicyProvider } from './apps/web/components/ConsentField.tsx';\n"+names.map((name) => `export { ${name} } from './apps/web/components/${name}.tsx';`).join('\n') +
   "\nexport { ManualPaymentReviewQueue } from './apps/web/components/ManualPaymentReviewForm.tsx';" +
   "\nexport { default as ContactPage } from './apps/web/app/contacto/page.tsx';" +
+  "\nexport { default as Pinlau, generateMetadata as pinlauMetadata } from './apps/web/app/pinlau/page.tsx';" +
   "\nexport { default as MyAccountPage } from './apps/web/app/mi-cuenta/page.tsx';" +
   "\nexport { reportManualPaymentAction, contactAction, loginAction } from './apps/web/app/actions.ts';" +
   "\nexport { HomeHero } from './apps/web/components/home/HomeSections.tsx';\nexport { default as PayInvoicePage } from './apps/web/app/mi-cuenta/facturas/[id]/pagar/page.tsx';\nexport { default as AdminNewsPage } from './apps/web/app/admin/noticias/page.tsx';" +
@@ -280,7 +281,8 @@ test('menú móvil: enlaces por rol, navegación con teclado, Escape y salida de
     fireEvent.click(toggle);
     assert.equal(toggle.getAttribute('aria-expanded'), 'true');
     const links = within(mobile).getAllByRole('link');
-    assert.equal(links.length, role ? 7 : 6);
+    assert.equal(links.length, role ? 8 : 7);
+    assert.equal(within(mobile).getByRole('link', { name: 'Pinlau' }).getAttribute('href'), '/pinlau');
     assert.equal(within(mobile).getByRole('link', { name: 'Compra y vende' }).getAttribute('href'), '/comprar');
     fireEvent.keyDown(links[0], { key: 'Tab' });
     assert.equal(mobile.hidden, false);
@@ -719,6 +721,27 @@ async function serverPage(name, params = {}, searchParams = {}) {
   const { prelude } = await prerender(tree);
   return new JSDOM(await new Response(prelude).text()).window.document;
 }
+
+test('Pinlau ofrece los 23 asuntos desde el primer HTML y publica exclusivamente los perfiles del editor', async () => {
+  const empty = await serverPage('Pinlau');
+  assert.equal(empty.querySelectorAll('details').length, 23);
+  assert.equal(empty.querySelectorAll('#equipo li').length, 0);
+  const people = [{name:'Persona de ensayo', role:'Socia', photo:'/fotos/api/files/retrato/content'}];
+  globalThis.__ui.publicSections = [
+    {id:'pinlau',values:{title:'Firma de prueba', people:JSON.stringify(people)}},
+    {id:'pinlauCivil',values:{divisorio:'División de bienes',divisorioText:'Descripción editorial del proceso divisorio.'}},
+  ];
+  const doc = await serverPage('Pinlau');
+  assert.equal((await ui.pinlauMetadata()).title, 'Firma de prueba');
+  assert.equal(doc.querySelector('h1').textContent, 'Firma de prueba');
+  assert.equal(doc.querySelector('#equipo li img').getAttribute('src'),people[0].photo);
+  assert.match(doc.querySelector('#equipo li').textContent, /Persona de ensayoSocia/);
+  const service = doc.querySelector('a[href="/contacto?pinlau=divisorio"]').closest('details');
+  assert.match(service.textContent, /División de bienesDescripción editorial/);
+  const contact = await serverPage('ContactPage',{}, {pinlau:'divisorio'});
+  assert.equal(contact.querySelector('[name="subject"]').value,'Pinlau · División de bienes');
+  assert.ok(contact.querySelector('a[href^="mailto:"][href*="subject="]'));
+});
 
 test('la portada de DEV ofrece búsqueda, portafolio y siete destinos desde el primer HTML', async (t) => {
   const before = process.env.APP_ENV;

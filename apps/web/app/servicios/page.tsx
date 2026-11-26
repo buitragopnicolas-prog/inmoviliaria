@@ -8,9 +8,9 @@ function serviceIcon(key:string) {
   return key==='contables' ? 'investment' : 'advice';
 }
 export default async function ServicesPage(){
-  const {servicios:s}=await readSite();
+  const {servicios:s,pinlau}=await readSite();
   return <section className="section pageTop"><div className="container"><div className="pageHeading"><h1>{s.title}</h1><p>{s.intro}</p></div>
     <div className="cardsGrid">{serviceMenu(s).map((item,i)=><Reveal key={item.key} delay={i*40}><article className="card serviceCard">
       <BrandIcon name={serviceIcon(item.key)}/><h2>{item.name}</h2><p className="formattedCopy">{item.description}</p><Link className="textLink" href={item.href} aria-label={s.button+' · '+item.name}>{s.button} →</Link>
-    </article></Reveal>)}</div></div></section>;
+    </article></Reveal>)}</div><Reveal><aside className="card serviceCard"><span className="eyebrow">{pinlau.kicker}</span><h2><Link className="textLink" href="/pinlau">{pinlau.title} →</Link></h2><p>{pinlau.intro}</p></aside></Reveal></div></section>;
 }

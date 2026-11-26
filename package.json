@@ -17,7 +17,7 @@
     "db:import:arrendamientos": "dotenv -e .env -- npm run import:arrendamientos -w @inmobiliaria/api",
     "check": "npm run lint --workspaces && npm run test:architecture",
     "test:architecture": "node --test scripts/architecture.test.mjs",
-    "test:regressions": "node --import tsx --test --test-concurrency=1 apps/api/src/legal/provider.test.ts apps/web/lib/market-feed.test.ts apps/web/lib/api.test.ts apps/web/lib/public-data.test.ts apps/web/lib/ai-tools.test.ts apps/web/lib/catalog-filters.test.mjs scripts/format-date.test.mjs scripts/payment-config-policy.test.mjs apps/api/src/payments/payment-config.test.ts",
+    "test:regressions": "node --import tsx --test --test-concurrency=1 apps/web/lib/pinlau.test.ts apps/api/src/legal/provider.test.ts apps/web/lib/market-feed.test.ts apps/web/lib/api.test.ts apps/web/lib/public-data.test.ts apps/web/lib/ai-tools.test.ts apps/web/lib/catalog-filters.test.mjs scripts/format-date.test.mjs scripts/payment-config-policy.test.mjs apps/api/src/payments/payment-config.test.ts",
     "test:web-errors": "node scripts/test-web-errors.mjs && node scripts/test-web-errors.mjs --dev-portada",
     "test:catalog-edge": "node scripts/test-web-errors.mjs --edge",
     "test:sonar-gate": "node --test scripts/sonar-gate.test.mjs",

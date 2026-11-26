@@ -330,3 +330,17 @@ Pasaron las 47 pruebas de componentes, 31 de regresión y dos de arquitectura. E
 La cabecera de escritorio y el menú móvil enlazan «Compra y vende» con `/comprar`. La nube «IA jurídica» abre por teclado o toque y devuelve el foco al cerrar. `/consulta-juridica` ofrece el acceso a ChatGPT con contexto público colombiano y, con la API habilitada, consulta dentro de JB para cuentas autenticadas. El proveedor recibe la pregunta y usa búsqueda sobre dominios oficiales. Se exige una respuesta terminada con citas y se muestran sus enlaces. Las consultas predefinidas se eligen por identificador. Las preguntas libres requieren autorización y una política publicada en el entorno. La configuración vive en el servidor.
 
 El lanzamiento sigue el flujo de PR, validación, Sonar y despliegue de la revisión aprobada a DEV. El lote opcional de pruebas crea cuentas sintéticas independientes de administrador, cliente de servicios y propietario. El operador entrega sus contraseñas fuera del repositorio. El alta es transaccional y la repetición del lote comprueba las identidades existentes.
+
+### Criterios de aceptación de la nube y los perfiles
+
+El acceso Compra y vende se prueba en el encabezado de escritorio y el menú móvil. Al cerrar la nube con Escape, el foco vuelve al botón que la abrió. Una respuesta con fuentes oficiales, un fallo seguido de reintento y el consentimiento se comprueban con un proveedor de ensayo. La prueba final del proveedor real se realiza en DEV con un tema predefinido. El administrador accede al editor y cada perfil de cliente o propietario ve su cuenta y vuelve a ella si intenta abrir la administración. La foto, el mapa y la navegación del carrusel se comprueban con teclado y con movimiento reducido.
+
+**Resultado en Edge sobre DEV.** Pasaron el encabezado móvil y de escritorio, la apertura y el cierre de la nube, los permisos de los tres roles y las galerías y pines de las dos fichas de prueba. El recorrido autenticado mostró el estado de conexión pendiente para OpenAI. [Evidencia de despliegue](https://github.com/buitragopnicolas-prog/inmoviliaria/actions/runs/45789355274)
+
+## Pinlau · Directorio público y equipo
+
+Desde el encabezado de escritorio o el menú móvil, abrir Pinlau, elegir el área, desplegar un asunto y seguir su enlace a contacto. El título del asunto procede de su versión editorial vigente y acepta tanto el formulario con consentimiento como el correo de JB. En movimiento reducido, el texto y el foco permanecen estables al abrir las descripciones. El encuadre de Bogotá cambia al entrar y la escena persiste al pasar a contacto.
+
+En Administración → Contenido del sitio → Pinlau · Presentación y equipo, añadir un perfil con nombre, cargo y retrato. Al añadir, el foco pasa al nombre. Al quitar, vuelve al siguiente perfil o al botón de alta. Publicar, comprobar la foto desde la página pública y comprobar que retirar el perfil lo oculta. Las seis áreas del directorio se editan desde esa misma navegación.
+
+En Edge local se verificaron los 23 servicios, el menú móvil y de escritorio, el teclado, la persistencia del lienzo y el movimiento reducido. Una solicitud de procesos divisorios se recibió en Administración → Contactos con su asunto. Se publicó y retiró un perfil de ensayo con retrato y se comprobó el resultado desde la página pública. La política de prueba del sitio local se reutilizó en el editor local para verificar el envío con consentimiento.

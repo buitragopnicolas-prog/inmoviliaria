@@ -2,6 +2,7 @@ import { BadRequestException, Body, ConflictException, Controller, Get, NotFound
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { IsInt, IsObject, Min } from 'class-validator';
 import { readFileSync } from 'node:fs';
+import { readTeam } from '../../../../shared/pinlau-team.mjs';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { FilesService } from '../storage/files.service.js';
 import { validateUploadedFile } from '../storage/file-validation.js';
@@ -49,9 +50,11 @@ function validLink(link: string) {
 }
 
 function validateField(field: Field, value: unknown) {
+  if (field.kind === 'team') return readTeam(value) !== null;
   if (typeof value !== 'string' || value.length > (field.kind === 'long' ? 30000 : 4000)) return false;
   if (!value.trim()) return field.kind === 'optionalText' || field.kind === 'optionalLink' || field.kind === 'long' || field.kind === 'links';
   switch (field.kind) {
+    case 'serviceTitle': return value.trim().length <= 140;
     case 'link': case 'optionalLink': return validLink(value);
     case 'links': return value.split(/\r?\n/).filter(line => line.trim()).every(line => {
       const [label, href, ...rest] = line.split('|'); return !!label?.trim() && !rest.length && validLink(href?.trim() || '');
@@ -93,7 +96,7 @@ export class EditorialAdminController {
     // Keep their published values while the revision still matches.
     const additive: Record<string, string[]> = {
       contacto: ['streetAddress'],
-      identidad: ['navBuy','headerLogo','footerLogo','navAdmin','navAccount','logout','menu'],
+      identidad: ['navBuy','navPinlau','headerLogo','footerLogo','navAdmin','navAccount','logout','menu'],
       catalogos: ['goodsHeading','featuredSalesHeading','saleHeading','investmentTitle','emptyInvestment','buyLink','publishLink'],
     };
     const missing = (additive[id] ?? []).filter(key=>!Object.hasOwn(body.values,key));

@@ -134,3 +134,15 @@ Las dos fotos creadas para la entrega representan una entrega de llaves y una re
 ## Consulta jurídica colombiana
 
 La nube usa un diálogo nativo y Motion; `/consulta-juridica` comparte el contexto de marca. La acción de Next llama con la sesión del usuario a Nest. `LegalController` controla el acceso y la frecuencia. `consultColombianLaw` llama a OpenAI Responses con `store: false`, búsqueda restringida a dominios oficiales y verificación de los enlaces devueltos. El servidor recibe `OPENAI_API_KEY` y, opcionalmente, `OPENAI_MODEL`. En DEV la API acepta también el Secret opcional `jb-openai` del namespace. El recorrido externo abre ChatGPT con un contexto fijo; el usuario introduce allí su consulta.
+
+### Publicación y accesos de prueba
+
+La edición de texto se habilita tras inicializar el formulario. Al guardar una revisión correcta, la acción invalida la etiqueta de contenido y el layout raíz para actualizar el encabezado y las demás rutas. El canal de despliegue de DEV puede recibir un lote de tres hashes de contraseña. Después de la verificación de la API y del almacenamiento, la aplicación da de alta las tres identidades en una transacción. Una repetición comprueba el lote existente. Los datos de acceso se entregan en el perfil local del operador.
+
+## Pinlau Asesoría Jurídica
+
+`/pinlau` es una colaboración pública de JB. El encabezado y `/servicios` llevan al directorio. Next renderiza los títulos, las descripciones y los controles de apertura en el servidor. Los seis grupos editoriales tienen identificadores estables. El enlace `/contacto?pinlau=restitucion`, por ejemplo, resuelve el título vigente y precarga el asunto en el formulario de contacto existente. Un identificador desconocido conserva el contacto ordinario. JB recibe la solicitud en su bandeja de contactos. El correo editable de JB admite contacto directo por el mismo asunto.
+
+El editor de contenido gestiona la presentación, los miembros del equipo y cada área por separado en SiteSection. El cliente envía los retratos seleccionados por el circuito administrativo de imágenes. La API valida el contenido y las rutas de fotografía antes de actualizar juntos los nombres, los cargos y las referencias de imagen con control de revisión. Cada sección admite hasta 24 perfiles y el equipo vacío se presenta mediante el texto editorial y el contacto. El modelo utiliza la tabla y el almacenamiento existentes.
+
+La profundidad depende del único lienzo del layout. Pinlau tiene un encuadre de cámara propio y usa una superficie de lectura translúcida sobre los cerros y la ciudad. Los controles nativos funcionan con teclado y antes de la hidratación. La preferencia de movimiento reducido conserva la escena estática y suprime la animación de apertura.
