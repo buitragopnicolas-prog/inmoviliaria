@@ -50,7 +50,7 @@ export function PropertyLocationField({ location = {} }: Readonly<{ location?: P
 
 export function PublicPropertyLocation(location: Readonly<PropertyLocation & { addressText: string }>) {
   const point = savedPoint(location);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(point));
   const panel = useId();
   const coordinates = point?.join(', ');
   const query = coordinates || (location.addressText && location.addressText + ', Colombia');
