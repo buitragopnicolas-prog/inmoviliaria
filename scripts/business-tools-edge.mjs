@@ -157,7 +157,9 @@ try {
   await page.getByText('Cambios publicados.').waitFor();
   await page.goto(origin+'/pinlau');
   assert.equal(await page.locator('details summary').filter({hasText:'Procesos reivindicatorios'}).count(),1);
-  await page.locator('#equipo li img').evaluate(img=>img.decode());
+  const portrait = page.locator('#equipo li img');
+  await portrait.scrollIntoViewIfNeeded();
+  await portrait.evaluate(img=>img.decode());
   assert.equal(await page.locator('#equipo li h3').innerText(),'Perfil de prueba');
   const service=page.locator('details').filter({has:page.locator('summary',{hasText:'Restitución de inmuebles arrendados'})});
   await service.locator('summary').focus();
