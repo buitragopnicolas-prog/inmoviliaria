@@ -20,6 +20,7 @@ function viewpoint(path: string): Pose {
   if (/^\/noticias(\/|$)/.test(path)) return {x:-.045,y:.012,zoom:1.09};
   if (path === '/comprar' || path === '/vehiculos-y-bienes') return {x:.039,y:-.008,zoom:1.08};
   if (path === '/contacto' || path === '/sugerencias') return {x:.016,y:-.022,zoom:1.095};
+  if (path === '/pinlau') return {x:-.024,y:-.012,zoom:1.06};
   if (/^\/(mi-cuenta|admin|propietarios|clientes|arrendatarios)(\/|$)/.test(path)) return {x:-.036,y:0,zoom:1.07};
   return {x:.022,y:.005,zoom:1.045};
 }

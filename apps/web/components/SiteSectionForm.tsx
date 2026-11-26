@@ -3,6 +3,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from 'reac
 import { saveSection, type PublicationState } from '@/app/admin/publishing-actions';
 import { sections, type SectionId } from '@/lib/site-content';
 import { EditorialImageField } from './EditorialImageField';
+import { PinlauTeamField } from './PinlauTeamField';
 import { StatusNotice } from './StatusNotice';
 
 export function SiteSectionForm({id,values,revision}:Readonly<{id:SectionId;values:Record<string,string>;revision:number}>) {
@@ -28,14 +29,16 @@ export function SiteSectionForm({id,values,revision}:Readonly<{id:SectionId;valu
   }}>
     <input type="hidden" name="revision" value={version}/>
     {Object.entries(sections[id].fields).map(([key,field])=>{
+      if (field.kind === 'team') return <PinlauTeamField key={key + version} value={draft[key]} disabled={!ready || pending || busy}/>;
       const input={name:key,defaultValue:draft[key]??'',readOnly:!ready};
       let control;
-      if (['long','links','cityList'].includes(field.kind)) {
-        control = <textarea {...input} rows={field.kind==='long'?3:7} required={field.kind==='cityList'}/>;
+      if (['long','paragraph','links','cityList'].includes(field.kind)) {
+        const paragraph = field.kind === 'paragraph';
+        control = <textarea {...input} rows={paragraph || field.kind==='long'?3:7} required={paragraph || field.kind==='cityList'} maxLength={paragraph ? 4000 : undefined}/>;
       } else if (field.kind === 'image') {
         control = <EditorialImageField key={version} name={key} value={draft[key] || field.value} label={field.label}/>;
       } else {
-        control = <input {...input} type={field.kind==='email'?'email':'text'} required={!['optionalLink','optionalText'].includes(field.kind)}/>;
+        control = <input {...input} type={field.kind==='email'?'email':'text'} maxLength={field.kind==='serviceTitle'?140:undefined} required={!['optionalLink','optionalText'].includes(field.kind)}/>;
       }
       return <div key={key}><label>{field.label}{control}</label></div>;
     })}

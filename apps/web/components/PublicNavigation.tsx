@@ -16,6 +16,7 @@ export function PublicNavigation({ role, copy = defaultCopy.identidad }: Readonl
     { href: '/', label: copy.navHome },
     { href: '/inmuebles', label: copy.navRent },
     { href: '/comprar', label: copy.navBuy },
+    { href: '/pinlau', label: copy.navPinlau },
     { href: '/noticias', label: copy.navNews },
     { href: '/nosotros', label: copy.navAbout },
     { href: '/contacto', label: copy.navContact },

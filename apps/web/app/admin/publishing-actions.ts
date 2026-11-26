@@ -1,5 +1,6 @@
 'use server';
 import { textField } from '@/lib/form-text';
+import { teamFromForm } from '@/lib/pinlau-team-form';
 import { revalidatePath, updateTag } from 'next/cache';
 import { apiFetch } from '@/lib/api';
 import { requireUser } from '@/lib/auth';
@@ -20,6 +21,10 @@ export async function saveSection(id: SectionId, previous: PublicationState, for
     if (!Object.hasOwn(sections,id)) throw new Error('Sección desconocida.');
     const values: Record<string,string> = {};
     for (const [key,field] of Object.entries(sections[id].fields)) {
+      if (field.kind === 'team') {
+        values[key] = await teamFromForm(form, upload);
+        continue;
+      }
       values[key] = textField(form,key).trim();
       const file = form.get('photo-'+key);
       if (field.kind==='image' && file instanceof File && file.size) {

@@ -32,6 +32,11 @@
         "kind": "text",
         "value": "Boletín jurídico y noticias"
       },
+      "navPinlau": {
+        "label": "Menú · Colaboración jurídica",
+        "kind": "text",
+        "value": "Pinlau"
+      },
       "navAbout": {
         "label": "Menú · Nosotros",
         "kind": "text",
@@ -1236,6 +1241,361 @@
         "label": "Sin documentos asignados",
         "value": "Aún no tienes documentos asignados.",
         "kind": "text"
+      }
+    }
+  },
+  "pinlau": {
+    "title": "Pinlau · Presentación y equipo",
+    "fields": {
+      "kicker": {
+        "label": "Colaboración",
+        "kind": "text",
+        "value": "Una colaboración de Asesoría Inmobiliaria JB"
+      },
+      "title": {
+        "label": "Nombre de la colaboración",
+        "kind": "text",
+        "value": "Pinlau Asesoría Jurídica"
+      },
+      "intro": {
+        "label": "Presentación",
+        "kind": "paragraph",
+        "value": "Acompañamos decisiones sobre tus bienes, tu familia y tu empresa. Elige el asunto que quieres consultar para ponerte en contacto con el equipo."
+      },
+      "photo": {
+        "label": "Fotografía de la colaboración",
+        "kind": "image",
+        "value": "/images/jb-alianzas.webp"
+      },
+      "alt": {
+        "label": "Descripción de la fotografía",
+        "kind": "text",
+        "value": "Mesa de trabajo con una maqueta arquitectónica y documentos de un proyecto."
+      },
+      "catalog": {
+        "label": "Título del catálogo",
+        "kind": "text",
+        "value": "¿En qué podemos ayudarte?"
+      },
+      "contact": {
+        "label": "Enlace de cada servicio",
+        "kind": "text",
+        "value": "Consultar este servicio"
+      },
+      "general": {
+        "label": "Contacto general",
+        "kind": "text",
+        "value": "Contactar con Pinlau"
+      },
+      "team": {
+        "label": "Título del equipo",
+        "kind": "text",
+        "value": "Fundadores y socios"
+      },
+      "teamIntro": {
+        "label": "Presentación del equipo",
+        "kind": "paragraph",
+        "value": "Para conocer quién puede acompañarte, cuéntanos brevemente el área en la que necesitas orientación."
+      },
+      "channel": {
+        "label": "Canal de contacto",
+        "kind": "text",
+        "value": "JB recibe las consultas de esta colaboración."
+      },
+      "people": {
+        "label": "Perfiles del equipo",
+        "kind": "team",
+        "value": "[]"
+      }
+    }
+  },
+  "pinlauEmpresa": {
+    "title": "Pinlau · Empresas y sociedades",
+    "fields": {
+      "heading": {
+        "label": "Nombre del área",
+        "kind": "text",
+        "value": "Empresas y sociedades"
+      },
+      "comercial": {
+        "label": "Servicio · Derecho comercial",
+        "kind": "serviceTitle",
+        "value": "Derecho comercial"
+      },
+      "comercialText": {
+        "label": "Descripción · Derecho comercial",
+        "kind": "paragraph",
+        "value": "Revisamos contratos de negocios, acuerdos con proveedores y conflictos entre comerciantes. Cuéntanos qué operación estás preparando o qué compromiso se incumplió."
+      },
+      "corporativo": {
+        "label": "Servicio · Derecho corporativo",
+        "kind": "serviceTitle",
+        "value": "Derecho corporativo"
+      },
+      "corporativoText": {
+        "label": "Descripción · Derecho corporativo",
+        "kind": "paragraph",
+        "value": "Acompañamos a socios y administradores en acuerdos de accionistas, decisiones de asamblea, reformas estatutarias y manejo de conflictos internos."
+      },
+      "crear-empresa": {
+        "label": "Servicio · Creación de empresas",
+        "kind": "serviceTitle",
+        "value": "Creación de empresas"
+      },
+      "crear-empresaText": {
+        "label": "Descripción · Creación de empresas",
+        "kind": "paragraph",
+        "value": "Te ayudamos a elegir una estructura para tu negocio y a definir aportes, administración y reglas entre las personas que lo fundan."
+      },
+      "registro-sociedades": {
+        "label": "Servicio · Registro de sociedades en Cámara de Comercio",
+        "kind": "serviceTitle",
+        "value": "Registro de sociedades en Cámara de Comercio"
+      },
+      "registro-sociedadesText": {
+        "label": "Descripción · Registro de sociedades en Cámara de Comercio",
+        "kind": "paragraph",
+        "value": "Revisamos el documento de constitución y los requisitos de inscripción ante la cámara correspondiente al domicilio y al tipo de sociedad elegido."
+      },
+      "velo-corporativo": {
+        "label": "Servicio · Levantamiento del velo corporativo",
+        "kind": "serviceTitle",
+        "value": "Levantamiento del velo corporativo"
+      },
+      "velo-corporativoText": {
+        "label": "Descripción · Levantamiento del velo corporativo",
+        "kind": "paragraph",
+        "value": "Estudiamos si el uso de una sociedad para defraudar la ley o perjudicar a terceros permite solicitar la desestimación de su personalidad jurídica. Revisamos hechos, documentos y posibles responsables."
+      }
+    }
+  },
+  "pinlauCivil": {
+    "title": "Pinlau · Derecho civil, inmuebles y patrimonio",
+    "fields": {
+      "heading": {
+        "label": "Nombre del área",
+        "kind": "text",
+        "value": "Derecho civil, inmuebles y patrimonio"
+      },
+      "civil": {
+        "label": "Servicio · Derecho civil",
+        "kind": "serviceTitle",
+        "value": "Derecho civil"
+      },
+      "civilText": {
+        "label": "Descripción · Derecho civil",
+        "kind": "paragraph",
+        "value": "Asesoramos en obligaciones, contratos entre particulares y responsabilidad por daños. Revisamos tus documentos y las alternativas para resolver el desacuerdo."
+      },
+      "restitucion": {
+        "label": "Servicio · Restitución de inmuebles arrendados",
+        "kind": "serviceTitle",
+        "value": "Restitución de inmuebles arrendados"
+      },
+      "restitucionText": {
+        "label": "Descripción · Restitución de inmuebles arrendados",
+        "kind": "paragraph",
+        "value": "Revisamos el contrato de arrendamiento, la causa de terminación y las comunicaciones entre las partes para orientar la solicitud de entrega o su defensa."
+      },
+      "divisorio": {
+        "label": "Servicio · Procesos divisorios",
+        "kind": "serviceTitle",
+        "value": "Procesos divisorios"
+      },
+      "divisorioText": {
+        "label": "Descripción · Procesos divisorios",
+        "kind": "paragraph",
+        "value": "Si compartes la propiedad de un bien y quieres poner fin a la comunidad, estudiamos la posibilidad de dividirlo materialmente o solicitar su venta y distribuir el producto."
+      },
+      "reivindicatorio": {
+        "label": "Servicio · Procesos reivindicatorios",
+        "kind": "serviceTitle",
+        "value": "Procesos reivindicatorios"
+      },
+      "reivindicatorioText": {
+        "label": "Descripción · Procesos reivindicatorios",
+        "kind": "paragraph",
+        "value": "Estudiamos el título de dominio y la posesión del bien para orientar al propietario que busca recuperarlo o a quien deba responder a la reclamación."
+      },
+      "usucapion": {
+        "label": "Servicio · Usucapión y procesos de pertenencia",
+        "kind": "serviceTitle",
+        "value": "Usucapión y procesos de pertenencia"
+      },
+      "usucapionText": {
+        "label": "Descripción · Usucapión y procesos de pertenencia",
+        "kind": "paragraph",
+        "value": "Evaluamos la historia de la posesión y sus pruebas para determinar si procede solicitar que se reconozca la propiedad por prescripción adquisitiva."
+      },
+      "ejecutivo": {
+        "label": "Servicio · Procesos ejecutivos",
+        "kind": "serviceTitle",
+        "value": "Procesos ejecutivos"
+      },
+      "ejecutivoText": {
+        "label": "Descripción · Procesos ejecutivos",
+        "kind": "paragraph",
+        "value": "Revisamos el documento que respalda una obligación y su exigibilidad para orientar el cobro judicial o la defensa frente a un mandamiento de pago."
+      }
+    }
+  },
+  "pinlauFamilia": {
+    "title": "Pinlau · Familia y sucesiones",
+    "fields": {
+      "heading": {
+        "label": "Nombre del área",
+        "kind": "text",
+        "value": "Familia y sucesiones"
+      },
+      "familia": {
+        "label": "Servicio · Derecho de familia",
+        "kind": "serviceTitle",
+        "value": "Derecho de familia"
+      },
+      "familiaText": {
+        "label": "Descripción · Derecho de familia",
+        "kind": "paragraph",
+        "value": "Acompañamos acuerdos y controversias sobre alimentos, relaciones familiares y patrimonio. Identificamos contigo qué asuntos pueden resolverse de común acuerdo."
+      },
+      "sucesiones": {
+        "label": "Servicio · Sucesiones",
+        "kind": "serviceTitle",
+        "value": "Sucesiones"
+      },
+      "sucesionesText": {
+        "label": "Descripción · Sucesiones",
+        "kind": "paragraph",
+        "value": "Orientamos a herederos y demás interesados en la identificación de bienes y deudas, la partición de la herencia y la elección de la vía notarial o judicial que corresponda."
+      },
+      "divorcios": {
+        "label": "Servicio · Divorcios",
+        "kind": "serviceTitle",
+        "value": "Divorcios"
+      },
+      "divorciosText": {
+        "label": "Descripción · Divorcios",
+        "kind": "paragraph",
+        "value": "Revisamos tu situación familiar para orientar el divorcio y las decisiones relacionadas con hijos, alimentos y liquidación del patrimonio común."
+      },
+      "custodia": {
+        "label": "Servicio · Custodia y cuidado personal",
+        "kind": "serviceTitle",
+        "value": "Custodia y cuidado personal"
+      },
+      "custodiaText": {
+        "label": "Descripción · Custodia y cuidado personal",
+        "kind": "paragraph",
+        "value": "Acompañamos acuerdos y procesos para definir el cuidado cotidiano, la residencia y las visitas de niños, niñas y adolescentes atendiendo a su interés superior."
+      },
+      "patria-potestad": {
+        "label": "Servicio · Privación de la patria potestad",
+        "kind": "serviceTitle",
+        "value": "Privación de la patria potestad"
+      },
+      "patria-potestadText": {
+        "label": "Descripción · Privación de la patria potestad",
+        "kind": "paragraph",
+        "value": "Estudiamos si los hechos se ajustan a una causal legal y orientamos la solicitud o la defensa ante el juez de familia, con atención a los derechos del menor de edad."
+      },
+      "redam": {
+        "label": "Servicio · Registro de Deudores Alimentarios Morosos (REDAM)",
+        "kind": "serviceTitle",
+        "value": "Registro de Deudores Alimentarios Morosos (REDAM)"
+      },
+      "redamText": {
+        "label": "Descripción · Registro de Deudores Alimentarios Morosos (REDAM)",
+        "kind": "paragraph",
+        "value": "Revisamos el soporte de la obligación alimentaria y el historial de pagos para orientar la solicitud de inscripción ante la autoridad competente o la respuesta a esa solicitud."
+      }
+    }
+  },
+  "pinlauMovilidad": {
+    "title": "Pinlau · Viajes y documentación migratoria",
+    "fields": {
+      "heading": {
+        "label": "Nombre del área",
+        "kind": "text",
+        "value": "Viajes y documentación migratoria"
+      },
+      "salida-del-pais": {
+        "label": "Servicio · Permisos de salida del país para menores",
+        "kind": "serviceTitle",
+        "value": "Permisos de salida del país para menores"
+      },
+      "salida-del-paisText": {
+        "label": "Descripción · Permisos de salida del país para menores",
+        "kind": "paragraph",
+        "value": "Orientamos sobre las autorizaciones de viaje de niños, niñas y adolescentes según quién los acompañe y si existe acuerdo entre sus representantes."
+      },
+      "visas": {
+        "label": "Servicio · Documentación para visas",
+        "kind": "serviceTitle",
+        "value": "Documentación para visas"
+      },
+      "visasText": {
+        "label": "Descripción · Documentación para visas",
+        "kind": "paragraph",
+        "value": "Te ayudamos a identificar y organizar los soportes que solicita la autoridad del país de destino de acuerdo con el tipo de visa y el motivo de tu viaje."
+      }
+    }
+  },
+  "pinlauPublico": {
+    "title": "Pinlau · Derecho administrativo y penal",
+    "fields": {
+      "heading": {
+        "label": "Nombre del área",
+        "kind": "text",
+        "value": "Derecho administrativo y penal"
+      },
+      "administrativo": {
+        "label": "Servicio · Derecho administrativo",
+        "kind": "serviceTitle",
+        "value": "Derecho administrativo"
+      },
+      "administrativoText": {
+        "label": "Descripción · Derecho administrativo",
+        "kind": "paragraph",
+        "value": "Acompañamos peticiones, recursos y controversias con entidades públicas. Revisamos el acto o la comunicación recibida para identificar las opciones de actuación."
+      },
+      "penal": {
+        "label": "Servicio · Derecho penal",
+        "kind": "serviceTitle",
+        "value": "Derecho penal"
+      },
+      "penalText": {
+        "label": "Descripción · Derecho penal",
+        "kind": "paragraph",
+        "value": "Orientamos a víctimas y personas investigadas sobre denuncias, defensa y representación durante el proceso penal. En la primera consulta identificamos la etapa y la necesidad de acompañamiento."
+      }
+    }
+  },
+  "pinlauTecnologia": {
+    "title": "Pinlau · Tecnología y presencia digital",
+    "fields": {
+      "heading": {
+        "label": "Nombre del área",
+        "kind": "text",
+        "value": "Tecnología y presencia digital"
+      },
+      "tecnologia": {
+        "label": "Servicio · Servicios tecnológicos para empresas",
+        "kind": "serviceTitle",
+        "value": "Servicios tecnológicos para empresas"
+      },
+      "tecnologiaText": {
+        "label": "Descripción · Servicios tecnológicos para empresas",
+        "kind": "paragraph",
+        "value": "Revisamos cómo gestionas consultas, documentos y tareas repetitivas para definir mejoras digitales que se ajusten a la operación de tu negocio."
+      },
+      "paginas-web": {
+        "label": "Servicio · Diseño y creación de páginas web",
+        "kind": "serviceTitle",
+        "value": "Diseño y creación de páginas web"
+      },
+      "paginas-webText": {
+        "label": "Descripción · Diseño y creación de páginas web",
+        "kind": "paragraph",
+        "value": "Definimos contigo el contenido, la navegación y los medios de contacto de tu sitio, desde una página de presentación hasta un catálogo de productos o servicios."
       }
     }
   },

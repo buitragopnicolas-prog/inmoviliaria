@@ -280,7 +280,8 @@ test('menú móvil: enlaces por rol, navegación con teclado, Escape y salida de
     fireEvent.click(toggle);
     assert.equal(toggle.getAttribute('aria-expanded'), 'true');
     const links = within(mobile).getAllByRole('link');
-    assert.equal(links.length, role ? 7 : 6);
+    assert.equal(links.length, role ? 8 : 7);
+    assert.equal(within(mobile).getByRole('link', { name: 'Pinlau' }).getAttribute('href'), '/pinlau');
     assert.equal(within(mobile).getByRole('link', { name: 'Compra y vende' }).getAttribute('href'), '/comprar');
     fireEvent.keyDown(links[0], { key: 'Tab' });
     assert.equal(mobile.hidden, false);
